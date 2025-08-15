@@ -304,7 +304,20 @@ export default function WordBreakerGame() {
     if (gameState.gameWon) return
 
     const word = gameState.inputLetters.join("")
-    if (word.length !== 5) return
+    if (word.length !== 5) {
+      // This shouldn't happen in normal gameplay, but handle it gracefully
+      setGameState((prev) => ({ 
+        ...prev, 
+        errorMessage: "Please enter exactly 5 letters",
+        inputLetters: ["", "", "", "", ""],
+        activeIndex: 0
+      }))
+      const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
+      setTimeout(() => {
+        inputRefs.current[0]?.focus()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
 
     const lastAttempt =
       gameState.attempts.length > 0 ? gameState.attempts[gameState.attempts.length - 1] : gameState.rootWord
@@ -312,14 +325,32 @@ export default function WordBreakerGame() {
     // Check if word is in dictionary first
     const wordLower = word.toLowerCase()
     if (!VALID_WORDS.has(wordLower)) {
-      setGameState((prev) => ({ ...prev, errorMessage: `"${word.toUpperCase()}" is not a valid word in our dictionary` }))
+      setGameState((prev) => ({ 
+        ...prev, 
+        errorMessage: `"${word.toUpperCase()}" is not a valid word in our dictionary`,
+        inputLetters: ["", "", "", "", ""],
+        activeIndex: 0
+      }))
       const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
+      // Clear input and refocus to first position
+      setTimeout(() => {
+        inputRefs.current[0]?.focus()
+      }, 50)
       return () => clearTimeout(timer)
     }
 
     if (!isValidMove(lastAttempt, word)) {
-      setGameState((prev) => ({ ...prev, errorMessage: "You must change exactly one letter (rearrangement allowed)" }))
+      setGameState((prev) => ({ 
+        ...prev, 
+        errorMessage: "You must change exactly one letter (rearrangement allowed)",
+        inputLetters: ["", "", "", "", ""],
+        activeIndex: 0
+      }))
       const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
+      // Clear input and refocus to first position
+      setTimeout(() => {
+        inputRefs.current[0]?.focus()
+      }, 50)
       return () => clearTimeout(timer)
     }
 
@@ -888,7 +919,7 @@ export default function WordBreakerGame() {
             </div>
           </div> */}
 
-          <div className="flex justify-center gap-1 mb-2">
+          <div className="w-[312px] mx-auto flex justify-center gap-1 mb-2">
                          {gameState.mysteryWord.split("").map((letter, index) => {
                // Reveal letters that actually exist in any guessed word
                const isLetterFound = gameState.attempts.some(attempt => {
@@ -901,7 +932,7 @@ export default function WordBreakerGame() {
                 key={index}
                 className={`w-12 h-12 border-2 flex items-center justify-center shadow-lg ${
                      isLetterFound ? "border-emerald-500 bg-emerald-600" : "border-gray-600 bg-gray-800"
-                } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
+                } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}`}
                 style={{
                   animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
                 }}
@@ -931,7 +962,7 @@ export default function WordBreakerGame() {
 
           {/* Start word row - only show when there are 0 attempts */}
           {gameState.attempts.length === 0 ? (
-            <div className="flex justify-center gap-1 mb-2">
+            <div className="w-[312px] mx-auto flex justify-center gap-1 mb-2">
               {gameState.rootWord.split("").map((letter, index) => {
                 const shouldShowHint = !gameState.isHardMode && gameState.attempts.length === 0
                 const optimalHints = shouldShowHint
@@ -944,15 +975,43 @@ export default function WordBreakerGame() {
                   key={index}
                   className={`w-12 h-12 border-2 border-gray-600 bg-gray-700 flex items-center justify-center shadow-md ${
                             shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
-                          }`}
-                          title={shouldHighlight ? "Hint: Change this letter to reach the next word" : ""}
+                          } relative`}
+                          onTouchStart={() => {
+                            // Show tooltip on touch for mobile
+                            const tooltip = document.getElementById(`start-tooltip-${index}`)
+                            if (tooltip) {
+                              tooltip.classList.remove('hidden')
+                              setTimeout(() => tooltip.classList.add('hidden'), 3000) // Hide after 3 seconds
+                            }
+                          }}
+                          onMouseEnter={() => {
+                            // Show tooltip on hover for desktop
+                            const tooltip = document.getElementById(`start-tooltip-${index}`)
+                            if (tooltip) tooltip.classList.remove('hidden')
+                          }}
+                          onMouseLeave={() => {
+                            // Hide tooltip on hover out for desktop
+                            const tooltip = document.getElementById(`start-tooltip-${index}`)
+                            if (tooltip) tooltip.classList.add('hidden')
+                          }}
                         >
                           <span className={`text-lg font-bold font-inter ${
                             shouldHighlight ? "text-[#555]" : "text-white"
                           }`}>
                             {letter}
                           </span>
-                </div>
+                          
+                          {/* Custom tooltip for start word hints */}
+                          {shouldHighlight && (
+                            <div
+                              id={`start-tooltip-${index}`}
+                              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none whitespace-nowrap"
+                            >
+                              Hint: Change this letter to reach the next word
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          )}
+                        </div>
               )
               })}
               {/* Step number for start word - shows total steps needed */}
@@ -1005,11 +1064,11 @@ export default function WordBreakerGame() {
             return (
               <div 
                 key={actualIndex} 
-                className={`flex items-center gap-2 justify-center ${
+                className={`w-[312px] mx-auto flex items-center gap-1 justify-center ${
                   gameState.gameWon ? "animate-[slideInFromTop_0.5s_ease-out_forwards]" : ""
                 }`}
                 style={{
-                  animationDelay: gameState.gameWon ? `${800 + actualIndex * 200}ms` : "0ms",
+                  animationDelay: gameState.gameWon ? `${1500 + actualIndex * 200}ms` : "0ms",
                   visibility: gameState.gameWon && actualIndex > 0 ? "hidden" : "visible"
                 }}
               >
@@ -1032,29 +1091,72 @@ export default function WordBreakerGame() {
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
+                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
                         style={{
                           animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms",
                         }}
-                        title={(() => {
-                          if (shouldHighlight) return "Hint: Change this letter to reach the next word"
-                          if (results[letterIndex] === "correct") return "Correct letter in correct position"
-                          if (results[letterIndex] === "present") return "Letter is in the word but wrong position"
-                          return "Letter not in the word"
-                        })()}
+                        onTouchStart={() => {
+                          // Show tooltip on touch for mobile
+                          const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
+                          if (tooltip) {
+                            tooltip.classList.remove('hidden')
+                            setTimeout(() => tooltip.classList.add('hidden'), 3000) // Hide after 3 seconds
+                          }
+                        }}
+                        onMouseEnter={() => {
+                          // Show tooltip on hover for desktop
+                          const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
+                          if (tooltip) tooltip.classList.remove('hidden')
+                        }}
+                        onMouseLeave={() => {
+                          // Hide tooltip on hover out for desktop
+                          const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
+                          if (tooltip) tooltip.classList.add('hidden')
+                        }}
                       >
                         <span className={`text-lg font-bold font-inter ${
                           shouldHighlight ? "text-[#555]" : "text-white"
                         }`}>
                           {letter}
                         </span>
+                        
+                        {/* Custom tooltip for mobile and desktop */}
+                        <div
+                          id={`tooltip-${actualIndex}-${letterIndex}`}
+                          className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none whitespace-nowrap"
+                        >
+                          {(() => {
+                            if (shouldHighlight) return "Hint: Change this letter to reach the next word"
+                            if (results[letterIndex] === "correct") return "Correct letter in correct position"
+                            if (results[letterIndex] === "present") return "Letter is in the word but wrong position"
+                            return "Letter not in the word"
+                          })()}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
                       </div>
                     )
                   })}
                   {/* Entry order for completed rows when game is won */}
                   <div 
-                    className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
-                    title={gameState.gameWon ? `Word entered ${entryOrder}${entryOrder === 1 ? 'st' : entryOrder === 2 ? 'nd' : entryOrder === 3 ? 'rd' : 'th'}` : `Remaining steps to solve: ${entryOrder}`}
+                    className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
+                    onTouchStart={() => {
+                      // Show tooltip on touch for mobile
+                      const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
+                      if (tooltip) {
+                        tooltip.classList.remove('hidden')
+                        setTimeout(() => tooltip.classList.add('hidden'), 3000) // Hide after 3 seconds
+                      }
+                    }}
+                    onMouseEnter={() => {
+                      // Show tooltip on hover for desktop
+                      const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
+                      if (tooltip) tooltip.classList.remove('hidden')
+                    }}
+                    onMouseLeave={() => {
+                      // Hide tooltip on hover out for desktop
+                      const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
+                      if (tooltip) tooltip.classList.add('hidden')
+                    }}
                   >
                     {gameState.gameWon && entryOrder === 0 ? (
                       <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1065,6 +1167,15 @@ export default function WordBreakerGame() {
                         {entryOrder}
                       </span>
                     )}
+                    
+                    {/* Custom tooltip for entry order */}
+                    <div
+                      id={`entry-tooltip-${actualIndex}`}
+                      className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none whitespace-nowrap"
+                    >
+                      {gameState.gameWon ? `Word entered ${entryOrder}${entryOrder === 1 ? 'st' : entryOrder === 2 ? 'nd' : entryOrder === 3 ? 'rd' : 'th'}` : `Remaining steps to solve: ${entryOrder}`}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1073,7 +1184,7 @@ export default function WordBreakerGame() {
 
           {!gameState.gameWon && (
             <>
-              <div className="flex justify-center gap-1">
+              <div className="w-[312px] mx-auto flex justify-center gap-1">
                 {gameState.inputLetters.map((letter, index) => {
                   return (
                     <input
@@ -1085,7 +1196,7 @@ export default function WordBreakerGame() {
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => handleFocus(index)}
                       className={`w-12 h-12 border-2 border-gray-600 bg-gray-800 text-center text-lg font-bold text-white focus:outline-none shadow-lg font-inter ${
-                        gameState.activeIndex === index ? "border-blue-400 bg-gray-700 ring-2 ring-blue-400/50" : ""
+                        gameState.activeIndex === index ? "focus:outline-none focus:shadow-[inset_0_0_0_1px_theme('colors.blue.500')]" : ""
                       }`}
                       maxLength={1}
                     />
@@ -1093,34 +1204,57 @@ export default function WordBreakerGame() {
                 })}
                 {/* "?" placeholder that shows clue for next word in BFS path */}
                 <div 
-                  className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
-                  title={(() => {
-                    // Get clue for the next word in the BFS path
-                    if (gameState.attempts.length > 0) {
-                      // If there are attempts, get clue for next word after last attempt
-                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                      const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
-                      console.log(`🔍 Tooltip BFS: ${lastAttempt} → ${gameState.mysteryWord.toUpperCase()}, path:`, path)
-                      if (path.length >= 2) {
-                        const nextWord = path[1].toLowerCase()
-                        console.log(`🔍 Next word: "${nextWord}"`)
-                        const clue = getWordClue(nextWord)
-                        console.log(`🔍 Found clue: "${clue}"`)
-                        return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
-                      }
-                    } else {
-                      // If no attempts yet, get clue for first word in BFS path
-                      const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                      if (path.length >= 2) {
-                        const nextWord = path[1].toLowerCase()
-                        const clue = getWordClue(nextWord)
-                        return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
-                      }
+                  className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
+                  onTouchStart={() => {
+                    // Show tooltip on touch for mobile
+                    const tooltip = document.getElementById('clue-tooltip')
+                    if (tooltip) {
+                      tooltip.classList.remove('hidden')
+                      setTimeout(() => tooltip.classList.add('hidden'), 3000) // Hide after 3 seconds
                     }
-                    return "No clue available"
-                  })()}
+                  }}
+                  onMouseEnter={() => {
+                    // Show tooltip on hover for desktop
+                    const tooltip = document.getElementById('clue-tooltip')
+                    if (tooltip) tooltip.classList.remove('hidden')
+                  }}
+                  onMouseLeave={() => {
+                    // Hide tooltip on hover out for desktop
+                    const tooltip = document.getElementById('clue-tooltip')
+                    if (tooltip) tooltip.classList.add('hidden')
+                  }}
                 >
                   <span className="text-yellow-400 text-lg font-bold font-inter">?</span>
+                  
+                  {/* Custom tooltip for clue button */}
+                  <div
+                    id="clue-tooltip"
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none whitespace-nowrap"
+                  >
+                    {(() => {
+                      // Get clue for the next word in the BFS path
+                      if (gameState.attempts.length > 0) {
+                        // If there are attempts, get clue for next word after last attempt
+                        const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                        const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                        if (path.length >= 2) {
+                          const nextWord = path[1].toLowerCase()
+                          const clue = getWordClue(nextWord)
+                          return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
+                        }
+                      } else {
+                        // If no attempts yet, get clue for first word in BFS path
+                        const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                        if (path.length >= 2) {
+                          const nextWord = path[1].toLowerCase()
+                          const clue = getWordClue(nextWord)
+                          return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
+                        }
+                      }
+                      return "No clue available"
+                    })()}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
                 </div>
               </div>
               {gameState.errorMessage && (
@@ -1133,8 +1267,7 @@ export default function WordBreakerGame() {
         </div>
 
         {/* Action Buttons - constrained to grid width */}
-        {!gameState.gameWon && (
-          <div className="w-[312px] mx-auto">
+        <div className="w-[312px] mx-auto">
             <div className="grid grid-cols-6 gap-1">
               <button
                 onClick={showSolutionPath}
@@ -1224,7 +1357,6 @@ export default function WordBreakerGame() {
               </div>
             </div>
           </div>
-        )}
 
         {/* Solution Modal */}
         {gameState.showSolution && (
