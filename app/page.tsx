@@ -268,16 +268,22 @@ export default function WordBreakerGame() {
     (index: number, letter: string) => {
       if (gameState.gameWon) return
 
-      const filteredLetter = letter.replace(/[^A-Za-z]/g, "")
-      if (!filteredLetter) return
-
       const newInput = [...gameState.inputLetters]
-      newInput[index] = filteredLetter.toUpperCase()
+      
+      if (letter === "") {
+        // Clear the cell
+        newInput[index] = ""
+      } else {
+        // Set a new letter
+        const filteredLetter = letter.replace(/[^A-Za-z]/g, "")
+        if (!filteredLetter) return
+        newInput[index] = filteredLetter.toUpperCase()
+      }
 
       setGameState((prev) => ({ ...prev, inputLetters: newInput }))
 
-      // Auto-advance focus
-      if (filteredLetter && index < 4) {
+      // Auto-advance focus only when adding letters
+      if (letter !== "" && index < 4) {
         setTimeout(() => {
           inputRefs.current[index + 1]?.focus()
         }, 0)
@@ -289,15 +295,9 @@ export default function WordBreakerGame() {
   const handleFocus = useCallback(
     (index: number) => {
       setGameState((prev) => ({ ...prev, activeIndex: index }))
-
-      // If there's an existing letter, clear it
-      if (gameState.inputLetters[index]) {
-        const newInput = [...gameState.inputLetters]
-        newInput[index] = ""
-        setGameState((prev) => ({ ...prev, inputLetters: newInput }))
-      }
+      // Removed automatic letter clearing - now arrow keys only move cursor
     },
-    [gameState.inputLetters],
+    [],
   )
 
   const submitWord = useCallback(() => {
@@ -816,20 +816,28 @@ export default function WordBreakerGame() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>, index: number) => {
       if (e.key === "Backspace" || e.key === "Delete") {
+        // Clear the current cell first
+        handleLetterInput(index, "")
         if (index > 0) {
-          handleLetterInput(index - 1, "")
-          setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
-          setTimeout(() => inputRefs.current[index - 1]?.focus(), 0)
-        } else {
-          // If at first position, just clear it
-          handleLetterInput(index, "")
+          // Then move to previous cell with a delay so clearing is visible
+          setTimeout(() => {
+            setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
+            inputRefs.current[index - 1]?.focus()
+          }, 50)
         }
       }
       if (e.key === "ArrowLeft") {
         if (index > 0) {
-          handleLetterInput(index - 1, "")
+          // Just move cursor, don't clear any letters
           setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
           setTimeout(() => inputRefs.current[index - 1]?.focus(), 0)
+        }
+      }
+      if (e.key === "ArrowRight") {
+        if (index < 4) {
+          // Just move cursor, don't clear any letters
+          setGameState((prev) => ({ ...prev, activeIndex: index + 1 }))
+          setTimeout(() => inputRefs.current[index + 1]?.focus(), 0)
         }
       }
       if (e.key === "Enter") {
