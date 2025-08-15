@@ -49,7 +49,7 @@ const PUZZLES = [
   { root: "OCEAN", mystery: "FIELD" },
   { root: "SPACE", mystery: "GRACE" },
   { root: "BRAVE", mystery: "GRAVE" },
-  { root: "SMILE", mystery: "GRIN" },
+  { root: "SMILE", mystery: "GRIME" },
 ]
 
 const HARD_PUZZLES = [
@@ -972,12 +972,12 @@ export default function WordBreakerGame() {
           
 
 
-                    {/* Only show the last submitted attempt to maintain 2-row limit */}
-          {gameState.attempts.slice(-1).map((attempt, sliceIndex) => {
+                    {/* Show all attempts when solved, otherwise only show the last submitted attempt */}
+          {(gameState.gameWon ? gameState.attempts : gameState.attempts.slice(-1)).map((attempt, sliceIndex) => {
             // Calculate the actual index in the full attempts array
-            const actualIndex = gameState.attempts.length - 1
-            // For slice(-1), there's only one element, so it's always the last attempt
-            const isLastAttempt = true
+            const actualIndex = gameState.gameWon ? sliceIndex : gameState.attempts.length - 1
+            // When solved, show hints on all attempts. When playing, only show hints on the last attempt
+            const isLastAttempt = gameState.gameWon ? true : true
             console.log(`🔍 DEBUG: attempt="${attempt}", sliceIndex=${sliceIndex}, actualIndex=${actualIndex}, attempts.length=${gameState.attempts.length}, isLastAttempt=${isLastAttempt}`)
             const isCompleted = gameState.gameWon && actualIndex === gameState.attempts.length - 1
             const results = checkWord(attempt, gameState.mysteryWord)
@@ -999,15 +999,20 @@ export default function WordBreakerGame() {
               return []
             })() : []
             
-            // Calculate remaining steps to target based on BFS path
-            // We need to find the actual path length from current word to target
-            const currentWord = attempt
-            const targetWord = gameState.mysteryWord
-            const path = bidirectionalBFS(currentWord.toUpperCase(), targetWord.toUpperCase())
-            const remainingSteps = path.length > 0 ? path.length - 1 : 0
+            // Calculate entry order for display when game is won
+            const entryOrder = gameState.gameWon ? sliceIndex + 1 : 0
 
             return (
-              <div key={actualIndex} className="flex items-center gap-2 justify-center">
+              <div 
+                key={actualIndex} 
+                className={`flex items-center gap-2 justify-center ${
+                  gameState.gameWon ? "animate-[slideInFromTop_0.5s_ease-out_forwards]" : ""
+                }`}
+                style={{
+                  animationDelay: gameState.gameWon ? `${800 + actualIndex * 200}ms` : "0ms",
+                  visibility: gameState.gameWon && actualIndex > 0 ? "hidden" : "visible"
+                }}
+              >
                 <div className="flex gap-1">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
@@ -1046,18 +1051,18 @@ export default function WordBreakerGame() {
                       </div>
                     )
                   })}
-                  {/* BFS count for completed rows */}
+                  {/* Entry order for completed rows when game is won */}
                   <div 
                     className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
-                    title={`Remaining steps to solve: ${remainingSteps}`}
+                    title={gameState.gameWon ? `Word entered ${entryOrder}${entryOrder === 1 ? 'st' : entryOrder === 2 ? 'nd' : entryOrder === 3 ? 'rd' : 'th'}` : `Remaining steps to solve: ${entryOrder}`}
                   >
-                    {remainingSteps === 0 ? (
+                    {gameState.gameWon && entryOrder === 0 ? (
                       <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
                       <span className="text-yellow-400 text-lg font-bold font-inter">
-                        {remainingSteps}
+                        {entryOrder}
                       </span>
                     )}
                   </div>
@@ -1128,96 +1133,98 @@ export default function WordBreakerGame() {
         </div>
 
         {/* Action Buttons - constrained to grid width */}
-        <div className="w-[312px] mx-auto">
-          <div className="grid grid-cols-6 gap-1">
-            <button
-              onClick={showSolutionPath}
-              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-              title="Show Solution"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-            </button>
+        {!gameState.gameWon && (
+          <div className="w-[312px] mx-auto">
+            <div className="grid grid-cols-6 gap-1">
+              <button
+                onClick={showSolutionPath}
+                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
+                title="Show Solution"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </button>
 
-            <button
-              onClick={resetGame}
-              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-              title="Reset Game"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
+              <button
+                onClick={resetGame}
+                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
+                title="Reset Game"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
 
-            <button
-              onClick={initializeGame}
-              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-              title="New Game"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
+              <button
+                onClick={initializeGame}
+                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
+                title="New Game"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
 
-            <button
-              onClick={() => setShowHowToPlay(true)}
-              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-              title="How to Play"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
+              <button
+                onClick={() => setShowHowToPlay(true)}
+                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
+                title="How to Play"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </button>
 
-            <button
-              onClick={() => setShowSettings(true)}
-              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-              title="Settings"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </button>
-            {/* Smiley face icon to complete 6-column layout */}
-            <div className="w-12 h-12 bg-gray-700 flex items-center justify-center shadow-md">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
+                title="Settings"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </button>
+              {/* Smiley face icon to complete 6-column layout */}
+              <div className="w-12 h-12 bg-gray-700 flex items-center justify-center shadow-md">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Solution Modal */}
         {gameState.showSolution && (
@@ -1226,7 +1233,7 @@ export default function WordBreakerGame() {
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white font-poppins">
                 {gameState.solutionPath.length > 0
-                    ? `Solution Path (${gameState.solutionPath.length - 1} steps)`
+                    ? `Solution Path (${gameState.solutionPath.length - 1} words)`
                   : "Solution Path"}
                 </h2>
               <button
@@ -1242,9 +1249,11 @@ export default function WordBreakerGame() {
             {gameState.solutionPath.length > 0 ? (
                 <div className="space-y-4">
                   {gameState.solutionPath.map((word, stepIndex) => {
-                    const remainingSteps = gameState.solutionPath.length - 1 - stepIndex
                     const isTarget = stepIndex === gameState.solutionPath.length - 1
                     const isStart = stepIndex === 0
+                    
+                    // Debug logging to see what's happening
+                    console.log(`🔍 Reveal sequence: stepIndex=${stepIndex}, word=${word}, isTarget=${isTarget}, isStart=${isStart}`)
                     
                     // Get hint letters for this word (except target word)
                     const shouldShowHint = !isTarget && !isStart
@@ -1287,14 +1296,14 @@ export default function WordBreakerGame() {
                           </div>
                         )
                       })}
-                          {/* Step number indicator - shows remaining steps to target */}
+                          {/* Step number indicator - shows entry order for reveal sequence */}
                           {!isTarget && (
                             <div 
                               className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
-                              title={`${remainingSteps} steps remaining to solve`}
+                              title={`Word ${stepIndex + 1}`}
                             >
                               <span className="text-yellow-400 text-lg font-bold font-inter">
-                                {remainingSteps}
+                                {stepIndex + 1}
                               </span>
                             </div>
                           )}
@@ -1304,7 +1313,7 @@ export default function WordBreakerGame() {
                         ? "Start"
                         : stepIndex === gameState.solutionPath.length - 1
                           ? "Mystery Word"
-                          : `Step ${stepIndex}`}
+                          : `Word ${stepIndex + 1}`}
                     </div>
                         {stepIndex < gameState.solutionPath.length - 1 && (
                           <div className="text-yellow-400 text-xl font-bold">↓</div>
