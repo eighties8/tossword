@@ -440,7 +440,7 @@ export default function WordBreakerGame() {
     const optimalHints = performRealTimeBFSAnalysis(currentWord, targetWord)
     
     // Debug logging
-    // console.log(`Hints for ${currentWord} -> ${targetWord}:`, optimalHints)
+    console.log(`🔍 getOptimalLetterHints: ${currentWord} -> ${targetWord}, result:`, optimalHints)
     
     // Cache the result
     hintsCache.current.set(cacheKey, optimalHints)
@@ -462,6 +462,7 @@ export default function WordBreakerGame() {
       const nextWord = path[1]
       console.log(`🎯 TARGET FOUND! Complete path: ${path.join(' → ')}`)
       console.log(`📊 Path length: ${path.length} steps`)
+      console.log(`🔍 Next word in path: "${nextWord}"`)
       
       // Find the letter difference for hints
       const hints = findLetterDifference(currentUpper, nextWord)
@@ -471,7 +472,7 @@ export default function WordBreakerGame() {
     // If no path found, use fallback approach
     console.log(`❌ BFS no path found for ${currentUpper} → ${targetUpper}`)
     console.log(`🔧 Using fallback hint system`)
-    return findFallbackHint(currentUpper, targetUpper)
+    return findFallbackHint(currentUpper, targetWord)
   }, [])
 
   // Use the imported multiset-based neighbor generation
@@ -483,10 +484,15 @@ export default function WordBreakerGame() {
       const hints: number[] = []
     const targetLetters = word2.split('')
     
+    console.log(`🔍 findLetterDifference: "${word1}" -> "${word2}"`)
+    console.log(`🔍 Target letters: [${targetLetters.join(', ')}]`)
+    console.log(`🔍 Word1 letters: [${word1.split('').join(', ')}]`)
+    
     // Find which letter from word1 is not in word2 (the letter to change)
       for (let i = 0; i < 5; i++) {
       if (!targetLetters.includes(word1[i])) {
             hints.push(i)
+        console.log(`🔍 Letter "${word1[i]}" at index ${i} not in target, adding to hints`)
         break // Only highlight one letter for cleaner UI
       }
     }
@@ -496,11 +502,13 @@ export default function WordBreakerGame() {
       for (let i = 0; i < 5; i++) {
         if (word1[i] !== word2[i]) {
           hints.push(i)
+          console.log(`🔍 Letter "${word1[i]}" at index ${i} different from target "${word2[i]}", adding to hints`)
           break
         }
       }
     }
     
+    console.log(`🔍 Final hints array: [${hints.join(', ')}]`)
       return hints
   }, [])
 
@@ -685,6 +693,13 @@ export default function WordBreakerGame() {
       "shard": "fragment",
       "heard": "listened",
       
+      // Additional words from GAMES → FRONT path
+      "morse": "code",
+      
+      // Additional words from SWORD → BEACH path
+      "swear": "curse",
+      "share": "divide",
+      
       // Additional words from current puzzle
       
       // Additional words from all puzzle starting words
@@ -802,7 +817,7 @@ export default function WordBreakerGame() {
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-white mb-2 font-poppins">Tossword</h1>
                                             <p className="text-gray-300 text-sm font-inter">
-                   Begin unlocking today's word (the "Bossword") by changing one letter from the Tossword <strong>"{gameState.rootWord}"</strong>. You can rearrange letters to make the new word but you must use all but one letter from the previous word.
+                   Begin unlocking today's mystery word by changing one letter from the Tossword <strong>"{gameState.rootWord}"</strong>. You can rearrange letters to make the new word but you must use all but one letter from the previous word.
                    Today's word can be unlocked in <strong>{(() => {
                       const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
                       return path.length > 0 ? path.length - 1 : "?"
@@ -901,94 +916,88 @@ export default function WordBreakerGame() {
               </div>
                )
              })}
-            {/* BFS number for mystery word - shows live BFS count */}
+            {/* BFS number for mystery word - shows ? until solved, then user's score */}
             <div 
               className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
-              title="Live BFS count: Total steps needed to solve this puzzle"
+              title={gameState.gameWon ? `Solved in ${gameState.attempts.length} steps!` : "Total steps taken to solve this puzzle"}
             >
               <span className="text-yellow-400 text-lg font-bold font-inter">
-                {(() => {
-                  // If there are attempts, calculate BFS from the last attempt to mystery word
-                  if (gameState.attempts.length > 0) {
-                    const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                    const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
-                    return path.length > 0 ? path.length - 1 : "?"
-                  } else {
-                    // If no attempts yet, show BFS from root word to mystery word
-                    const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                    return path.length > 0 ? path.length - 1 : "?"
-                  }
-                })()}
+                {gameState.gameWon ? gameState.attempts.length : "?"}
               </span>
             </div>
           </div>
 
 
 
-          <div className="flex justify-center gap-1 mb-2">
-            {gameState.rootWord.split("").map((letter, index) => {
-              const shouldShowHint = !gameState.isHardMode && gameState.attempts.length === 0
-              const optimalHints = shouldShowHint
-                ? getOptimalLetterHints(gameState.rootWord, gameState.mysteryWord)
-                : []
-              const shouldHighlight = shouldShowHint && optimalHints.includes(index)
-                    
-                    // Check if this letter has been "tossed" (not used in any subsequent word)
-                    const isLetterTossed = (() => {
-                      // Only show "X" if there are actual attempts (game has started)
-                      if (gameState.attempts.length === 0) return false
+          {/* Start word row - only show when there are 0 attempts */}
+          {gameState.attempts.length === 0 ? (
+            <div className="flex justify-center gap-1 mb-2">
+              {gameState.rootWord.split("").map((letter, index) => {
+                const shouldShowHint = !gameState.isHardMode && gameState.attempts.length === 0
+                const optimalHints = shouldShowHint
+                  ? getOptimalLetterHints(gameState.rootWord, gameState.mysteryWord)
+                  : []
+                const shouldHighlight = shouldShowHint && optimalHints.includes(index)
                       
-                      // Check if this letter is used in any subsequent word (including attempts and mystery word)
-                      const subsequentWords = [
-                        ...gameState.attempts,
-                        gameState.mysteryWord
-                      ]
-                      return !subsequentWords.some(word => word.includes(letter))
-                    })()
-
-              return (
+                                    return (
                 <div
                   key={index}
                   className={`w-12 h-12 border-2 border-gray-600 bg-gray-700 flex items-center justify-center shadow-md ${
-                          shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
-                        }`}
-                        title={shouldHighlight ? "Hint: Change this letter to reach the next word" : ""}
-                      >
-                        <span className={`text-lg font-bold font-inter relative ${
-                          shouldHighlight ? "text-[#555]" : "text-white"
-                        }`}>
-                          {letter}
-                          {isLetterTossed && (
-                            <span className="absolute inset-0 flex items-center justify-center text-black text-5xl font-bold opacity-25 pointer-events-none">
-                              ✕
-                            </span>
-                          )}
-                        </span>
+                            shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
+                          }`}
+                          title={shouldHighlight ? "Hint: Change this letter to reach the next word" : ""}
+                        >
+                          <span className={`text-lg font-bold font-inter ${
+                            shouldHighlight ? "text-[#555]" : "text-white"
+                          }`}>
+                            {letter}
+                          </span>
                 </div>
               )
-            })}
-            {/* Step number for start word - shows total steps needed */}
-            <div 
-              className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
-              title="Total steps needed to solve this puzzle"
-            >
-              <span className="text-yellow-400 text-lg font-bold font-inter">
-                {(() => {
-                  const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                  return path.length > 0 ? path.length - 1 : "?"
-                })()}
-              </span>
+              })}
+              {/* Step number for start word - shows total steps needed */}
+              <div 
+                className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+                title="Minimum steps to solve this puzzle"
+              >
+                <span className="text-yellow-400 text-lg font-bold font-inter">
+                  {(() => {
+                    const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                    return path.length > 0 ? path.length - 1 : "?"
+                  })()}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : null}
           
 
 
-          {gameState.attempts.map((attempt, attemptIndex) => {
-            const isLastAttempt = attemptIndex === gameState.attempts.length - 1
-            const isCompleted = gameState.gameWon && attemptIndex === gameState.attempts.length - 1
+                    {/* Only show the last submitted attempt to maintain 2-row limit */}
+          {gameState.attempts.slice(-1).map((attempt, sliceIndex) => {
+            // Calculate the actual index in the full attempts array
+            const actualIndex = gameState.attempts.length - 1
+            // For slice(-1), there's only one element, so it's always the last attempt
+            const isLastAttempt = true
+            console.log(`🔍 DEBUG: attempt="${attempt}", sliceIndex=${sliceIndex}, actualIndex=${actualIndex}, attempts.length=${gameState.attempts.length}, isLastAttempt=${isLastAttempt}`)
+            const isCompleted = gameState.gameWon && actualIndex === gameState.attempts.length - 1
             const results = checkWord(attempt, gameState.mysteryWord)
             const shouldShowHint = !gameState.isHardMode && isLastAttempt
-            const optimalHints = shouldShowHint ? getOptimalLetterHints(attempt, gameState.mysteryWord) : []
+            console.log(`🔍 shouldShowHint=${shouldShowHint}, isHardMode=${gameState.isHardMode}, isLastAttempt=${isLastAttempt}`)
+            // Get hints for the next word in the BFS path, not the mystery word
+            const optimalHints = shouldShowHint ? (() => {
+              // Find the next word in the BFS path from this attempt
+              const path = bidirectionalBFS(attempt.toUpperCase(), gameState.mysteryWord.toUpperCase())
+              console.log(`🔍 BFS path for ${attempt}:`, path)
+              if (path.length >= 2) {
+                const nextWord = path[1]
+                console.log(`🔍 Calculating hints for ${attempt} → ${nextWord}`)
+                const hints = getOptimalLetterHints(attempt, nextWord)
+                console.log(`🔍 Hints returned:`, hints)
+                return hints
+              }
+              console.log(`🔍 No next word found in path`)
+              return []
+            })() : []
             
             // Calculate remaining steps to target based on BFS path
             // We need to find the actual path length from current word to target
@@ -998,11 +1007,16 @@ export default function WordBreakerGame() {
             const remainingSteps = path.length > 0 ? path.length - 1 : 0
 
             return (
-              <div key={attemptIndex} className="flex items-center gap-2 justify-center">
+              <div key={actualIndex} className="flex items-center gap-2 justify-center">
                 <div className="flex gap-1">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
-                    const bgColor = "bg-gray-700"
+                    // Debug hint calculation
+                    if (shouldShowHint) {
+                      console.log(`🔍 Letter "${letter}" at index ${letterIndex}: shouldHighlight=${shouldHighlight}, optimalHints=${JSON.stringify(optimalHints)}`)
+                    }
+                    // Hint styling takes priority over mystery word reveal styling
+                    const bgColor = shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : "bg-gray-700"
                     const borderColor =
                       results[letterIndex] === "correct"
                         ? "border-b-[3px] border-b-emerald-500"
@@ -1010,25 +1024,10 @@ export default function WordBreakerGame() {
                           ? "border-b-[3px] border-b-amber-500"
                           : ""
                     
-                    // Check if this letter has been "tossed" (not used in any subsequent word)
-                    const isLetterTossed = (() => {
-                      // Don't show "X" for the last attempt - those letters are still in play
-                      if (attemptIndex === gameState.attempts.length - 1) return false
-                      
-                      // Check if this letter is used in any subsequent word (including mystery word)
-                      const subsequentWords = [
-                        ...gameState.attempts.slice(attemptIndex + 1),
-                        gameState.mysteryWord
-                      ]
-                      return !subsequentWords.some(word => word.includes(letter))
-                    })()
-
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
-                           shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
-                         } ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
+                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
                         style={{
                           animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms",
                         }}
@@ -1039,15 +1038,10 @@ export default function WordBreakerGame() {
                           return "Letter not in the word"
                         })()}
                       >
-                        <span className={`text-lg font-bold font-inter relative ${
+                        <span className={`text-lg font-bold font-inter ${
                           shouldHighlight ? "text-[#555]" : "text-white"
                         }`}>
                           {letter}
-                          {isLetterTossed && (
-                            <span className="absolute inset-0 flex items-center justify-center text-black text-5xl font-bold opacity-25 pointer-events-none">
-                              ✕
-                            </span>
-                          )}
                         </span>
                       </div>
                     )
@@ -1101,9 +1095,12 @@ export default function WordBreakerGame() {
                       // If there are attempts, get clue for next word after last attempt
                       const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
                       const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                      console.log(`🔍 Tooltip BFS: ${lastAttempt} → ${gameState.mysteryWord.toUpperCase()}, path:`, path)
                       if (path.length >= 2) {
                         const nextWord = path[1].toLowerCase()
+                        console.log(`🔍 Next word: "${nextWord}"`)
                         const clue = getWordClue(nextWord)
+                        console.log(`🔍 Found clue: "${clue}"`)
                         return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
                       }
                     } else {
@@ -1269,16 +1266,6 @@ export default function WordBreakerGame() {
                               // Check if this letter should show hint underline
                               const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
                               
-                              // Check if this letter has been "tossed" (not used in the next word in BFS path)
-                              const isLetterTossed = (() => {
-                                if (stepIndex < gameState.solutionPath.length - 1) {
-                                  // If there's a next word in the path, check if this letter is used
-                                  const nextWord = gameState.solutionPath[stepIndex + 1]
-                                  return !nextWord.includes(letter)
-                                }
-                                return false
-                              })()
-                              
                         return (
                           <div
                             key={letterIndex}
@@ -1292,15 +1279,10 @@ export default function WordBreakerGame() {
                                     return "Letter not in the word"
                                   })()}
                                 >
-                                  <span className={`text-lg font-bold font-inter relative ${
+                                  <span className={`text-lg font-bold font-inter ${
                                     shouldHighlight ? "text-[#555]" : "text-white"
                                   }`}>
                                     {letter}
-                                    {isLetterTossed && (
-                                      <span className="absolute inset-0 flex items-center justify-center text-black text-5xl font-bold opacity-25 pointer-events-none">
-                                        ✕
-                                      </span>
-                                    )}
                                   </span>
                           </div>
                         )
