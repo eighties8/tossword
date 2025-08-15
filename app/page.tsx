@@ -47,6 +47,9 @@ const PUZZLES = [
   { root: "SWORD", mystery: "BEACH" },
   { root: "HOUSE", mystery: "MAGIC" },
   { root: "OCEAN", mystery: "FIELD" },
+  { root: "SPACE", mystery: "GRACE" },
+  { root: "BRAVE", mystery: "GRAVE" },
+  { root: "SMILE", mystery: "GRIN" },
 ]
 
 const HARD_PUZZLES = [
@@ -426,9 +429,9 @@ export default function WordBreakerGame() {
   }, [])
 
   const getOptimalLetterHints = useCallback((currentWord: string, targetWord: string): number[] => {
-    if (!currentWord || currentWord.length !== 5 || gameState.isHardMode) return []
+      if (!currentWord || currentWord.length !== 5 || gameState.isHardMode) return []
 
-    const cacheKey = `hints-${currentWord}-${targetWord}`
+      const cacheKey = `hints-${currentWord}-${targetWord}`
     if (hintsCache.current.has(cacheKey)) {
       return hintsCache.current.get(cacheKey)!
     }
@@ -447,7 +450,7 @@ export default function WordBreakerGame() {
   const performRealTimeBFSAnalysis = useCallback((currentWord: string, targetWord: string): number[] => {
     if (currentWord === targetWord) return []
 
-    const currentUpper = currentWord.toUpperCase()
+      const currentUpper = currentWord.toUpperCase()
     const targetUpper = targetWord.toUpperCase()
     
     console.log(`\n=== BFS Analysis: ${currentUpper} → ${targetUpper} ===`)
@@ -477,13 +480,13 @@ export default function WordBreakerGame() {
   }, [])
 
   const findLetterDifference = useCallback((word1: string, word2: string): number[] => {
-    const hints: number[] = []
+      const hints: number[] = []
     const targetLetters = word2.split('')
     
     // Find which letter from word1 is not in word2 (the letter to change)
-    for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
       if (!targetLetters.includes(word1[i])) {
-        hints.push(i)
+            hints.push(i)
         break // Only highlight one letter for cleaner UI
       }
     }
@@ -498,7 +501,7 @@ export default function WordBreakerGame() {
       }
     }
     
-    return hints
+      return hints
   }, [])
 
   const findFallbackHint = useCallback((currentWord: string, targetWord: string): number[] => {
@@ -683,19 +686,14 @@ export default function WordBreakerGame() {
       "heard": "listened",
       
       // Additional words from current puzzle
-      "ocean": "sea",
       
       // Additional words from all puzzle starting words
-      "cumin": "spice",
-      "storm": "tempest",
       "elfin": "fairy",
       
       // Words from BFS paths that are missing clues
       "manic": "crazy",
-      "anime": "cartoon",
       "meant": "intended",
       "tamed": "domesticated",
-      "adept": "skilled",
       "short": "brief",
       "shirt": "garment",
       "fling": "throw",
@@ -709,7 +707,6 @@ export default function WordBreakerGame() {
       "rates": "prices",
       "roast": "cook",
       "snort": "laugh",
-      "front": "foremost",
       
       // Additional words from HOUSE → MAGIC path and other missing words
       "house": "home",
@@ -730,11 +727,17 @@ export default function WordBreakerGame() {
       "field": "meadow",
       
       // Additional words from BREAD → HONEY path and other missing words
-      "bread": "food",
-      "ready": "prepared",
       "yearn": "desire",
       "hyena": "animal",
-      "honey": "sweet"
+      "ready": "prepared",
+      "denim": "fabric",
+      "pined": "longed",
+      
+      // New puzzles with single letter overlaps
+      "space": "area",
+      "place": "location",
+      "smile": "grin",
+      "stile": "step",
     }
     
     return clues[word] || null
@@ -797,15 +800,15 @@ export default function WordBreakerGame() {
     <div className={`min-h-screen bg-black flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
       <div className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-700 shadow-2xl">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2 font-poppins">Cloodle</h1>
-                          <p className="text-gray-300 text-sm font-inter">
-                  Unlock the mystery word by changing one letter from the start word.  You can rearrange letters to make the new word but the new word must share all but one letter from the previous word.
-                  Today's Cloodle can be unlocked in <strong>{(() => {
-                    const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                    return path.length > 0 ? path.length - 1 : "?"
-                  })()} words. </strong>
-                </p>
-                {/* Dynamic clue for the next word in the BFS path */}
+          <h1 className="text-3xl font-bold text-white mb-2 font-poppins">Tossword</h1>
+                                            <p className="text-gray-300 text-sm font-inter">
+                   Begin unlocking today's word (the "Bossword") by changing one letter from the Tossword <strong>"{gameState.rootWord}"</strong>. You can rearrange letters to make the new word but you must use all but one letter from the previous word.
+                   Today's word can be unlocked in <strong>{(() => {
+                      const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                      return path.length > 0 ? path.length - 1 : "?"
+                    })()} words. </strong>
+                  </p>
+
                 {(() => {
                   const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
                   if (path.length >= 2) {
@@ -828,11 +831,7 @@ export default function WordBreakerGame() {
                       const clue = getWordClue(nextWord)
                       // console.log(`🔍 Found clue: "${clue}"`)
                       if (clue) {
-                        return (
-                          <p className="text-amber-400 text-sm font-inter mt-2 italic">
-                            "{clue}"
-                          </p>
-                        )
+                        return null // Clue display removed - now shown on hover in guess word columns
                       } else {
                         console.log(`❌ No clue found for: "${nextWord}"`)
                       }
@@ -846,11 +845,7 @@ export default function WordBreakerGame() {
                         // User is one step away from mystery word
                         const mysteryWordClue = getWordClue(gameState.mysteryWord.toLowerCase())
                         if (mysteryWordClue) {
-                          return (
-                            <p className="text-amber-400 text-sm font-inter mt-2 italic">
-                              "{mysteryWordClue}"
-                            </p>
-                          )
+                          return null // Clue display removed - now shown on hover in guess word columns
                         }
                       }
                     }
@@ -887,32 +882,43 @@ export default function WordBreakerGame() {
                })
                
                return (
-                 <div
-                   key={index}
-                   className={`w-12 h-12 border-2 flex items-center justify-center shadow-lg ${
+              <div
+                key={index}
+                className={`w-12 h-12 border-2 flex items-center justify-center shadow-lg ${
                      isLetterFound ? "border-emerald-500 bg-emerald-600" : "border-gray-600 bg-gray-800"
-                   } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
-                   style={{
-                     animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
-                   }}
-                 >
-                   <span
-                     className={`font-bold font-inter ${
-                       isLetterFound ? "text-white text-lg" : "text-gray-400 text-2xl"
-                     }`}
-                   >
+                } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
+                style={{
+                  animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
+                }}
+              >
+                <span
+                     className={`font-bold font-inter leading-none ${
+                       isLetterFound ? "text-white text-lg" : "text-gray-400 text-3xl"
+                  }`}
+                >
                      {isLetterFound ? letter : "*"}
-                   </span>
-                 </div>
+                </span>
+              </div>
                )
              })}
-            {/* BFS number for mystery word - shows "?" initially, then actual count when solved */}
-            <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+            {/* BFS number for mystery word - shows live BFS count */}
+            <div 
+              className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+              title="Live BFS count: Total steps needed to solve this puzzle"
+            >
               <span className="text-yellow-400 text-lg font-bold font-inter">
-                {gameState.gameWon ? (() => {
-                  const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                  return path.length > 0 ? path.length - 1 : "?"
-                })() : "?"}
+                {(() => {
+                  // If there are attempts, calculate BFS from the last attempt to mystery word
+                  if (gameState.attempts.length > 0) {
+                    const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                    const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                    return path.length > 0 ? path.length - 1 : "?"
+                  } else {
+                    // If no attempts yet, show BFS from root word to mystery word
+                    const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                    return path.length > 0 ? path.length - 1 : "?"
+                  }
+                })()}
               </span>
             </div>
           </div>
@@ -926,20 +932,46 @@ export default function WordBreakerGame() {
                 ? getOptimalLetterHints(gameState.rootWord, gameState.mysteryWord)
                 : []
               const shouldHighlight = shouldShowHint && optimalHints.includes(index)
+                    
+                    // Check if this letter has been "tossed" (not used in any subsequent word)
+                    const isLetterTossed = (() => {
+                      // Only show "X" if there are actual attempts (game has started)
+                      if (gameState.attempts.length === 0) return false
+                      
+                      // Check if this letter is used in any subsequent word (including attempts and mystery word)
+                      const subsequentWords = [
+                        ...gameState.attempts,
+                        gameState.mysteryWord
+                      ]
+                      return !subsequentWords.some(word => word.includes(letter))
+                    })()
 
               return (
                 <div
                   key={index}
                   className={`w-12 h-12 border-2 border-gray-600 bg-gray-700 flex items-center justify-center shadow-md ${
-                    shouldHighlight ? "!bg-gray-500" : ""
-                  }`}
-                >
-                  <span className="text-white text-lg font-bold font-inter">{letter}</span>
+                          shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
+                        }`}
+                        title={shouldHighlight ? "Hint: Change this letter to reach the next word" : ""}
+                      >
+                        <span className={`text-lg font-bold font-inter relative ${
+                          shouldHighlight ? "text-[#555]" : "text-white"
+                        }`}>
+                          {letter}
+                          {isLetterTossed && (
+                            <span className="absolute inset-0 flex items-center justify-center text-black text-5xl font-bold opacity-25 pointer-events-none">
+                              ✕
+                            </span>
+                          )}
+                        </span>
                 </div>
               )
             })}
             {/* Step number for start word - shows total steps needed */}
-            <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+            <div 
+              className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+              title="Total steps needed to solve this puzzle"
+            >
               <span className="text-yellow-400 text-lg font-bold font-inter">
                 {(() => {
                   const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
@@ -970,30 +1002,61 @@ export default function WordBreakerGame() {
                 <div className="flex gap-1">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
-                                         const bgColor = "bg-gray-700"
-                     const borderColor =
-                       results[letterIndex] === "correct"
-                         ? "border-b-[3px] border-b-emerald-500"
-                         : results[letterIndex] === "present"
-                           ? "border-b-[3px] border-b-amber-500"
-                           : ""
+                    const bgColor = "bg-gray-700"
+                    const borderColor =
+                      results[letterIndex] === "correct"
+                        ? "border-b-[3px] border-b-emerald-500"
+                        : results[letterIndex] === "present"
+                          ? "border-b-[3px] border-b-amber-500"
+                          : ""
+                    
+                    // Check if this letter has been "tossed" (not used in any subsequent word)
+                    const isLetterTossed = (() => {
+                      // Don't show "X" for the last attempt - those letters are still in play
+                      if (attemptIndex === gameState.attempts.length - 1) return false
+                      
+                      // Check if this letter is used in any subsequent word (including mystery word)
+                      const subsequentWords = [
+                        ...gameState.attempts.slice(attemptIndex + 1),
+                        gameState.mysteryWord
+                      ]
+                      return !subsequentWords.some(word => word.includes(letter))
+                    })()
 
-                     return (
-                       <div
-                         key={letterIndex}
-                         className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
-                           shouldHighlight ? "!bg-gray-500" : ""
+                    return (
+                      <div
+                        key={letterIndex}
+                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
+                           shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
                          } ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
                         style={{
                           animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms",
                         }}
+                        title={(() => {
+                          if (shouldHighlight) return "Hint: Change this letter to reach the next word"
+                          if (results[letterIndex] === "correct") return "Correct letter in correct position"
+                          if (results[letterIndex] === "present") return "Letter is in the word but wrong position"
+                          return "Letter not in the word"
+                        })()}
                       >
-                        <span className="text-white text-lg font-bold font-inter">{letter}</span>
+                        <span className={`text-lg font-bold font-inter relative ${
+                          shouldHighlight ? "text-[#555]" : "text-white"
+                        }`}>
+                          {letter}
+                          {isLetterTossed && (
+                            <span className="absolute inset-0 flex items-center justify-center text-black text-5xl font-bold opacity-25 pointer-events-none">
+                              ✕
+                            </span>
+                          )}
+                        </span>
                       </div>
                     )
                   })}
-                  {/* Step number showing remaining steps to target */}
-                  <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+                  {/* BFS count for completed rows */}
+                  <div 
+                    className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+                    title={`Remaining steps to solve: ${remainingSteps}`}
+                  >
                     {remainingSteps === 0 ? (
                       <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1016,7 +1079,7 @@ export default function WordBreakerGame() {
                   return (
                     <input
                       key={index}
-                      ref={(el) => (inputRefs.current[index] = el)}
+                      ref={(el) => { inputRefs.current[index] = el }}
                       type="text"
                       value={letter}
                       onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
@@ -1029,8 +1092,32 @@ export default function WordBreakerGame() {
                     />
                   )
                 })}
-                {/* "?" placeholder that will update to BFS calculation once word is entered */}
-                <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+                {/* "?" placeholder that shows clue for next word in BFS path */}
+                <div 
+                  className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+                  title={(() => {
+                    // Get clue for the next word in the BFS path
+                    if (gameState.attempts.length > 0) {
+                      // If there are attempts, get clue for next word after last attempt
+                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                      const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                      if (path.length >= 2) {
+                        const nextWord = path[1].toLowerCase()
+                        const clue = getWordClue(nextWord)
+                        return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
+                      }
+                    } else {
+                      // If no attempts yet, get clue for first word in BFS path
+                      const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                      if (path.length >= 2) {
+                        const nextWord = path[1].toLowerCase()
+                        const clue = getWordClue(nextWord)
+                        return clue ? `Next word clue: "${clue}"` : `No clue for "${nextWord}"`
+                      }
+                    }
+                    return "No clue available"
+                  })()}
+                >
                   <span className="text-yellow-400 text-lg font-bold font-inter">?</span>
                 </div>
               </div>
@@ -1139,23 +1226,23 @@ export default function WordBreakerGame() {
         {gameState.showSolution && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl">
-              <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white font-poppins">
-                  {gameState.solutionPath.length > 0
+                {gameState.solutionPath.length > 0
                     ? `Solution Path (${gameState.solutionPath.length - 1} steps)`
-                    : "Solution Path"}
+                  : "Solution Path"}
                 </h2>
-                <button
-                  onClick={() => setGameState((prev) => ({ ...prev, showSolution: false }))}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
+              <button
+                onClick={() => setGameState((prev) => ({ ...prev, showSolution: false }))}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
               
-              {gameState.solutionPath.length > 0 ? (
+            {gameState.solutionPath.length > 0 ? (
                 <div className="space-y-4">
                   {gameState.solutionPath.map((word, stepIndex) => {
                     const remainingSteps = gameState.solutionPath.length - 1 - stepIndex
@@ -1167,66 +1254,94 @@ export default function WordBreakerGame() {
                     const optimalHints = shouldShowHint ? getOptimalLetterHints(word, gameState.mysteryWord) : []
                     
                     return (
-                      <div key={stepIndex} className="text-center">
+                  <div key={stepIndex} className="text-center">
                         <div className="flex justify-center gap-1 mb-2">
-                                                      {word.split("").map((letter, letterIndex) => {
-                              const results = checkWord(word, gameState.mysteryWord)
+                      {word.split("").map((letter, letterIndex) => {
+                        const results = checkWord(word, gameState.mysteryWord)
                                                              const bgColor = "bg-gray-700"
                               const borderColor =
-                                results[letterIndex] === "correct"
+                          results[letterIndex] === "correct"
                                   ? "border-b-[3px] border-b-emerald-500"
-                                  : results[letterIndex] === "present"
+                            : results[letterIndex] === "present"
                                     ? "border-b-[3px] border-b-amber-500"
                                     : ""
                               
                               // Check if this letter should show hint underline
                               const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
                               
-                              return (
-                                <div
-                                  key={letterIndex}
+                              // Check if this letter has been "tossed" (not used in the next word in BFS path)
+                              const isLetterTossed = (() => {
+                                if (stepIndex < gameState.solutionPath.length - 1) {
+                                  // If there's a next word in the path, check if this letter is used
+                                  const nextWord = gameState.solutionPath[stepIndex + 1]
+                                  return !nextWord.includes(letter)
+                                }
+                                return false
+                              })()
+                              
+                        return (
+                          <div
+                            key={letterIndex}
                                   className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
-                                    shouldHighlight ? "!bg-gray-500" : ""
+                                    shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
                                   } ${borderColor}`}
+                                  title={(() => {
+                                    if (shouldHighlight) return "Hint: Change this letter to reach the next word"
+                                    if (results[letterIndex] === "correct") return "Correct letter in correct position"
+                                    if (results[letterIndex] === "present") return "Letter is in the word but wrong position"
+                                    return "Letter not in the word"
+                                  })()}
                                 >
-                                  <span className="text-white text-lg font-bold font-inter">{letter}</span>
-                                </div>
-                              )
-                            })}
+                                  <span className={`text-lg font-bold font-inter relative ${
+                                    shouldHighlight ? "text-[#555]" : "text-white"
+                                  }`}>
+                                    {letter}
+                                    {isLetterTossed && (
+                                      <span className="absolute inset-0 flex items-center justify-center text-black text-5xl font-bold opacity-25 pointer-events-none">
+                                        ✕
+                                      </span>
+                                    )}
+                                  </span>
+                          </div>
+                        )
+                      })}
                           {/* Step number indicator - shows remaining steps to target */}
                           {!isTarget && (
-                            <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+                            <div 
+                              className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+                              title={`${remainingSteps} steps remaining to solve`}
+                            >
                               <span className="text-yellow-400 text-lg font-bold font-inter">
                                 {remainingSteps}
                               </span>
                             </div>
                           )}
-                        </div>
-                        <div className="text-yellow-400 text-sm font-medium font-inter">
-                          {stepIndex === 0
-                            ? "Start"
-                            : stepIndex === gameState.solutionPath.length - 1
-                              ? "Mystery Word"
-                              : `Step ${stepIndex}`}
-                        </div>
+                    </div>
+                    <div className="text-yellow-400 text-sm font-medium font-inter">
+                      {stepIndex === 0
+                        ? "Start"
+                        : stepIndex === gameState.solutionPath.length - 1
+                          ? "Mystery Word"
+                          : `Step ${stepIndex}`}
+                    </div>
                         {stepIndex < gameState.solutionPath.length - 1 && (
                           <div className="text-yellow-400 text-xl font-bold">↓</div>
                         )}
-                      </div>
+                  </div>
                     )
                   })}
-                </div>
-              ) : (
+              </div>
+            ) : (
                 <div className="text-center font-inter">
                   <p className="text-yellow-400 text-lg">No solution path found.</p>
                   <p className="text-gray-400 text-sm mt-2">
                     This puzzle may be unsolvable.
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
-                    Debug: {gameState.rootWord} → {gameState.mysteryWord}
-                  </p>
-                </div>
-              )}
+                  Debug: {gameState.rootWord} → {gameState.mysteryWord}
+                </p>
+              </div>
+            )}
             </div>
           </div>
         )}
