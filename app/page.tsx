@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react" // Import KeyboardEvent for handleKey
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 
 import { Inter, Poppins } from "next/font/google"
+import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,2325 +18,6 @@ const poppins = Poppins({
   display: "swap",
   variable: "--font-poppins",
 })
-
-const VALID_WORDS = new Set([
-  "aback",
-  "abase",
-  "abate",
-  "abbey",
-  "abbot",
-  "abhor",
-  "abide",
-  "abled",
-  "abode",
-  "abort",
-  "about",
-  "above",
-  "abuse",
-  "abyss",
-  "acorn",
-  "acrid",
-  "actor",
-  "acute",
-  "adage",
-  "adapt",
-  "adept",
-  "admin",
-  "admit",
-  "adobe",
-  "adopt",
-  "adore",
-  "adorn",
-  "adult",
-  "affix",
-  "afire",
-  "afoot",
-  "afoul",
-  "after",
-  "again",
-  "agape",
-  "agate",
-  "agent",
-  "agile",
-  "aging",
-  "aglow",
-  "agony",
-  "agora",
-  "agree",
-  "ahead",
-  "aider",
-  "aisle",
-  "alarm",
-  "album",
-  "alert",
-  "algae",
-  "alibi",
-  "alien",
-  "align",
-  "alike",
-  "alive",
-  "allay",
-  "alley",
-  "allot",
-  "allow",
-  "alloy",
-  "aloft",
-  "alone",
-  "along",
-  "aloof",
-  "aloud",
-  "alpha",
-  "altar",
-  "alter",
-  "amass",
-  "amaze",
-  "amber",
-  "amble",
-  "amend",
-  "amiss",
-  "amity",
-  "among",
-  "ample",
-  "amply",
-  "amuse",
-  "angel",
-  "anger",
-  "angle",
-  "angry",
-  "angst",
-  "anime",
-  "ankle",
-  "annex",
-  "annoy",
-  "annul",
-  "anode",
-  "antic",
-  "anvil",
-  "aorta",
-  "apart",
-  "aphid",
-  "aping",
-  "apnea",
-  "apple",
-  "apply",
-  "apron",
-  "aptly",
-  "arbor",
-  "ardor",
-  "arena",
-  "argue",
-  "arise",
-  "armor",
-  "aroma",
-  "arose",
-  "array",
-  "arrow",
-  "arson",
-  "artsy",
-  "ascot",
-  "ashen",
-  "aside",
-  "askew",
-  "assay",
-  "asset",
-  "atoll",
-  "atone",
-  "attic",
-  "audio",
-  "audit",
-  "augur",
-  "aunty",
-  "avail",
-  "avert",
-  "avian",
-  "avoid",
-  "await",
-  "awake",
-  "award",
-  "aware",
-  "awash",
-  "awful",
-  "awoke",
-  "axial",
-  "axiom",
-  "axion",
-  "azure",
-  "bacon",
-  "badge",
-  "badly",
-  "bagel",
-  "baggy",
-  "baker",
-  "baler",
-  "balmy",
-  "banal",
-  "banjo",
-  "barge",
-  "baron",
-  "basal",
-  "basic",
-  "basil",
-  "basin",
-  "basis",
-  "baste",
-  "batch",
-  "bathe",
-  "baton",
-  "batty",
-  "bawdy",
-  "bayou",
-  "beach",
-  "beady",
-  "beard",
-  "beast",
-  "beech",
-  "beefy",
-  "befit",
-  "began",
-  "begat",
-  "beget",
-  "begin",
-  "begun",
-  "being",
-  "belch",
-  "belie",
-  "belle",
-  "belly",
-  "below",
-  "bench",
-  "beret",
-  "berry",
-  "berth",
-  "beset",
-  "betel",
-  "bevel",
-  "bezel",
-  "bible",
-  "bicep",
-  "biddy",
-  "bigot",
-  "bilge",
-  "billy",
-  "binge",
-  "bingo",
-  "biome",
-  "birch",
-  "birth",
-  "bison",
-  "bitty",
-  "black",
-  "blade",
-  "blame",
-  "bland",
-  "blank",
-  "blare",
-  "blast",
-  "blaze",
-  "bleak",
-  "bleat",
-  "bleed",
-  "bleep",
-  "blend",
-  "bless",
-  "blimp",
-  "blind",
-  "blink",
-  "bliss",
-  "blitz",
-  "bloat",
-  "block",
-  "bloke",
-  "blond",
-  "blood",
-  "bloom",
-  "blown",
-  "bluer",
-  "bluff",
-  "blunt",
-  "blurb",
-  "blurt",
-  "blush",
-  "board",
-  "boast",
-  "bobby",
-  "boney",
-  "bongo",
-  "bonus",
-  "booby",
-  "boost",
-  "booth",
-  "booty",
-  "booze",
-  "boozy",
-  "borax",
-  "borne",
-  "bosom",
-  "bossy",
-  "botch",
-  "bough",
-  "boule",
-  "bound",
-  "bowel",
-  "boxer",
-  "brace",
-  "braid",
-  "brain",
-  "brake",
-  "brand",
-  "brash",
-  "brass",
-  "brave",
-  "bravo",
-  "brawl",
-  "brawn",
-  "bread",
-  "break",
-  "breed",
-  "briar",
-  "bribe",
-  "brick",
-  "bride",
-  "brief",
-  "brine",
-  "bring",
-  "brink",
-  "briny",
-  "brisk",
-  "broad",
-  "broil",
-  "broke",
-  "brood",
-  "brook",
-  "broom",
-  "broth",
-  "brown",
-  "brunt",
-  "brush",
-  "brute",
-  "buddy",
-  "budge",
-  "buggy",
-  "bugle",
-  "build",
-  "built",
-  "bulge",
-  "bulky",
-  "bully",
-  "bunch",
-  "bunny",
-  "burly",
-  "burnt",
-  "burst",
-  "bused",
-  "bushy",
-  "butch",
-  "butte",
-  "buxom",
-  "buyer",
-  "bylaw",
-  "cabal",
-  "cabby",
-  "cabin",
-  "cable",
-  "cacao",
-  "cache",
-  "cacti",
-  "caddy",
-  "cadet",
-  "cagey",
-  "cairn",
-  "camel",
-  "cameo",
-  "canal",
-  "candy",
-  "canny",
-  "canoe",
-  "canon",
-  "caper",
-  "caput",
-  "carat",
-  "cargo",
-  "carol",
-  "carry",
-  "carve",
-  "caste",
-  "catch",
-  "cater",
-  "catty",
-  "caulk",
-  "cause",
-  "cavil",
-  "cease",
-  "cedar",
-  "cello",
-  "chafe",
-  "chaff",
-  "chain",
-  "chair",
-  "chalk",
-  "champ",
-  "chant",
-  "chaos",
-  "chard",
-  "charm",
-  "chart",
-  "chase",
-  "chasm",
-  "cheap",
-  "cheat",
-  "check",
-  "cheek",
-  "cheer",
-  "chess",
-  "chest",
-  "chick",
-  "chide",
-  "chief",
-  "child",
-  "chili",
-  "chill",
-  "chime",
-  "china",
-  "chirp",
-  "chock",
-  "choir",
-  "choke",
-  "chord",
-  "chore",
-  "chose",
-  "chuck",
-  "chump",
-  "chunk",
-  "churn",
-  "chute",
-  "cider",
-  "cigar",
-  "cinch",
-  "circa",
-  "civic",
-  "civil",
-  "clack",
-  "claim",
-  "clamp",
-  "clang",
-  "clank",
-  "clash",
-  "clasp",
-  "class",
-  "clean",
-  "clear",
-  "cleat",
-  "cleft",
-  "clerk",
-  "click",
-  "cliff",
-  "climb",
-  "cling",
-  "clink",
-  "cloak",
-  "clock",
-  "clone",
-  "close",
-  "cloth",
-  "cloud",
-  "clout",
-  "clove",
-  "clown",
-  "cluck",
-  "clued",
-  "clump",
-  "clung",
-  "coach",
-  "coast",
-  "cobra",
-  "cocoa",
-  "colon",
-  "color",
-  "comet",
-  "comfy",
-  "comic",
-  "comma",
-  "conch",
-  "condo",
-  "conic",
-  "copse",
-  "coral",
-  "corer",
-  "corny",
-  "couch",
-  "cough",
-  "could",
-  "count",
-  "coupe",
-  "court",
-  "coven",
-  "cover",
-  "covet",
-  "covey",
-  "cower",
-  "coyly",
-  "crack",
-  "craft",
-  "cramp",
-  "crane",
-  "crank",
-  "crash",
-  "crass",
-  "crate",
-  "crave",
-  "crawl",
-  "craze",
-  "crazy",
-  "creak",
-  "cream",
-  "credo",
-  "creed",
-  "creek",
-  "creep",
-  "creme",
-  "crepe",
-  "crept",
-  "cress",
-  "crest",
-  "crick",
-  "cried",
-  "crier",
-  "crime",
-  "crimp",
-  "crisp",
-  "croak",
-  "crock",
-  "crone",
-  "crony",
-  "crook",
-  "cross",
-  "croup",
-  "crowd",
-  "crown",
-  "crude",
-  "cruel",
-  "crumb",
-  "crump",
-  "crush",
-  "crust",
-  "crypt",
-  "cubic",
-  "cumin",
-  "curio",
-  "curly",
-  "curry",
-  "curse",
-  "curve",
-  "curvy",
-  "cutie",
-  "cyber",
-  "cycle",
-  "cynic",
-  "daddy",
-  "daily",
-  "dairy",
-  "daisy",
-  "dally",
-  "dance",
-  "dandy",
-  "datum",
-  "daunt",
-  "dealt",
-  "death",
-  "debar",
-  "debit",
-  "debug",
-  "debut",
-  "decal",
-  "decay",
-  "decor",
-  "decoy",
-  "decry",
-  "defer",
-  "deign",
-  "deity",
-  "delay",
-  "delta",
-  "delve",
-  "demon",
-  "demur",
-  "denim",
-  "dense",
-  "depot",
-  "depth",
-  "derby",
-  "deter",
-  "detox",
-  "deuce",
-  "devil",
-  "diary",
-  "dicey",
-  "digit",
-  "dilly",
-  "dimly",
-  "diner",
-  "dingo",
-  "dingy",
-  "diode",
-  "dirge",
-  "dirty",
-  "disco",
-  "ditch",
-  "ditto",
-  "ditty",
-  "diver",
-  "dizzy",
-  "dodge",
-  "dodgy",
-  "dogma",
-  "doing",
-  "dolly",
-  "donor",
-  "donut",
-  "dopey",
-  "doubt",
-  "dough",
-  "dowdy",
-  "dowel",
-  "downy",
-  "dowry",
-  "dozen",
-  "draft",
-  "drain",
-  "drake",
-  "drama",
-  "drank",
-  "drape",
-  "drawl",
-  "drawn",
-  "dread",
-  "dream",
-  "dress",
-  "dried",
-  "drier",
-  "drift",
-  "drill",
-  "drink",
-  "drive",
-  "droit",
-  "droll",
-  "drone",
-  "drool",
-  "droop",
-  "dross",
-  "drove",
-  "drown",
-  "druid",
-  "drunk",
-  "dryer",
-  "dryly",
-  "duchy",
-  "dully",
-  "dummy",
-  "dumpy",
-  "dunce",
-  "dusky",
-  "dusty",
-  "dutch",
-  "duvet",
-  "dwarf",
-  "dwell",
-  "dwelt",
-  "dying",
-  "eager",
-  "eagle",
-  "early",
-  "earth",
-  "easel",
-  "eaten",
-  "eater",
-  "ebony",
-  "eclat",
-  "edict",
-  "edify",
-  "eerie",
-  "egret",
-  "eight",
-  "eject",
-  "eking",
-  "elate",
-  "elbow",
-  "elder",
-  "elect",
-  "elegy",
-  "elfin",
-  "elide",
-  "elite",
-  "elope",
-  "elude",
-  "email",
-  "embed",
-  "ember",
-  "emcee",
-  "empty",
-  "enact",
-  "endow",
-  "enema",
-  "enemy",
-  "enjoy",
-  "ennui",
-  "ensue",
-  "enter",
-  "entry",
-  "envoy",
-  "epoch",
-  "epoxy",
-  "equal",
-  "equip",
-  "erase",
-  "erect",
-  "erode",
-  "error",
-  "erupt",
-  "essay",
-  "ester",
-  "ether",
-  "ethic",
-  "ethos",
-  "etude",
-  "evade",
-  "event",
-  "every",
-  "evict",
-  "evoke",
-  "exact",
-  "exalt",
-  "excel",
-  "exert",
-  "exile",
-  "exist",
-  "expel",
-  "extol",
-  "extra",
-  "exult",
-  "eying",
-  "fable",
-  "facet",
-  "faint",
-  "fairy",
-  "faith",
-  "false",
-  "fancy",
-  "fanny",
-  "farce",
-  "fatal",
-  "fatty",
-  "fault",
-  "fauna",
-  "favor",
-  "feast",
-  "fecal",
-  "feign",
-  "fella",
-  "felon",
-  "femme",
-  "femur",
-  "fence",
-  "feral",
-  "ferry",
-  "fetal",
-  "fetch",
-  "fetid",
-  "fetus",
-  "fever",
-  "fewer",
-  "fiber",
-  "fibre",
-  "ficus",
-  "field",
-  "fiend",
-  "fiery",
-  "fifth",
-  "fifty",
-  "fight",
-  "filer",
-  "filet",
-  "filly",
-  "filmy",
-  "filth",
-  "final",
-  "finch",
-  "finer",
-  "first",
-  "fishy",
-  "fixer",
-  "fizzy",
-  "fjord",
-  "flack",
-  "flail",
-  "flair",
-  "flake",
-  "flaky",
-  "flame",
-  "flank",
-  "flare",
-  "flash",
-  "flask",
-  "fleck",
-  "fleet",
-  "flesh",
-  "flick",
-  "flier",
-  "fling",
-  "flint",
-  "flirt",
-  "float",
-  "flock",
-  "flood",
-  "floor",
-  "flora",
-  "floss",
-  "flour",
-  "flout",
-  "flown",
-  "fluff",
-  "fluid",
-  "fluke",
-  "flume",
-  "flung",
-  "flunk",
-  "flush",
-  "flute",
-  "flyer",
-  "foamy",
-  "focal",
-  "focus",
-  "foggy",
-  "foist",
-  "folio",
-  "folly",
-  "foray",
-  "force",
-  "forge",
-  "forgo",
-  "forte",
-  "forth",
-  "forty",
-  "forum",
-  "found",
-  "foyer",
-  "frail",
-  "frame",
-  "frank",
-  "fraud",
-  "freak",
-  "freed",
-  "freer",
-  "fresh",
-  "friar",
-  "fried",
-  "frill",
-  "frisk",
-  "fritz",
-  "frock",
-  "frond",
-  "front",
-  "frost",
-  "froth",
-  "frown",
-  "froze",
-  "fruit",
-  "fudge",
-  "fugue",
-  "fully",
-  "fungi",
-  "funky",
-  "funny",
-  "furor",
-  "furry",
-  "fussy",
-  "fuzzy",
-  "gaffe",
-  "gaily",
-  "gamer",
-  "gamma",
-  "gamut",
-  "gassy",
-  "gaudy",
-  "gauge",
-  "gaunt",
-  "gauze",
-  "gavel",
-  "gawky",
-  "gayer",
-  "gayly",
-  "gazer",
-  "gecko",
-  "geeky",
-  "geese",
-  "genie",
-  "genre",
-  "ghost",
-  "ghoul",
-  "giant",
-  "giddy",
-  "gipsy",
-  "girly",
-  "girth",
-  "given",
-  "giver",
-  "glade",
-  "gland",
-  "glare",
-  "glass",
-  "glaze",
-  "gleam",
-  "glean",
-  "glide",
-  "glint",
-  "gloat",
-  "globe",
-  "gloom",
-  "glory",
-  "gloss",
-  "glove",
-  "glyph",
-  "gnash",
-  "gnome",
-  "godly",
-  "going",
-  "golem",
-  "golly",
-  "gonad",
-  "goner",
-  "goody",
-  "gooey",
-  "goofy",
-  "goose",
-  "gorge",
-  "gouge",
-  "gourd",
-  "grace",
-  "grade",
-  "graft",
-  "grail",
-  "grain",
-  "grand",
-  "grant",
-  "grape",
-  "graph",
-  "grasp",
-  "grass",
-  "grate",
-  "grave",
-  "gravy",
-  "graze",
-  "great",
-  "greed",
-  "green",
-  "greet",
-  "grief",
-  "grill",
-  "grime",
-  "grimy",
-  "grind",
-  "gripe",
-  "groan",
-  "groin",
-  "groom",
-  "grope",
-  "gross",
-  "group",
-  "grout",
-  "grove",
-  "growl",
-  "grown",
-  "gruel",
-  "gruff",
-  "grunt",
-  "guard",
-  "guava",
-  "guess",
-  "guest",
-  "guide",
-  "guild",
-  "guile",
-  "guilt",
-  "guise",
-  "gulch",
-  "gully",
-  "gumbo",
-  "gummy",
-  "guppy",
-  "gusto",
-  "gusty",
-  "gypsy",
-  "habit",
-  "hairy",
-  "halve",
-  "handy",
-  "happy",
-  "hardy",
-  "harem",
-  "harpy",
-  "harry",
-  "harsh",
-  "haste",
-  "hasty",
-  "hatch",
-  "hater",
-  "haunt",
-  "haute",
-  "haven",
-  "havoc",
-  "hazel",
-  "heady",
-  "heard",
-  "heart",
-  "heath",
-  "heave",
-  "heavy",
-  "hedge",
-  "hefty",
-  "heist",
-  "helix",
-  "hello",
-  "hence",
-  "heron",
-  "hilly",
-  "hinge",
-  "hippo",
-  "hippy",
-  "hitch",
-  "hoard",
-  "hobby",
-  "hoist",
-  "holly",
-  "homer",
-  "honey",
-  "honor",
-  "horde",
-  "horny",
-  "horse",
-  "hotel",
-  "hotly",
-  "hound",
-  "house",
-  "hovel",
-  "hover",
-  "howdy",
-  "human",
-  "humid",
-  "humor",
-  "humph",
-  "humus",
-  "hunch",
-  "hunky",
-  "hurry",
-  "husky",
-  "hussy",
-  "hutch",
-  "hydro",
-  "hyena",
-  "hymen",
-  "hyper",
-  "icily",
-  "icing",
-  "ideal",
-  "idiom",
-  "idiot",
-  "idler",
-  "idyll",
-  "igloo",
-  "iliac",
-  "image",
-  "imbue",
-  "impel",
-  "imply",
-  "inane",
-  "inbox",
-  "incur",
-  "index",
-  "inept",
-  "inert",
-  "infer",
-  "ingot",
-  "inlay",
-  "inlet",
-  "inner",
-  "input",
-  "inter",
-  "intro",
-  "ionic",
-  "irate",
-  "irony",
-  "islet",
-  "issue",
-  "itchy",
-  "ivory",
-  "jaunt",
-  "jazzy",
-  "jelly",
-  "jerky",
-  "jetty",
-  "jewel",
-  "jiffy",
-  "joint",
-  "joist",
-  "joker",
-  "jolly",
-  "joust",
-  "judge",
-  "juice",
-  "juicy",
-  "jumbo",
-  "jumpy",
-  "junta",
-  "junto",
-  "juror",
-  "kappa",
-  "karma",
-  "kayak",
-  "kebab",
-  "khaki",
-  "kinky",
-  "kiosk",
-  "kitty",
-  "knack",
-  "knave",
-  "knead",
-  "kneed",
-  "kneel",
-  "knelt",
-  "knife",
-  "knock",
-  "knoll",
-  "known",
-  "koala",
-  "krill",
-  "label",
-  "labor",
-  "laden",
-  "ladle",
-  "lager",
-  "lance",
-  "lanky",
-  "lapel",
-  "lapse",
-  "large",
-  "larva",
-  "lasso",
-  "latch",
-  "later",
-  "lathe",
-  "latte",
-  "laugh",
-  "layer",
-  "leach",
-  "leafy",
-  "leaky",
-  "leant",
-  "leapt",
-  "learn",
-  "lease",
-  "leash",
-  "least",
-  "leave",
-  "ledge",
-  "leech",
-  "leery",
-  "lefty",
-  "legal",
-  "leggy",
-  "lemon",
-  "lemur",
-  "leper",
-  "level",
-  "lever",
-  "libel",
-  "liege",
-  "light",
-  "liken",
-  "lilac",
-  "limbo",
-  "limit",
-  "linen",
-  "liner",
-  "lingo",
-  "lipid",
-  "lithe",
-  "liver",
-  "livid",
-  "llama",
-  "loamy",
-  "loath",
-  "lobby",
-  "local",
-  "locus",
-  "lodge",
-  "lofty",
-  "logic",
-  "login",
-  "loopy",
-  "loose",
-  "lorry",
-  "loser",
-  "loner",
-  "louse",
-  "lousy",
-  "lover",
-  "lower",
-  "lowly",
-  "loyal",
-  "lucid",
-  "lucky",
-  "lumen",
-  "lumpy",
-  "lunar",
-  "lunch",
-  "lunge",
-  "lupus",
-  "lurch",
-  "lurid",
-  "lusty",
-  "lying",
-  "lymph",
-  "lynch",
-  "lyric",
-  "macaw",
-  "macho",
-  "macro",
-  "madam",
-  "madly",
-  "mafia",
-  "magic",
-  "magma",
-  "maize",
-  "major",
-  "maker",
-  "mambo",
-  "mamma",
-  "mammy",
-  "manga",
-  "mange",
-  "mango",
-  "mangy",
-  "mania",
-  "manic",
-  "manly",
-  "manor",
-  "maple",
-  "march",
-  "marry",
-  "marsh",
-  "mason",
-  "masse",
-  "match",
-  "matey",
-  "mauve",
-  "maxim",
-  "maybe",
-  "mayor",
-  "mealy",
-  "meant",
-  "meaty",
-  "mecca",
-  "medal",
-  "media",
-  "medic",
-  "melee",
-  "melon",
-  "mercy",
-  "merge",
-  "merit",
-  "merry",
-  "metal",
-  "meter",
-  "metro",
-  "micro",
-  "midge",
-  "midst",
-  "might",
-  "milky",
-  "mimic",
-  "mince",
-  "miner",
-  "minim",
-  "minor",
-  "minty",
-  "minus",
-  "mirth",
-  "miser",
-  "missy",
-  "mocha",
-  "modal",
-  "model",
-  "modem",
-  "mogul",
-  "moist",
-  "molar",
-  "moldy",
-  "money",
-  "month",
-  "moody",
-  "moose",
-  "moral",
-  "moron",
-  "morph",
-  "mossy",
-  "motel",
-  "motif",
-  "motor",
-  "motto",
-  "moult",
-  "mound",
-  "mount",
-  "mourn",
-  "mouse",
-  "mouth",
-  "mover",
-  "movie",
-  "mower",
-  "mucky",
-  "mucus",
-  "muddy",
-  "mulch",
-  "mummy",
-  "munch",
-  "mural",
-  "murky",
-  "mushy",
-  "music",
-  "musky",
-  "musty",
-  "myrrh",
-  "nadir",
-  "naive",
-  "nanny",
-  "nasal",
-  "nasty",
-  "natal",
-  "naval",
-  "navel",
-  "needy",
-  "neigh",
-  "nerdy",
-  "nerve",
-  "never",
-  "newer",
-  "newly",
-  "nicer",
-  "niche",
-  "niece",
-  "night",
-  "ninja",
-  "ninny",
-  "ninth",
-  "noble",
-  "nobly",
-  "noise",
-  "noisy",
-  "nomad",
-  "noose",
-  "north",
-  "nosey",
-  "notch",
-  "novel",
-  "nudge",
-  "nurse",
-  "nutty",
-  "nylon",
-  "nymph",
-  "oaken",
-  "obese",
-  "occur",
-  "ocean",
-  "octal",
-  "octet",
-  "odder",
-  "oddly",
-  "offal",
-  "offer",
-  "often",
-  "olden",
-  "older",
-  "olive",
-  "ombre",
-  "omega",
-  "onion",
-  "onset",
-  "opera",
-  "opine",
-  "opium",
-  "optic",
-  "orbit",
-  "order",
-  "organ",
-  "other",
-  "otter",
-  "ought",
-  "ounce",
-  "outdo",
-  "outer",
-  "outgo",
-  "ovary",
-  "ovate",
-  "overt",
-  "ovine",
-  "ovoid",
-  "owing",
-  "owner",
-  "oxide",
-  "ozone",
-  "paddy",
-  "pagan",
-  "paint",
-  "paler",
-  "palsy",
-  "panel",
-  "panic",
-  "pansy",
-  "papal",
-  "paper",
-  "parer",
-  "parka",
-  "parry",
-  "parse",
-  "party",
-  "pasta",
-  "paste",
-  "pasty",
-  "patch",
-  "patio",
-  "patsy",
-  "patty",
-  "pause",
-  "payee",
-  "payer",
-  "peace",
-  "peach",
-  "pearl",
-  "pecan",
-  "pedal",
-  "penal",
-  "pence",
-  "penne",
-  "penny",
-  "perch",
-  "peril",
-  "perky",
-  "pesky",
-  "pesto",
-  "petal",
-  "petty",
-  "phase",
-  "phone",
-  "phony",
-  "photo",
-  "piano",
-  "picky",
-  "piece",
-  "piety",
-  "piggy",
-  "pilot",
-  "pinch",
-  "piney",
-  "pinky",
-  "pinto",
-  "piper",
-  "pique",
-  "pitch",
-  "pithy",
-  "pivot",
-  "pixel",
-  "pixie",
-  "pizza",
-  "place",
-  "plaid",
-  "plain",
-  "plait",
-  "plane",
-  "plank",
-  "plant",
-  "plate",
-  "plaza",
-  "plead",
-  "pleat",
-  "plied",
-  "plier",
-  "pluck",
-  "plumb",
-  "plume",
-  "plump",
-  "plunk",
-  "plush",
-  "poesy",
-  "point",
-  "poise",
-  "poker",
-  "polar",
-  "polka",
-  "polyp",
-  "pooch",
-  "poppy",
-  "porch",
-  "poser",
-  "posit",
-  "posse",
-  "pouch",
-  "pound",
-  "pouty",
-  "power",
-  "prank",
-  "prawn",
-  "preen",
-  "press",
-  "price",
-  "prick",
-  "pride",
-  "pried",
-  "prime",
-  "primo",
-  "print",
-  "prior",
-  "prism",
-  "privy",
-  "prize",
-  "probe",
-  "prone",
-  "prong",
-  "proof",
-  "prose",
-  "proud",
-  "prove",
-  "prowl",
-  "proxy",
-  "prude",
-  "prune",
-  "psalm",
-  "pubic",
-  "pudgy",
-  "puffy",
-  "pulpy",
-  "pulse",
-  "punch",
-  "pupal",
-  "pupil",
-  "puppy",
-  "puree",
-  "purer",
-  "purge",
-  "purse",
-  "pushy",
-  "putty",
-  "pygmy",
-  "quack",
-  "quail",
-  "quake",
-  "qualm",
-  "quark",
-  "quart",
-  "quash",
-  "quasi",
-  "queen",
-  "queer",
-  "quell",
-  "query",
-  "quest",
-  "queue",
-  "quick",
-  "quiet",
-  "quill",
-  "quilt",
-  "quirk",
-  "quite",
-  "quota",
-  "quote",
-  "quoth",
-  "rabbi",
-  "rabid",
-  "racer",
-  "radar",
-  "radii",
-  "radio",
-  "rainy",
-  "raise",
-  "rajah",
-  "rally",
-  "ralph",
-  "ramen",
-  "ranch",
-  "randy",
-  "range",
-  "rapid",
-  "rarer",
-  "raspy",
-  "ratio",
-  "ratty",
-  "raven",
-  "rayon",
-  "razor",
-  "reach",
-  "react",
-  "ready",
-  "realm",
-  "rearm",
-  "rebar",
-  "rebel",
-  "rebus",
-  "rebut",
-  "recap",
-  "recur",
-  "recut",
-  "reedy",
-  "refer",
-  "refit",
-  "regal",
-  "rehab",
-  "reign",
-  "relax",
-  "relay",
-  "relic",
-  "remit",
-  "renal",
-  "renew",
-  "repay",
-  "repel",
-  "reply",
-  "rerun",
-  "reset",
-  "resin",
-  "retch",
-  "retro",
-  "retry",
-  "reuse",
-  "revel",
-  "revue",
-  "rhino",
-  "rhyme",
-  "rider",
-  "ridge",
-  "rifle",
-  "right",
-  "rigid",
-  "rigor",
-  "rinse",
-  "ripen",
-  "riper",
-  "risen",
-  "riser",
-  "risky",
-  "rival",
-  "river",
-  "rivet",
-  "roach",
-  "roast",
-  "robin",
-  "robot",
-  "rocky",
-  "rodeo",
-  "roger",
-  "rogue",
-  "roomy",
-  "roost",
-  "rotor",
-  "rouge",
-  "rough",
-  "round",
-  "rouse",
-  "route",
-  "rover",
-  "rowdy",
-  "rower",
-  "royal",
-  "ruddy",
-  "ruder",
-  "rugby",
-  "ruler",
-  "rumba",
-  "rumor",
-  "rupee",
-  "rural",
-  "rusty",
-  "sadly",
-  "safer",
-  "saint",
-  "salad",
-  "sally",
-  "salon",
-  "salsa",
-  "salty",
-  "salve",
-  "salvo",
-  "sandy",
-  "saner",
-  "sappy",
-  "sassy",
-  "satin",
-  "satyr",
-  "sauce",
-  "saucy",
-  "sauna",
-  "saute",
-  "savor",
-  "savoy",
-  "savvy",
-  "scald",
-  "scale",
-  "scalp",
-  "scaly",
-  "scamp",
-  "scant",
-  "scare",
-  "scarf",
-  "scary",
-  "scene",
-  "scent",
-  "scion",
-  "scoff",
-  "scold",
-  "scone",
-  "scoop",
-  "scope",
-  "score",
-  "scorn",
-  "scour",
-  "scout",
-  "scowl",
-  "scram",
-  "scrap",
-  "scree",
-  "screw",
-  "scrub",
-  "scrum",
-  "scuba",
-  "sedan",
-  "seedy",
-  "segue",
-  "seize",
-  "semen",
-  "sense",
-  "sepia",
-  "serif",
-  "serum",
-  "serve",
-  "setup",
-  "seven",
-  "sever",
-  "sewer",
-  "shack",
-  "shade",
-  "shady",
-  "shaft",
-  "shake",
-  "shaky",
-  "shale",
-  "shall",
-  "shalt",
-  "shame",
-  "shank",
-  "shape",
-  "shard",
-  "share",
-  "shark",
-  "sharp",
-  "shave",
-  "shawl",
-  "shear",
-  "sheen",
-  "sheep",
-  "sheer",
-  "sheet",
-  "sheik",
-  "shelf",
-  "shell",
-  "shied",
-  "shift",
-  "shine",
-  "shiny",
-  "shire",
-  "shirk",
-  "shirt",
-  "shoal",
-  "shock",
-  "shone",
-  "shook",
-  "shoot",
-  "shore",
-  "shorn",
-  "short",
-  "shout",
-  "shove",
-  "shown",
-  "showy",
-  "shrew",
-  "shrub",
-  "shrug",
-  "shuck",
-  "shunt",
-  "shush",
-  "shyly",
-  "siege",
-  "sieve",
-  "sight",
-  "sigma",
-  "silky",
-  "silly",
-  "since",
-  "sinew",
-  "singe",
-  "siren",
-  "sissy",
-  "sixth",
-  "sixty",
-  "skate",
-  "skier",
-  "skiff",
-  "skill",
-  "skimp",
-  "skirt",
-  "skulk",
-  "skull",
-  "skunk",
-  "slack",
-  "slain",
-  "slang",
-  "slant",
-  "slash",
-  "slate",
-  "slave",
-  "sleek",
-  "sleep",
-  "sleet",
-  "slept",
-  "slice",
-  "slick",
-  "slide",
-  "slime",
-  "slimy",
-  "sling",
-  "slink",
-  "sloop",
-  "slope",
-  "slosh",
-  "sloth",
-  "slump",
-  "slung",
-  "slunk",
-  "slurp",
-  "slush",
-  "slyly",
-  "smack",
-  "small",
-  "smart",
-  "smash",
-  "smear",
-  "smell",
-  "smelt",
-  "smile",
-  "smirk",
-  "smite",
-  "smith",
-  "smock",
-  "smoke",
-  "smoky",
-  "smote",
-  "snack",
-  "snail",
-  "snake",
-  "snaky",
-  "snare",
-  "snarl",
-  "sneak",
-  "sneer",
-  "snide",
-  "sniff",
-  "snipe",
-  "snoop",
-  "snore",
-  "snort",
-  "snout",
-  "snowy",
-  "snuck",
-  "snuff",
-  "soapy",
-  "sober",
-  "soggy",
-  "solar",
-  "solid",
-  "solve",
-  "sonar",
-  "sonic",
-  "sooth",
-  "sooty",
-  "sorry",
-  "sound",
-  "south",
-  "sower",
-  "space",
-  "spade",
-  "spank",
-  "spare",
-  "spark",
-  "spasm",
-  "spawn",
-  "speak",
-  "spear",
-  "speck",
-  "speed",
-  "spell",
-  "spelt",
-  "spend",
-  "spent",
-  "sperm",
-  "spice",
-  "spicy",
-  "spied",
-  "spiel",
-  "spike",
-  "spiky",
-  "spill",
-  "spilt",
-  "spine",
-  "spiny",
-  "spire",
-  "spite",
-  "splat",
-  "split",
-  "spoil",
-  "spoke",
-  "spoof",
-  "spook",
-  "spool",
-  "spoon",
-  "spore",
-  "sport",
-  "spout",
-  "spray",
-  "spree",
-  "sprig",
-  "spunk",
-  "spurn",
-  "spurt",
-  "squad",
-  "squat",
-  "squib",
-  "stack",
-  "staff",
-  "stage",
-  "staid",
-  "stain",
-  "stair",
-  "stake",
-  "stale",
-  "stalk",
-  "stall",
-  "stamp",
-  "stand",
-  "stank",
-  "stare",
-  "stark",
-  "start",
-  "stash",
-  "state",
-  "stave",
-  "stead",
-  "steak",
-  "steal",
-  "steam",
-  "steed",
-  "steel",
-  "steep",
-  "steer",
-  "stein",
-  "stern",
-  "stick",
-  "stiff",
-  "still",
-  "stilt",
-  "sting",
-  "stink",
-  "stint",
-  "stock",
-  "stoic",
-  "stoke",
-  "stole",
-  "stomp",
-  "stone",
-  "stony",
-  "stood",
-  "stool",
-  "stoop",
-  "store",
-  "stork",
-  "storm",
-  "story",
-  "stout",
-  "stove",
-  "strap",
-  "straw",
-  "stray",
-  "strip",
-  "strut",
-  "stuck",
-  "study",
-  "stuff",
-  "stump",
-  "stung",
-  "stunk",
-  "stunt",
-  "style",
-  "suave",
-  "sugar",
-  "suing",
-  "suite",
-  "sulky",
-  "sully",
-  "sumac",
-  "sunny",
-  "super",
-  "surer",
-  "surge",
-  "surly",
-  "sushi",
-  "swami",
-  "swamp",
-  "swarm",
-  "swash",
-  "swath",
-  "swear",
-  "sweat",
-  "sweep",
-  "sweet",
-  "swell",
-  "swept",
-  "swift",
-  "swill",
-  "swine",
-  "swing",
-  "swirl",
-  "swish",
-  "swoon",
-  "swoop",
-  "sword",
-  "swore",
-  "sworn",
-  "swung",
-  "synod",
-  "syrup",
-  "tabby",
-  "table",
-  "taboo",
-  "tacit",
-  "tacky",
-  "taffy",
-  "taint",
-  "taken",
-  "taker",
-  "tally",
-  "talon",
-  "tamer",
-  "tango",
-  "tangy",
-  "taper",
-  "tapir",
-  "tardy",
-  "tarot",
-  "taste",
-  "tasty",
-  "tatty",
-  "taunt",
-  "tawny",
-  "teach",
-  "teary",
-  "tease",
-  "teddy",
-  "teeth",
-  "tempo",
-  "tenet",
-  "tenor",
-  "tense",
-  "tenth",
-  "tepee",
-  "tepid",
-  "terra",
-  "terse",
-  "testy",
-  "thank",
-  "theft",
-  "their",
-  "theme",
-  "there",
-  "these",
-  "theta",
-  "thick",
-  "thief",
-  "thigh",
-  "thing",
-  "think",
-  "third",
-  "thong",
-  "thorn",
-  "those",
-  "three",
-  "threw",
-  "throb",
-  "throw",
-  "thrum",
-  "thumb",
-  "thump",
-  "thyme",
-  "tiara",
-  "tibia",
-  "tidal",
-  "tiger",
-  "tight",
-  "tilde",
-  "timer",
-  "timid",
-  "tipsy",
-  "titan",
-  "tithe",
-  "title",
-  "toast",
-  "today",
-  "toddy",
-  "token",
-  "tonal",
-  "tonga",
-  "tonic",
-  "tooth",
-  "topaz",
-  "topic",
-  "torch",
-  "torso",
-  "torus",
-  "total",
-  "totem",
-  "touch",
-  "tough",
-  "towel",
-  "tower",
-  "toxic",
-  "toxin",
-  "trace",
-  "track",
-  "tract",
-  "trade",
-  "trail",
-  "train",
-  "trait",
-  "tramp",
-  "trash",
-  "trawl",
-  "tread",
-  "treat",
-  "trend",
-  "triad",
-  "trial",
-  "tribe",
-  "trice",
-  "trick",
-  "tried",
-  "tripe",
-  "trite",
-  "troll",
-  "troop",
-  "trope",
-  "trout",
-  "trove",
-  "truce",
-  "truck",
-  "truer",
-  "truly",
-  "trump",
-  "trunk",
-  "truss",
-  "trust",
-  "truth",
-  "tryst",
-  "tubal",
-  "tuber",
-  "tulip",
-  "tulle",
-  "tumor",
-  "tunic",
-  "turbo",
-  "tutor",
-  "twang",
-  "tweak",
-  "tweed",
-  "tweet",
-  "twice",
-  "twine",
-  "twirl",
-  "twist",
-  "twixt",
-  "tying",
-  "udder",
-  "ulcer",
-  "ultra",
-  "umbra",
-  "uncle",
-  "uncut",
-  "under",
-  "undid",
-  "undue",
-  "unfed",
-  "unfit",
-  "unify",
-  "union",
-  "unite",
-  "unity",
-  "unlit",
-  "unmet",
-  "unset",
-  "untie",
-  "until",
-  "unwed",
-  "unzip",
-  "upper",
-  "upset",
-  "urban",
-  "urine",
-  "usage",
-  "usher",
-  "using",
-  "usual",
-  "usurp",
-  "utile",
-  "utter",
-  "vague",
-  "valet",
-  "valid",
-  "valor",
-  "value",
-  "valve",
-  "vapid",
-  "vapor",
-  "vault",
-  "vaunt",
-  "vegan",
-  "venom",
-  "venue",
-  "verge",
-  "verse",
-  "verso",
-  "verve",
-  "vicar",
-  "video",
-  "vigil",
-  "vigor",
-  "villa",
-  "vinyl",
-  "viola",
-  "viper",
-  "viral",
-  "virus",
-  "visit",
-  "visor",
-  "vista",
-  "vital",
-  "vivid",
-  "vixen",
-  "vocal",
-  "vodka",
-  "vogue",
-  "voice",
-  "voila",
-  "vomit",
-  "voter",
-  "vouch",
-  "vowel",
-  "vying",
-  "wacky",
-  "wafer",
-  "wager",
-  "wagon",
-  "waist",
-  "waive",
-  "waltz",
-  "warty",
-  "waste",
-  "watch",
-  "water",
-  "waver",
-  "waxen",
-  "weary",
-  "weave",
-  "wedge",
-  "weedy",
-  "weigh",
-  "weird",
-  "welch",
-  "welsh",
-  "wench",
-  "whack",
-  "whale",
-  "wharf",
-  "wheat",
-  "wheel",
-  "whelp",
-  "where",
-  "which",
-  "whiff",
-  "while",
-  "whine",
-  "whiny",
-  "whirl",
-  "whisk",
-  "white",
-  "whole",
-  "whoop",
-  "whose",
-  "widen",
-  "wider",
-  "widow",
-  "width",
-  "wield",
-  "wight",
-  "willy",
-  "wimpy",
-  "wince",
-  "winch",
-  "windy",
-  "wiser",
-  "wispy",
-  "witch",
-  "witty",
-  "woken",
-  "woman",
-  "women",
-  "woody",
-  "wooer",
-  "wooly",
-  "woozy",
-  "wordy",
-  "world",
-  "worry",
-  "worse",
-  "worst",
-  "worth",
-  "would",
-  "wound",
-  "woven",
-  "wrack",
-  "wrath",
-  "wreak",
-  "wreck",
-  "wrest",
-  "wring",
-  "wrist",
-  "write",
-  "wrong",
-  "wrote",
-  "wrung",
-  "wryly",
-  "yacht",
-  "yearn",
-  "yeast",
-  "yield",
-  "young",
-  "youth",
-  "zebra",
-  "zesty",
-  "zonal",
-])
 
 type LetterState = "correct" | "present" | "absent"
 
@@ -2398,6 +80,7 @@ export default function WordBreakerGame() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const solutionPathCache = useRef<Map<string, string[]>>(new Map())
+  const hintsCache = useRef<Map<string, number[]>>(new Map())
 
   const resetGame = useCallback(() => {
     // Reset current game state without changing the puzzle
@@ -2416,6 +99,8 @@ export default function WordBreakerGame() {
     
     // Clear solution cache
     solutionPathCache.current.clear()
+    // Clear hints cache
+    hintsCache.current.clear()
     
     // Focus first input
     setTimeout(() => {
@@ -2432,6 +117,8 @@ export default function WordBreakerGame() {
 
     // Clear solution cache when starting new game
     solutionPathCache.current.clear()
+    // Clear hints cache when starting new game
+    hintsCache.current.clear()
 
     setGameState({
       mysteryWord,
@@ -2619,6 +306,14 @@ export default function WordBreakerGame() {
     const lastAttempt =
       gameState.attempts.length > 0 ? gameState.attempts[gameState.attempts.length - 1] : gameState.rootWord
 
+    // Check if word is in dictionary first
+    const wordLower = word.toLowerCase()
+    if (!VALID_WORDS.has(wordLower)) {
+      setGameState((prev) => ({ ...prev, errorMessage: `"${word.toUpperCase()}" is not a valid word in our dictionary` }))
+      const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
+      return () => clearTimeout(timer)
+    }
+
     if (!isValidMove(lastAttempt, word)) {
       setGameState((prev) => ({ ...prev, errorMessage: "You must change exactly one letter (rearrangement allowed)" }))
       const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
@@ -2627,6 +322,9 @@ export default function WordBreakerGame() {
 
     const newAttempts = [...gameState.attempts, word]
     const isWon = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+
+    // Clear hints cache so BFS recalculates for next hint
+    hintsCache.current.clear()
 
     updateRevealedLetters(word)
 
@@ -2659,9 +357,62 @@ export default function WordBreakerGame() {
   ])
 
   const showSolutionPath = useCallback(() => {
-    const path = findSolutionPath(gameState.rootWord, gameState.mysteryWord)
-    setGameState((prev) => ({ ...prev, solutionPath: path, showSolution: true }))
-  }, [gameState.rootWord, gameState.mysteryWord, findSolutionPath])
+    // Try BFS first, fallback to hardcoded if BFS fails
+    const bfsPath = findBFSSolutionPath(gameState.rootWord, gameState.mysteryWord)
+    
+    // If BFS found a path, use it; otherwise use hardcoded solution
+    if (bfsPath.length > 2) {
+      console.log("✅ Using BFS-found path:", bfsPath)
+      setGameState((prev) => ({ ...prev, solutionPath: bfsPath, showSolution: true }))
+    } else {
+      console.log("🔄 BFS failed, using hardcoded solution")
+      // Fallback to hardcoded solution for known puzzles
+      const hardcodedPath = getHardcodedSolution(gameState.rootWord, gameState.mysteryWord)
+      setGameState((prev) => ({ ...prev, solutionPath: hardcodedPath, showSolution: true }))
+    }
+  }, [gameState.rootWord, gameState.mysteryWord])
+
+  const findBFSSolutionPath = useCallback((startWord: string, targetWord: string): string[] => {
+    if (startWord === targetWord) return [startWord]
+
+    const startUpper = startWord.toUpperCase()
+    const targetUpper = targetWord.toUpperCase()
+    
+    console.log(`\n=== Finding BFS Solution Path: ${startUpper} → ${targetUpper} ===`)
+    
+    // Use the imported bidirectional BFS for guaranteed shortest paths
+    const path = bidirectionalBFS(startUpper, targetUpper)
+    
+    if (path.length > 0) {
+      console.log(`🎯 Solution path found: ${path.join(' → ')}`)
+      return path
+    }
+    
+    console.log(`❌ No solution path found`)
+    return [startWord, targetWord] // Fallback
+  }, [])
+
+  const getHardcodedSolution = useCallback((startWord: string, targetWord: string): string[] => {
+    const startUpper = startWord.toUpperCase()
+    const targetUpper = targetWord.toUpperCase()
+    
+    // Known solution paths for specific puzzles
+    if (startUpper === "SWORD" && targetUpper === "BEACH") {
+      return ["SWORD", "CROWD", "CHORD", "CHARD", "REACH", "BEACH"]
+    }
+    if (startUpper === "GAMES" && targetUpper === "FRONT") {
+      return ["GAMES", "GAMER", "ANGER", "GONER", "TENOR", "FRONT"]
+    }
+    if (startUpper === "BREAD" && targetUpper === "HONEY") {
+      return ["BREAD", "BREAK", "BRAKE", "BRAVE", "GRAVE", "HONEY"]
+    }
+    if (startUpper === "CUMIN" && targetUpper === "DEPTH") {
+      return ["CUMIN", "MINCE", "MEDIC", "EDICT", "TEPID", "DEPTH"]
+    }
+    
+    // Default fallback
+    return [startUpper, targetUpper]
+  }, [])
 
   const getBackgroundColor = useCallback((state: LetterState): string => {
     switch (state) {
@@ -2674,42 +425,320 @@ export default function WordBreakerGame() {
     }
   }, [])
 
-  const getOptimalLetterHints = useMemo(() => {
-    return (currentWord: string, targetWord: string): number[] => {
-      if (!currentWord || currentWord.length !== 5 || gameState.isHardMode) return []
+  const getOptimalLetterHints = useCallback((currentWord: string, targetWord: string): number[] => {
+    if (!currentWord || currentWord.length !== 5 || gameState.isHardMode) return []
 
-      const cacheKey = `hints-${currentWord}-${targetWord}`
-      if (solutionPathCache.current.has(cacheKey)) {
-        return solutionPathCache.current.get(cacheKey) as number[]
-      }
+    const cacheKey = `hints-${currentWord}-${targetWord}`
+    if (hintsCache.current.has(cacheKey)) {
+      return hintsCache.current.get(cacheKey)!
+    }
 
-      // Find the actual next step in the solution path
-      const solutionPath = findSolutionPath(currentWord, targetWord)
-      if (solutionPath.length < 2) {
-        solutionPathCache.current.set(cacheKey, [])
-        return []
-      }
+    // Perform real-time BFS analysis to find the optimal next move
+    const optimalHints = performRealTimeBFSAnalysis(currentWord, targetWord)
+    
+    // Debug logging
+    // console.log(`Hints for ${currentWord} -> ${targetWord}:`, optimalHints)
+    
+    // Cache the result
+    hintsCache.current.set(cacheKey, optimalHints)
+    return optimalHints
+  }, [gameState.isHardMode])
 
-      const nextWord = solutionPath[1] // The next word in the optimal path
-      const currentUpper = currentWord.toUpperCase()
-      const nextUpper = nextWord.toUpperCase()
+  const performRealTimeBFSAnalysis = useCallback((currentWord: string, targetWord: string): number[] => {
+    if (currentWord === targetWord) return []
 
-      // Find which letter is different between current and next word
-      const hints: number[] = []
-      for (let i = 0; i < 5; i++) {
-        if (currentUpper[i] !== nextUpper[i]) {
-          // Check if this letter is being removed (not in next word)
-          if (!nextUpper.includes(currentUpper[i])) {
-            hints.push(i)
-            break // Only highlight one letter
-          }
-        }
-      }
-
-      solutionPathCache.current.set(cacheKey, hints)
+    const currentUpper = currentWord.toUpperCase()
+    const targetUpper = targetWord.toUpperCase()
+    
+    console.log(`\n=== BFS Analysis: ${currentUpper} → ${targetUpper} ===`)
+    
+    // Use bidirectional BFS to find the shortest path
+    const path = bidirectionalBFS(currentUpper, targetUpper)
+    
+    if (path.length >= 2) {
+      const nextWord = path[1]
+      console.log(`🎯 TARGET FOUND! Complete path: ${path.join(' → ')}`)
+      console.log(`📊 Path length: ${path.length} steps`)
+      
+      // Find the letter difference for hints
+      const hints = findLetterDifference(currentUpper, nextWord)
       return hints
     }
-  }, [gameState.isHardMode, findSolutionPath])
+    
+    // If no path found, use fallback approach
+    console.log(`❌ BFS no path found for ${currentUpper} → ${targetUpper}`)
+    console.log(`🔧 Using fallback hint system`)
+    return findFallbackHint(currentUpper, targetUpper)
+  }, [])
+
+  // Use the imported multiset-based neighbor generation
+  const generateValidNeighbors = useCallback((word: string): string[] => {
+    return neighborsOneChangeReorder(word)
+  }, [])
+
+  const findLetterDifference = useCallback((word1: string, word2: string): number[] => {
+    const hints: number[] = []
+    const targetLetters = word2.split('')
+    
+    // Find which letter from word1 is not in word2 (the letter to change)
+    for (let i = 0; i < 5; i++) {
+      if (!targetLetters.includes(word1[i])) {
+        hints.push(i)
+        break // Only highlight one letter for cleaner UI
+      }
+    }
+    
+    // If no letter is missing, find the first letter that's different
+    if (hints.length === 0) {
+      for (let i = 0; i < 5; i++) {
+        if (word1[i] !== word2[i]) {
+          hints.push(i)
+          break
+        }
+      }
+    }
+    
+    return hints
+  }, [])
+
+  const findFallbackHint = useCallback((currentWord: string, targetWord: string): number[] => {
+    // Find any letter that's not in the target word and suggest changing it
+    const targetLetters = targetWord.split('')
+    for (let i = 0; i < 5; i++) {
+      if (!targetLetters.includes(currentWord[i])) {
+        return [i]
+      }
+    }
+    
+    // If all letters are in target, suggest changing the first letter that's in wrong position
+    for (let i = 0; i < 5; i++) {
+      if (currentWord[i] !== targetWord[i]) {
+        return [i]
+      }
+    }
+    
+    return []
+  }, [])
+
+  // Function to provide semantic clues for words in the BFS path
+  const getWordClue = useCallback((word: string): string | null => {
+    const clues: Record<string, string> = {
+      // Common 5-letter words with concise clues
+      "sinew": "tendon",
+      "twine": "string",
+      "write": "compose",
+      "tower": "building",
+      "crowd": "group",
+      "chord": "notes",
+      "chard": "vegetable",
+      "reach": "extend",
+      "gamer": "player",
+      "aback": "surprised",
+      "abase": "humiliate",
+      "abate": "lessen",
+      "abbey": "monastery",
+      "abbot": "monk",
+      "abhor": "hate",
+      "abide": "endure",
+      "abled": "capable",
+      "abode": "home",
+      "abort": "cancel",
+      "about": "concerning",
+      "above": "overhead",
+      "abuse": "mistreat",
+      "abyss": "chasm",
+      "acorn": "nut",
+      "acrid": "bitter",
+      "actor": "performer",
+      "acute": "sharp",
+      "adage": "proverb",
+      "adapt": "adjust",
+      "adept": "skilled",
+      "admin": "manager",
+      "admit": "confess",
+      "adobe": "brick",
+      "adopt": "embrace",
+      "adore": "love",
+      "adorn": "decorate",
+      "adult": "grown",
+      "affix": "attach",
+      "afire": "burning",
+      "afoot": "happening",
+      "afoul": "conflicting",
+      "after": "following",
+      "again": "repeatedly",
+      "agape": "open",
+      "agate": "stone",
+      "agent": "representative",
+      "agile": "nimble",
+      "aging": "maturing",
+      "aglow": "shining",
+      "agony": "pain",
+      "agora": "marketplace",
+      "agree": "consent",
+      "ahead": "forward",
+      "aider": "helper",
+      "aisle": "passage",
+      "alarm": "warning",
+      "album": "collection",
+      "alert": "vigilant",
+      "algae": "seaweed",
+      "alibi": "excuse",
+      "align": "arrange",
+      "alike": "similar",
+      "alive": "living",
+      "allay": "soothe",
+      "alley": "pathway",
+      "allot": "assign",
+      "allow": "permit",
+      "alloy": "mixture",
+      "aloft": "airborne",
+      "along": "together",
+      "aloof": "distant",
+      "aloud": "audible",
+      "alpha": "first",
+      "altar": "shrine",
+      "alter": "change",
+      "amass": "gather",
+      "amaze": "astonish",
+      "amber": "resin",
+      "amble": "stroll",
+      "amend": "improve",
+      "amiss": "wrong",
+      "amity": "friendship",
+      "among": "between",
+      "ample": "sufficient",
+      "amply": "adequately",
+      "amuse": "entertain",
+      "angel": "messenger",
+      "angle": "corner",
+      "angry": "furious",
+      "angst": "anxiety",
+      "anime": "cartoon",
+      "ankle": "joint",
+      "annex": "addition",
+      "annoy": "irritate",
+      "annul": "cancel",
+      "anode": "electrode",
+      "antic": "prank",
+      "anvil": "tool",
+      "aorta": "artery",
+      "apart": "separate",
+      "aphid": "insect",
+      "aping": "copying",
+      "apnea": "breathing",
+      "apple": "fruit",
+      "apply": "use",
+      "arena": "stadium",
+      "argue": "dispute",
+      "arise": "emerge",
+      "array": "arrangement",
+      "aside": "separately",
+      "asset": "property",
+      "audio": "sound",
+      "audit": "examination",
+      "avoid": "evade",
+      "await": "wait",
+      "awake": "conscious",
+      "award": "prize",
+      "aware": "conscious",
+      "awful": "terrible",
+      "axiom": "principle",
+      
+      // Current puzzle rotation words
+      "storm": "tempest",
+      "light": "illumination",
+      "games": "play",
+      "front": "foremost",
+      "bread": "food",
+      "honey": "sweet",
+      "cumin": "spice",
+      "depth": "profundity",
+      "sword": "weapon",
+      "beach": "shore",
+      "anger": "rage",
+      "goner": "finished",
+      "tenor": "voice",
+      "break": "shatter",
+      "brake": "stop",
+      "brave": "courageous",
+      "grave": "serious",
+      "mince": "chop",
+      "medic": "doctor",
+      "edict": "decree",
+      "tepid": "lukewarm",
+      
+      // Additional words from BFS paths
+      "triad": "group",
+      "third": "ordinal",
+      "girth": "circumference",
+      "ridge": "crest",
+      "tiger": "feline",
+      "cedar": "tree",
+      "worth": "value",
+      
+      // Additional words from SWORD → BEACH path
+      "wards": "guards",
+      "shard": "fragment",
+      "heard": "listened",
+      
+      // Additional words from current puzzle
+      "ocean": "sea",
+      
+      // Additional words from all puzzle starting words
+      "cumin": "spice",
+      "storm": "tempest",
+      "elfin": "fairy",
+      
+      // Words from BFS paths that are missing clues
+      "manic": "crazy",
+      "anime": "cartoon",
+      "meant": "intended",
+      "tamed": "domesticated",
+      "adept": "skilled",
+      "short": "brief",
+      "shirt": "garment",
+      "fling": "throw",
+      "sling": "strap",
+      "glans": "tip",
+      "glass": "transparent",
+      "grass": "lawn",
+      
+      // Additional words from all BFS paths
+      "smear": "spread",
+      "rates": "prices",
+      "roast": "cook",
+      "snort": "laugh",
+      "front": "foremost",
+      
+      // Additional words from HOUSE → MAGIC path and other missing words
+      "house": "home",
+      "mouse": "rodent",
+      "males": "men",
+      "email": "message",
+      "image": "picture",
+      "magic": "spell",
+      "serum": "liquid",
+      "miser": "stingy",
+      "grime": "dirt",
+      
+      // Additional words from OCEAN → FIELD path and other missing words
+      "ocean": "sea",
+      "alone": "solitary",
+      "alien": "foreign",
+      "ideal": "perfect",
+      "field": "meadow",
+      
+      // Additional words from BREAD → HONEY path and other missing words
+      "bread": "food",
+      "ready": "prepared",
+      "yearn": "desire",
+      "hyena": "animal",
+      "honey": "sweet"
+    }
+    
+    return clues[word] || null
+  }, [])
 
   const foundLetters = useMemo(() => {
     const found: { letter: string; position: number }[] = []
@@ -2768,20 +797,78 @@ export default function WordBreakerGame() {
     <div className={`min-h-screen bg-black flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
       <div className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-700 shadow-2xl">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2 font-poppins">Word Breaker</h1>
-          <p className="text-gray-300 text-sm font-inter">Change one letter at a time to unlock today's word</p>
+          <h1 className="text-3xl font-bold text-white mb-2 font-poppins">Cloodle</h1>
+                          <p className="text-gray-300 text-sm font-inter">
+                  Unlock the mystery word by changing one letter from the start word.  You can rearrange letters to make the new word but the new word must share all but one letter from the previous word.
+                  Today's Cloodle can be unlocked in <strong>{(() => {
+                    const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                    return path.length > 0 ? path.length - 1 : "?"
+                  })()} words. </strong>
+                </p>
+                {/* Dynamic clue for the next word in the BFS path */}
+                {(() => {
+                  const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                  if (path.length >= 2) {
+                    // Find the next word based on current game state
+                    let nextWord = ""
+                    if (gameState.attempts.length === 0) {
+                      // If no attempts yet, show clue for first step
+                      nextWord = path[1].toLowerCase()
+                    } else {
+                      // Find the next word in the path after the last attempt
+                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                      const attemptIndex = path.findIndex(word => word === lastAttempt)
+                      if (attemptIndex >= 0 && attemptIndex + 1 < path.length) {
+                        nextWord = path[attemptIndex + 1].toLowerCase()
+                      }
+                    }
+                    
+                    if (nextWord) {
+                      // console.log(`🔍 Looking for clue for: "${nextWord}"`)
+                      const clue = getWordClue(nextWord)
+                      // console.log(`🔍 Found clue: "${clue}"`)
+                      if (clue) {
+                        return (
+                          <p className="text-amber-400 text-sm font-inter mt-2 italic">
+                            "{clue}"
+                          </p>
+                        )
+                      } else {
+                        console.log(`❌ No clue found for: "${nextWord}"`)
+                      }
+                    }
+                    
+                    // Special case: if user is one step away from mystery word, show mystery word clue
+                    if (gameState.attempts.length > 0) {
+                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                      const attemptIndex = path.findIndex(word => word === lastAttempt)
+                      if (attemptIndex >= 0 && attemptIndex + 1 === path.length - 1) {
+                        // User is one step away from mystery word
+                        const mysteryWordClue = getWordClue(gameState.mysteryWord.toLowerCase())
+                        if (mysteryWordClue) {
+                          return (
+                            <p className="text-amber-400 text-sm font-inter mt-2 italic">
+                              "{mysteryWordClue}"
+                            </p>
+                          )
+                        }
+                      }
+                    }
+                  }
+                  return null
+                })()}
         </div>
 
-        {gameState.gameWon && (
+        {/* {gameState.gameWon && (
           <div className="text-center mb-6 p-4 bg-emerald-900/30 rounded-lg border border-emerald-700">
             <h2 className="text-emerald-400 text-xl font-bold mb-2 font-poppins">🎉 Congratulations!</h2>
             <p className="text-emerald-300 font-inter">You solved it in {gameState.attempts.length} attempts!</p>
           </div>
-        )}
+        )} */}
 
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mb-2">
           {/* Found Letters Display - Right aligned with last letter of mystery word */}
-          <div className="flex justify-end mb-2" style={{ width: "256px", margin: "0 auto" }}>
+          {/* <div className="flex justify-end mb-2" style={{ width: "256px", margin: "0 auto" }}>
             <div className="flex gap-1 mb-2">
               {foundLetters.map((item, index) => (
                 <div key={index} className="w-12 h-12 bg-amber-500 flex items-center justify-center shadow-md">
@@ -2789,29 +876,48 @@ export default function WordBreakerGame() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           <div className="flex justify-center gap-1 mb-2">
-            {gameState.mysteryWord.split("").map((letter, index) => (
-              <div
-                key={index}
-                className={`w-12 h-12 border-2 flex items-center justify-center shadow-lg ${
-                  gameState.revealedLetters[index] ? "border-emerald-500 bg-emerald-600" : "border-gray-600 bg-gray-800"
-                } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
-                style={{
-                  animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
-                }}
-              >
-                <span
-                  className={`font-bold font-inter ${
-                    gameState.revealedLetters[index] ? "text-white text-lg" : "text-gray-400 text-2xl"
-                  }`}
-                >
-                  {gameState.revealedLetters[index] ? letter : "*"}
-                </span>
-              </div>
-            ))}
+                         {gameState.mysteryWord.split("").map((letter, index) => {
+               // Reveal letters that actually exist in any guessed word
+               const isLetterFound = gameState.attempts.some(attempt => {
+                 // Check if this letter from the mystery word exists anywhere in the attempt
+                 return attempt.includes(letter)
+               })
+               
+               return (
+                 <div
+                   key={index}
+                   className={`w-12 h-12 border-2 flex items-center justify-center shadow-lg ${
+                     isLetterFound ? "border-emerald-500 bg-emerald-600" : "border-gray-600 bg-gray-800"
+                   } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
+                   style={{
+                     animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
+                   }}
+                 >
+                   <span
+                     className={`font-bold font-inter ${
+                       isLetterFound ? "text-white text-lg" : "text-gray-400 text-2xl"
+                     }`}
+                   >
+                     {isLetterFound ? letter : "*"}
+                   </span>
+                 </div>
+               )
+             })}
+            {/* BFS number for mystery word - shows "?" initially, then actual count when solved */}
+            <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+              <span className="text-yellow-400 text-lg font-bold font-inter">
+                {gameState.gameWon ? (() => {
+                  const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                  return path.length > 0 ? path.length - 1 : "?"
+                })() : "?"}
+              </span>
+            </div>
           </div>
+
+
 
           <div className="flex justify-center gap-1 mb-2">
             {gameState.rootWord.split("").map((letter, index) => {
@@ -2825,14 +931,25 @@ export default function WordBreakerGame() {
                 <div
                   key={index}
                   className={`w-12 h-12 border-2 border-gray-600 bg-gray-700 flex items-center justify-center shadow-md ${
-                    shouldHighlight ? "border-b-[5px] border-b-yellow-400" : ""
+                    shouldHighlight ? "!bg-gray-500" : ""
                   }`}
                 >
                   <span className="text-white text-lg font-bold font-inter">{letter}</span>
                 </div>
               )
             })}
+            {/* Step number for start word - shows total steps needed */}
+            <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+              <span className="text-yellow-400 text-lg font-bold font-inter">
+                {(() => {
+                  const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                  return path.length > 0 ? path.length - 1 : "?"
+                })()}
+              </span>
+            </div>
           </div>
+          
+
 
           {gameState.attempts.map((attempt, attemptIndex) => {
             const isLastAttempt = attemptIndex === gameState.attempts.length - 1
@@ -2840,25 +957,33 @@ export default function WordBreakerGame() {
             const results = checkWord(attempt, gameState.mysteryWord)
             const shouldShowHint = !gameState.isHardMode && isLastAttempt
             const optimalHints = shouldShowHint ? getOptimalLetterHints(attempt, gameState.mysteryWord) : []
+            
+            // Calculate remaining steps to target based on BFS path
+            // We need to find the actual path length from current word to target
+            const currentWord = attempt
+            const targetWord = gameState.mysteryWord
+            const path = bidirectionalBFS(currentWord.toUpperCase(), targetWord.toUpperCase())
+            const remainingSteps = path.length > 0 ? path.length - 1 : 0
 
             return (
               <div key={attemptIndex} className="flex items-center gap-2 justify-center">
                 <div className="flex gap-1">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
-                    const bgColor =
-                      results[letterIndex] === "correct"
-                        ? "bg-emerald-600"
-                        : results[letterIndex] === "present"
-                          ? "bg-amber-500"
-                          : "bg-gray-600"
+                                         const bgColor = "bg-gray-700"
+                     const borderColor =
+                       results[letterIndex] === "correct"
+                         ? "border-b-[3px] border-b-emerald-500"
+                         : results[letterIndex] === "present"
+                           ? "border-b-[3px] border-b-amber-500"
+                           : ""
 
-                    return (
-                      <div
-                        key={letterIndex}
-                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
-                          shouldHighlight ? "border-b-[5px] border-b-yellow-400" : ""
-                        } ${gameState.showWinAnimation && isCompleted ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
+                     return (
+                       <div
+                         key={letterIndex}
+                         className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
+                           shouldHighlight ? "!bg-gray-500" : ""
+                         } ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spin_1s_ease-in-out_1]" : ""}`}
                         style={{
                           animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms",
                         }}
@@ -2867,6 +992,18 @@ export default function WordBreakerGame() {
                       </div>
                     )
                   })}
+                  {/* Step number showing remaining steps to target */}
+                  <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+                    {remainingSteps === 0 ? (
+                      <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <span className="text-yellow-400 text-lg font-bold font-inter">
+                        {remainingSteps}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )
@@ -2892,6 +1029,10 @@ export default function WordBreakerGame() {
                     />
                   )
                 })}
+                {/* "?" placeholder that will update to BFS calculation once word is entered */}
+                <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+                  <span className="text-yellow-400 text-lg font-bold font-inter">?</span>
+                </div>
               </div>
               {gameState.errorMessage && (
                 <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg">
@@ -2903,14 +1044,14 @@ export default function WordBreakerGame() {
         </div>
 
         {/* Action Buttons - constrained to grid width */}
-        <div className="w-[256px] mx-auto">
-          <div className="grid grid-cols-5 gap-1">
+        <div className="w-[312px] mx-auto">
+          <div className="grid grid-cols-6 gap-1">
             <button
               onClick={showSolutionPath}
               className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
               title="Show Solution"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -2925,22 +1066,7 @@ export default function WordBreakerGame() {
               className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
               title="Reset Game"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
-                />
-              </svg>
-            </button>
-
-            <button
-              onClick={initializeGame}
-              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-              title="New Game"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -2951,11 +1077,26 @@ export default function WordBreakerGame() {
             </button>
 
             <button
+              onClick={initializeGame}
+              className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
+              title="New Game"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+
+            <button
               onClick={() => setShowHowToPlay(true)}
               className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
               title="How to Play"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -2970,7 +1111,7 @@ export default function WordBreakerGame() {
               className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
               title="Settings"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -2985,6 +1126,12 @@ export default function WordBreakerGame() {
                 />
               </svg>
             </button>
+            {/* Smiley face icon to complete 6-column layout */}
+            <div className="w-12 h-12 bg-gray-700 flex items-center justify-center shadow-md">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -3010,39 +1157,64 @@ export default function WordBreakerGame() {
               
               {gameState.solutionPath.length > 0 ? (
                 <div className="space-y-4">
-                  {gameState.solutionPath.map((word, stepIndex) => (
-                    <div key={stepIndex} className="text-center">
-                      <div className="flex justify-center gap-1 mb-2">
-                        {word.split("").map((letter, letterIndex) => {
-                          const results = checkWord(word, gameState.mysteryWord)
-                          const bgColor =
-                            results[letterIndex] === "correct"
-                              ? "bg-emerald-600"
-                              : results[letterIndex] === "present"
-                                ? "bg-amber-500"
-                                : "bg-gray-600"
-                          return (
-                            <div
-                              key={letterIndex}
-                              className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md`}
-                            >
-                              <span className="text-white text-lg font-bold font-inter">{letter}</span>
+                  {gameState.solutionPath.map((word, stepIndex) => {
+                    const remainingSteps = gameState.solutionPath.length - 1 - stepIndex
+                    const isTarget = stepIndex === gameState.solutionPath.length - 1
+                    const isStart = stepIndex === 0
+                    
+                    // Get hint letters for this word (except target word)
+                    const shouldShowHint = !isTarget && !isStart
+                    const optimalHints = shouldShowHint ? getOptimalLetterHints(word, gameState.mysteryWord) : []
+                    
+                    return (
+                      <div key={stepIndex} className="text-center">
+                        <div className="flex justify-center gap-1 mb-2">
+                                                      {word.split("").map((letter, letterIndex) => {
+                              const results = checkWord(word, gameState.mysteryWord)
+                                                             const bgColor = "bg-gray-700"
+                              const borderColor =
+                                results[letterIndex] === "correct"
+                                  ? "border-b-[3px] border-b-emerald-500"
+                                  : results[letterIndex] === "present"
+                                    ? "border-b-[3px] border-b-amber-500"
+                                    : ""
+                              
+                              // Check if this letter should show hint underline
+                              const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
+                              
+                              return (
+                                <div
+                                  key={letterIndex}
+                                  className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
+                                    shouldHighlight ? "!bg-gray-500" : ""
+                                  } ${borderColor}`}
+                                >
+                                  <span className="text-white text-lg font-bold font-inter">{letter}</span>
+                                </div>
+                              )
+                            })}
+                          {/* Step number indicator - shows remaining steps to target */}
+                          {!isTarget && (
+                            <div className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md">
+                              <span className="text-yellow-400 text-lg font-bold font-inter">
+                                {remainingSteps}
+                              </span>
                             </div>
-                          )
-                        })}
+                          )}
+                        </div>
+                        <div className="text-yellow-400 text-sm font-medium font-inter">
+                          {stepIndex === 0
+                            ? "Start"
+                            : stepIndex === gameState.solutionPath.length - 1
+                              ? "Mystery Word"
+                              : `Step ${stepIndex}`}
+                        </div>
+                        {stepIndex < gameState.solutionPath.length - 1 && (
+                          <div className="text-yellow-400 text-xl font-bold">↓</div>
+                        )}
                       </div>
-                      <div className="text-yellow-400 text-sm font-medium font-inter">
-                        {stepIndex === 0
-                          ? "Start"
-                          : stepIndex === gameState.solutionPath.length - 1
-                            ? "Mystery Word"
-                            : `Step ${stepIndex}`}
-                      </div>
-                      {stepIndex < gameState.solutionPath.length - 1 && (
-                        <div className="text-yellow-400 text-xl font-bold">↓</div>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="text-center font-inter">

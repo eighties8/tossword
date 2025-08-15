@@ -1,0 +1,331 @@
+// Dictionary of valid 5-letter words for the Cluesle game
+export const VALID_WORDS = new Set([
+  "aback", "abase", "abate", "abbey", "abbot", "abhor", "abide", "abled", "abode", "abort",
+  "about", "above", "abuse", "abyss", "acorn", "acrid", "actor", "acute", "adage", "adapt",
+  "adept", "admin", "admit", "adobe", "adopt", "adore", "adorn", "adult", "affix", "afire",
+  "afoot", "afoul", "after", "again", "agape", "agate", "agent", "agile", "aging", "aglow",
+  "agony", "agora", "agree", "ahead", "aider", "aisle", "alarm", "album", "alert", "algae",
+  "alibi", "alien", "align", "alike", "alive", "allay", "alley", "allot", "allow", "alloy",
+  "aloft", "alone", "along", "aloof", "aloud", "alpha", "altar", "alter", "amass", "amaze",
+  "amber", "amble", "amend", "amiss", "amity", "among", "ample", "amply", "amuse", "angel",
+  "anger", "angle", "angry", "angst", "anime", "ankle", "annex", "annoy", "annul", "anode",
+  "antic", "anvil", "aorta", "apart", "aphid", "aping", "apnea", "apple", "apply", "arena",
+  "argue", "arise", "array", "aside", "asset", "audio", "audit", "avoid", "await", "awake",
+  "award", "aware", "awful", "axiom", "badge", "badly", "baker", "bases", "basic", "basis",
+  "beach", "began", "begin", "begun", "being", "below", "bench", "billy", "birth", "black",
+  "blame", "blank", "blind", "block", "blood", "bluff", "board", "boost", "booth", "bound",
+  "brain", "brand", "bread", "break", "breed", "brief", "bring", "broad", "broke", "brown",
+  "build", "built", "buyer", "cable", "calif", "carry", "catch", "cause", "chain", "chair",
+  "chart", "chase", "cheap", "check", "chest", "chief", "child", "china", "chose", "civil",
+  "claim", "class", "clean", "clear", "click", "climb", "clock", "close", "coach", "coast",
+  "could", "count", "court", "cover", "craft", "crash", "cream", "crime", "cross", "crowd",
+  "crown", "crude", "crush", "crust", "curly", "curry", "curse", "curve", "curvy", "cushy",
+  "cycle", "daily", "dance", "dated", "dealt", "death", "debut", "decal", "decay", "decor",
+  "delay", "delta", "delve", "demon", "denim", "dense", "depot", "depth", "derby", "desk",
+  "diary", "dicey", "digit", "diner", "dingy", "diode", "dirty", "disco", "ditch", "diver",
+  "dizzy", "dodgy", "doing", "doubt", "dough", "dowdy", "dowel", "downy", "dozen", "draft",
+  "drain", "drama", "drank", "drawl", "drawn", "dread", "dream", "dress", "dried", "drier",
+  "drift", "drill", "drink", "drive", "drone", "drool", "droop", "drops", "drove", "drown",
+  "druid", "drunk", "dryer", "dryly", "duchy", "dully", "dummy", "dumpy", "dunce", "dusky",
+  "dusty", "dutch", "duvet", "dwarf", "dwell", "dwelt", "dying", "eager", "eagle", "early",
+  "earth", "elbow", "elder", "elect", "elite", "elope", "elude", "email", "embed", "ember",
+  "empty", "enact", "endow", "enema", "enemy", "enjoy", "enter", "entry", "envoy", "equal",
+  "equip", "erase", "erect", "erode", "error", "erupt", "essay", "estate", "ether", "ethic",
+  "ethos", "evade", "event", "every", "evict", "evoke", "exact", "exalt", "excel", "exert",
+  "exile", "exist", "exits", "exotic", "expose", "extend", "extra", "fable", "faced", "fact",
+  "fade", "fairy", "faith", "false", "fancy", "fangs", "farce", "fatal", "fault", "fauna",
+  "favor", "feast", "fecal", "feign", "fella", "felly", "felon", "femme", "femur", "fence",
+  "feral", "ferry", "fetal", "fetch", "fever", "fewer", "fiber", "fibre", "ficus", "field",
+  "fiend", "fiery", "fifth", "fifty", "fight", "filmy", "filth", "final", "finch", "finer",
+  "first", "fishy", "fixer", "fizzy", "fjord", "flack", "flail", "flair", "flake", "flaky",
+  "flame", "flank", "flare", "flash", "flask", "fleck", "flick", "fling", "flint", "flirt",
+  "float", "flock", "flood", "floor", "flora", "floss", "flour", "flout", "flown", "fluff",
+  "fluid", "fluke", "flume", "flung", "flunk", "flush", "flute", "flyer", "foamy", "focal",
+  "focus", "foggy", "foist", "folio", "folks", "force", "forge", "forgo", "forte", "forth",
+  "forty", "forum", "found", "frame", "frank", "fraud", "freak", "freed", "freer", "fresh",
+  "friar", "fried", "frill", "frisk", "front", "frost", "froth", "frown", "froze", "fruit",
+  "fudge", "fugue", "fully", "fungi", "funky", "funny", "furry", "fussy", "fuzzy", "gaffe",
+  "gaily", "gamer", "gamma", "gases", "gaudy", "gauge", "gaunt", "gauze", "gavel", "gawky",
+  "gayer", "gayly", "gazer", "gecko", "geeky", "geese", "genie", "genre", "ghost", "ghoul",
+  "giant", "giddy", "gifts", "gimpy", "girly", "girth", "given", "giver", "glade", "gland",
+  "glans", "glare", "glass", "glaze", "gleam", "glean", "glide", "glint", "gloat", "globe",
+  "gloom", "glory", "gloss", "glove", "glowy", "glued", "gluey", "gluon", "glute", "glyph",
+  "gnarl", "gnash", "gnome", "godly", "going", "golem", "golly", "gonad", "goner", "goody",
+  "gooey", "goofy", "goose", "gorge", "gouge", "gourd", "gouty", "gown", "grabs", "grace",
+  "grade", "grain", "grand", "grant", "grape", "graph", "grasp", "grass", "grate", "grave",
+  "gravy", "graze", "great", "grebe", "greed", "green", "greet", "grief", "grill", "grime",
+  "grind", "gripe", "groan", "groin", "groom", "grope", "gross", "group", "grout", "grove",
+  "growl", "grown", "gruel", "gruff", "grunt", "guard", "guava", "guess", "guest", "guide",
+  "guild", "guile", "guilt", "guise", "gulch", "gully", "gumbo", "gummy", "guppy", "gusto",
+  "gusty", "gypsy", "habit", "hacks", "hairy", "halls", "hands", "handy", "hangs", "happy",
+  "hardy", "harsh", "harts", "haste", "hasty", "hatch", "hated", "hater", "haunt", "haven",
+  "havoc", "hawks", "heads", "heady", "heard", "heart", "heath", "heave", "heavy", "hedge",
+  "hefty", "heirs", "helix", "hello", "hence", "henry", "herbs", "herds", "hills", "hilly",
+  "hinge", "hints", "hired", "hobby", "holds", "holes", "holly", "homes", "honey", "honor",
+  "hooks", "hoped", "hopes", "horse", "hosts", "hotel", "hound", "hours", "house", "hover",
+  "howdy", "human", "humid", "humor", "hurts", "husks", "husky", "hutch", "hydro", "hyena",
+  "hymen", "hyper", "icily", "icing", "icons", "ideal", "ideas", "idiom", "idiot", "idled",
+  "idles", "idols", "igloo", "image", "imply", "inbox", "incur", "index", "indie", "inner",
+  "input", "inter", "intro", "issue", "items", "ivory", "jacks", "jaded", "jails", "jammy",
+  "japan", "jeans", "jeeps", "jeers", "jelly", "jerky", "jests", "jetty", "jewel", "jiffy",
+  "johns", "joins", "joint", "joked", "joker", "jokes", "jolly", "joust", "judge", "juice",
+  "juicy", "jumbo", "jumpy", "junta", "junto", "juror", "kayak", "kazoo", "kebab", "keeps",
+  "ketch", "keyed", "khaki", "kicks", "kiddo", "kills", "kinda", "kinds", "kings", "kinks",
+  "kinky", "knack", "knave", "knead", "kneed", "kneel", "knelt", "knife", "knock", "knoll",
+  "known", "koala", "kudos", "label", "labor", "lacks", "laden", "ladle", "lager", "lakes",
+  "lambs", "lamed", "lamp", "lance", "lands", "lanes", "lanky", "lapel", "lapse", "large",
+  "larva", "lasso", "lasts", "latch", "later", "lathe", "laugh", "layer", "leads", "leaks",
+  "leaky", "learn", "lease", "leash", "least", "leave", "ledge", "leech", "leery", "lefts",
+  "legal", "lemon", "lemur", "lends", "leper", "level", "lever", "libel", "liege", "liens",
+  "lifts", "light", "liked", "likes", "limbs", "limbo", "limbs", "limit", "lined", "linen",
+  "liner", "lines", "lingo", "links", "lions", "lists", "lived", "liver", "lives", "loads",
+  "loans", "lobby", "local", "locks", "lodge", "lofts", "lofty", "logic", "login", "loner",
+  "looks", "loops", "loose", "lords", "loses", "loved", "lover", "loves", "lower", "loyal",
+  "lucky", "lunar", "lunch", "lungs", "lurch", "lurks", "lying", "lymph", "lynch", "lyric",
+  "macaw", "macho", "macro", "madam", "madly", "mafia", "magic", "magma", "maids", "mails",
+  "major", "maker", "makes", "males", "mamma", "mango", "mania", "manic", "manly", "manor",
+  "maple", "march", "marks", "marry", "marsh", "mason", "match", "mates", "maths", "matte",
+  "maybe", "mayor", "meals", "means", "meant", "meats", "medal", "media", "medic", "meets",
+  "melee", "menus", "mercy", "merge", "merit", "merry", "messy", "metal", "meter", "midst",
+  "might", "miles", "minds", "mines", "minor", "minty", "minus", "mirth", "miser", "missy",
+  "mocha", "modal", "model", "modem", "modes", "moist", "molar", "molds", "moody", "moped",
+  "moral", "moron", "morph", "morse", "morts", "moses", "motel", "motif", "motor", "motto",
+  "mould", "mound", "mount", "mourn", "mouse", "mouth", "moved", "moves", "movie", "mower",
+  "mucus", "muddy", "mulch", "mummy", "munch", "mural", "mused", "muses", "music", "myrrh",
+  "myths", "nadir", "nails", "naive", "naked", "named", "names", "nasal", "nasty", "natal",
+  "naval", "navel", "nears", "neath", "necks", "needs", "nerve", "nests", "never", "newer",
+  "newly", "nexus", "nicer", "niche", "niece", "night", "ninja", "ninth", "noble", "nodal",
+  "nodes", "noise", "noisy", "nomad", "nooks", "norms", "north", "notch", "noted", "notes",
+  "nouns", "nudge", "nurse", "nylon", "nymph", "oaken", "obese", "occur", "ocean", "octal",
+  "octet", "odder", "odors", "offal", "offer", "often", "olden", "older", "olive", "ombre",
+  "omega", "onion", "onset", "opals", "opens", "opera", "opted", "optic", "orbit", "order",
+  "organ", "other", "otter", "ought", "ounce", "outdo", "outer", "outgo", "ovals", "ovary",
+  "ovens", "overt", "ovoid", "owing", "owner", "oxide", "ozone", "paced", "pacer", "paces",
+  "packs", "pacts", "paged", "pager", "pages", "pails", "pains", "paint", "pairs", "panda",
+  "panes", "panel", "pangs", "panic", "pansy", "pants", "panty", "paper", "parks", "parts",
+  "party", "pasta", "paste", "patch", "paths", "patio", "pause", "peace", "peach", "peaks",
+  "pearl", "pedal", "peers", "perch", "perks", "perky", "perry", "pesky", "pests", "petty",
+  "phase", "phone", "photo", "piano", "picks", "piece", "piers", "piety", "piggy", "piled",
+  "piles", "pills", "pilot", "pinch", "pined", "pines", "pinky", "pinto", "pints", "piper",
+  "pipes", "pitch", "pithy", "pivot", "pixel", "pizza", "place", "plaid", "plain", "plane",
+  "plank", "plans", "plant", "plate", "plays", "plaza", "plods", "plops", "plots", "plows",
+  "pluck", "plugs", "plumb", "plume", "plump", "plums", "plunk", "plush", "poems", "poets",
+  "point", "poker", "polar", "polka", "polyp", "pooch", "poppy", "porch", "pores", "ports",
+  "posed", "poses", "posse", "posts", "pouch", "pound", "pours", "power", "prank", "prawn",
+  "prays", "preen", "press", "price", "prick", "pride", "prime", "print", "prior", "prism",
+  "privy", "prize", "probe", "prone", "prong", "proof", "props", "prose", "proud", "prove",
+  "prowl", "proxy", "prude", "prune", "psalm", "pubic", "pudgy", "puffs", "puffy", "pulls",
+  "pulse", "pumps", "punch", "pupil", "puppy", "purge", "purse", "pushy", "putty", "pygmy",
+  "quack", "quail", "qualm", "quark", "quart", "quash", "quasi", "queen", "queer", "quell",
+  "query", "quest", "queue", "quick", "quiet", "quill", "quilt", "quirk", "quite", "quota",
+  "quote", "quoth", "rabbi", "rabid", "racer", "radar", "radii", "radio", "rainy", "raise",
+  "rajah", "rally", "ralph", "ramps", "ranch", "rands", "range", "ranks", "rants", "rapid",
+  "rarer", "raspy", "rated", "rates", "ratio", "razor", "reach", "react", "reads", "ready",
+  "realm", "rebel", "refer", "reign", "relax", "relay", "relic", "remit", "renal", "renew",
+  "repay", "repel", "reply", "rerun", "reset", "resin", "retch", "retro", "revel", "rhino",
+  "rhyme", "rider", "ridge", "rifle", "right", "rigid", "rigor", "rinds", "rings", "rinks",
+  "rinse", "riots", "ripen", "risen", "rises", "risks", "risky", "rival", "river", "rivet",
+  "roach", "roads", "roast", "robin", "rocks", "rocky", "rogue", "roles", "rolls", "roman",
+  "rooms", "roomy", "roost", "roots", "ropes", "roses", "rosin", "rotor", "rouge", "rough",
+  "round", "rouse", "route", "rover", "rowdy", "rower", "royal", "ruddy", "ruder", "rugby",
+  "ruins", "ruled", "ruler", "rules", "rural", "rusty", "sadly", "safer", "saint", "salad",
+  "sally", "salon", "salsa", "salts", "salty", "salve", "salvo", "sands", "sandy", "satin",
+  "satyr", "sauce", "saucy", "saucy", "sauna", "saved", "saves", "savor", "savvy", "scald",
+  "scale", "scalp", "scare", "scarf", "scary", "scene", "scent", "scoff", "scold", "scoop",
+  "scope", "score", "scorn", "scout", "scowl", "scrap", "screw", "scrub", "scrum", "scuba",
+  "sedan", "seeds", "seedy", "segue", "seize", "sense", "sepia", "serif", "serum", "serve",
+  "seven", "shack", "shade", "shaft", "shake", "shaky", "shall", "shalt", "shame", "shank",
+  "shape", "shard", "share", "shark", "sharp", "shave", "shawl", "shear", "sheen", "sheep",
+  "sheer", "sheet", "shelf", "shell", "shied", "shift", "shill", "shine", "shiny", "ship",
+  "shire", "shirk", "shirt", "shoal", "shock", "shoes", "shook", "shoot", "shops", "shore",
+  "shorn", "short", "shots", "shout", "shove", "shown", "shows", "showy", "shred", "shrew",
+  "shrub", "shrug", "shuck", "shuns", "shush", "shut", "shuts", "shyly", "sieve", "sifts",
+  "sighs", "sight", "sigma", "signs", "silks", "silly", "since", "sinew", "singe", "sings",
+  "sinks", "sinus", "sired", "siren", "sires", "sixth", "sixty", "sized", "sizes", "skate",
+  "skew", "skews", "skids", "skied", "skies", "skiff", "skill", "skimp", "skims", "skins",
+  "skint", "skips", "skirt", "skulk", "skull", "skunk", "slack", "slain", "slang", "slant",
+  "slash", "slate", "slats", "slave", "slays", "sleds", "sleek", "sleep", "sleet", "slept",
+  "slice", "slick", "slide", "slime", "slimy", "sling", "slink", "slips", "slits", "slobs",
+  "sloth", "slots", "slows", "slugs", "slump", "slung", "slunk", "slurp", "slurs", "slush",
+  "slyly", "smack", "small", "smart", "smash", "smear", "smell", "smelt", "smile", "smirk",
+  "smite", "smith", "smock", "smoke", "smoky", "smote", "smurf", "smush", "snack", "snags",
+  "snail", "snake", "snaky", "snaps", "snare", "snark", "snarl", "sneak", "sneer", "snide",
+  "sniff", "snipe", "snipe", "snips", "snits", "snobs", "snood", "snook", "snoot", "snore",
+  "snort", "snout", "snowy", "snubs", "snuck", "snuff", "snugs", "soaks", "soaps", "soapy",
+  "sober", "soggy", "soils", "solar", "sonar", "sonic", "sonny", "sooth", "sooty", "soppy",
+  "sores", "sorry", "sorts", "souls", "sound", "south", "sowed", "sower", "soyuz", "space",
+  "spade", "spank", "spans", "spare", "spark", "spars", "spasm", "spats", "spawn", "speak",
+  "spear", "speck", "speed", "spell", "spelt", "spend", "spent", "sperm", "spice", "spicy",
+  "spied", "spiel", "spies", "spiff", "spike", "spiky", "spill", "spilt", "spine", "spins",
+  "spiny", "spire", "spite", "spits", "splat", "split", "spoil", "spoke", "spoof", "spook",
+  "spool", "spoon", "spore", "sport", "spots", "spout", "spray", "spree", "sprig", "spuds",
+  "spuds", "spume", "spunk", "spurn", "spurs", "spurt", "squad", "squat", "squib", "stack",
+  "staff", "stage", "stain", "stair", "stake", "stale", "stalk", "stall", "stamp", "stand",
+  "stank", "stare", "stark", "stash", "state", "stave", "stays", "stead", "steak", "steal",
+  "steam", "steel", "steep", "steer", "stems", "steps", "stews", "stick", "sties", "stiff",
+  "stile", "still", "stilt", "sting", "stink", "stint", "stirs", "stock", "stoke", "stole",
+  "stomp", "stone", "stony", "stood", "stool", "stoop", "stops", "store", "stork", "storm",
+  "story", "stout", "stove", "stows", "strap", "straw", "stray", "strep", "strew", "strip",
+  "strum", "strut", "stubs", "stuck", "studs", "study", "stuff", "stump", "stung", "stunk",
+  "stuns", "stunt", "style", "styli", "suave", "suede", "sugar", "suing", "suite", "suits",
+  "sulks", "sulky", "sully", "sumac", "sumps", "sunny", "super", "surer", "surge", "surly",
+  "sushi", "swabs", "swags", "swain", "swami", "swamp", "swank", "swans", "swaps", "swarm",
+  "swash", "swath", "swats", "sways", "swear", "sweat", "sweep", "sweet", "swell", "swept",
+  "swift", "swill", "swine", "swing", "swipe", "swirl", "swish", "swiss", "swoon", "swoop",
+  "sword", "swore", "sworn", "swung", "synod", "syrup", "tabby", "table", "taboo", "tacit",
+  "tacky", "taffy", "tails", "taint", "taken", "taker", "takes", "tales", "talks", "tally",
+  "talon", "tamed", "tamer", "tames", "tango", "tangy", "taper", "tapes", "tardy", "tarot",
+  "tarry", "tarts", "tasks", "taste", "tasty", "tatty", "taunt", "tawny", "taxes", "teach",
+  "tears", "tease", "techs", "teddy", "teens", "teeny", "teeth", "tepee", "tepid", "terms",
+  "tests", "texts", "thank", "theft", "their", "theme", "there", "these", "theta", "thick",
+  "thief", "thigh", "thing", "think", "third", "thong", "thorn", "those", "three", "threw",
+  "throb", "throw", "thrum", "thuds", "thugs", "thumb", "thump", "thyme", "tiara", "tibia",
+  "ticks", "tidal", "tiger", "tight", "tiles", "timer", "times", "timid", "tipsy", "tired",
+  "tires", "titan", "tithe", "title", "toads", "toast", "today", "toddy", "toffy", "toile",
+  "token", "tonal", "toned", "tones", "tonic", "tools", "tooth", "topaz", "topic", "torch",
+  "torso", "torts", "torus", "total", "totem", "touch", "tough", "tours", "towel", "tower",
+  "towns", "toxic", "toxin", "toyed", "trace", "track", "tract", "trade", "trail", "train",
+  "trait", "tramp", "trams", "trap", "traps", "trash", "trawl", "tray", "trays", "tread",
+  "treat", "trees", "treks", "trend", "triad", "trial", "tribe", "trice", "trick", "tried",
+  "tries", "trike", "trill", "trims", "trios", "tripe", "trips", "trite", "troll", "troop",
+  "trope", "troth", "trots", "trout", "truce", "truck", "truer", "truly", "trump", "trunk",
+  "truss", "trust", "truth", "tryst", "tsars", "tubal", "tubby", "tubed", "tubes", "tucks",
+  "tudor", "tufts", "tulip", "tulle", "tumor", "tuned", "tuner", "tunes", "tunic", "turbo",
+  "turns", "tusks", "tutor", "tutus", "tuxes", "twang", "tweak", "tweed", "tweet", "twice",
+  "twine", "twins", "twirl", "twist", "twits", "twixt", "tying", "udder", "ulcer", "ultra",
+  "umbra", "uncle", "uncut", "under", "undid", "undue", "unfed", "unfit", "unify", "union",
+  "unite", "unity", "unlit", "unmet", "untie", "until", "unwed", "unzip", "upper", "upset",
+  "urban", "urine", "usage", "users", "usher", "using", "usual", "usurp", "utile", "utter",
+  "uvula", "vague", "valet", "valid", "valor", "value", "valve", "vapid", "vapor", "vault",
+  "vaunt", "veers", "vegan", "venom", "venue", "verge", "verse", "verso", "verve", "vicar",
+  "video", "vigil", "vigor", "villa", "vinyl", "viola", "viper", "viral", "virus", "visit",
+  "visor", "vista", "vital", "vivid", "vixen", "vocal", "vodka", "vogue", "voice", "voila",
+  "vomit", "voter", "vouch", "vowed", "vowel", "vower", "vying", "wacky", "wafer", "wafts",
+  "waged", "wager", "wages", "wagon", "waifs", "wails", "waist", "waits", "waive", "waken",
+  "wakes", "waled", "wales", "walks", "walls", "wands", "wanes", "wanly", "wants", "wards",
+  "wares", "warms", "warns", "warps", "warts", "wasps", "waste", "watch", "water", "waver",
+  "waxen", "waxes", "wayne", "ways", "weak", "wean", "weary", "weave", "wedge", "weeds",
+  "weedy", "weeks", "weeps", "weepy", "weigh", "weird", "wells", "welsh", "wench", "wetly",
+  "whack", "whale", "wharf", "wheat", "wheel", "whelp", "where", "which", "whiff", "while",
+  "whine", "whiny", "whip", "whips", "whirl", "whisk", "whist", "white", "whizz", "whoop",
+  "whoop", "whore", "whose", "widen", "wider", "widow", "width", "wield", "wight", "wilds",
+  "wiles", "wills", "willy", "wimpy", "wince", "winch", "winds", "windy", "wined", "wines",
+  "wings", "winks", "winos", "wiped", "wipes", "wired", "wires", "wiser", "wishy", "wispy",
+  "witch", "witty", "wives", "woken", "wolds", "woman", "women", "wonky", "woods", "woody",
+  "wooed", "wooer", "woofs", "wools", "woozy", "words", "wordy", "works", "world", "worms",
+  "wormy", "worry", "worse", "worst", "worth", "would", "wound", "woven", "wrack", "wraps",
+  "wrath", "wreak", "wreck", "wrest", "wring", "wrist", "write", "writs", "wrong", "wrote",
+  "wrung", "wryly", "yacht", "yanks", "yappy", "yards", "yarns", "yawls", "yawns", "yawps",
+  "yearn", "years", "yeast", "yield", "yodel", "yokel", "yokes", "yolks", "yours", "youth",
+  "yowls", "yucky", "yummy", "zebra", "zesty", "zincs", "zippy", "zonal", "zoned", "zones"
+]);
+
+// Build signature index once for multiset-based neighbor generation
+const UPPER_WORDS = Array.from(VALID_WORDS).map(w => w.toUpperCase());
+
+const bySignature = new Map<string, string[]>();
+for (const w of UPPER_WORDS) {
+  const sig = w.split('').sort().join('');
+  const arr = bySignature.get(sig);
+  if (arr) arr.push(w); else bySignature.set(sig, [w]);
+}
+
+// Helper functions for multiset operations
+function countsOf(word: string): number[] {
+  const c = Array(26).fill(0);
+  for (const ch of word) c[ch.charCodeAt(0) - 65]++;
+  return c;
+}
+
+function sigFromCounts(c: number[]): string {
+  let s = '';
+  for (let i = 0; i < 26; i++) s += String.fromCharCode(65 + i).repeat(c[i]);
+  return s;
+}
+
+// Generate neighbors by one-letter multiset change (allows reordering)
+export function neighborsOneChangeReorder(word: string): string[] {
+  const c = countsOf(word);
+  const result: string[] = [];
+  const seen = new Set<string>();
+
+  for (let i = 0; i < 26; i++) {
+    if (c[i] === 0) continue;
+    c[i]--;
+    for (let j = 0; j < 26; j++) {
+      if (j === i) continue;
+      c[j]++;
+      const sig = sigFromCounts(c);
+      const bucket = bySignature.get(sig);
+      if (bucket) {
+        for (const w of bucket) {
+          if (w !== word && !seen.has(w)) {
+            seen.add(w);
+            result.push(w);
+          }
+        }
+      }
+      c[j]--;
+    }
+    c[i]++;
+  }
+  return result;
+}
+
+// Bidirectional BFS for guaranteed shortest paths
+export function bidirectionalBFS(start: string, target: string): string[] {
+  if (start === target) return [start];
+  const s = start.toUpperCase();
+  const t = target.toUpperCase();
+
+  let q1: string[] = [s], q2: string[] = [t];
+  const p1 = new Map<string, string>();
+  const p2 = new Map<string, string>();
+  const v1 = new Set<string>([s]);
+  const v2 = new Set<string>([t]);
+
+  const step = (front: string[], visited: Set<string>, otherVisited: Set<string>, parents: Map<string, string>) => {
+    const next: string[] = [];
+    for (const w of front) {
+      for (const nb of neighborsOneChangeReorder(w)) {
+        if (visited.has(nb)) continue;
+        visited.add(nb);
+        parents.set(nb, w);
+        if (otherVisited.has(nb)) {
+          return { meet: nb, next };
+        }
+        next.push(nb);
+      }
+    }
+    return { meet: null as string | null, next };
+  };
+
+  for (let iter = 0; iter < 20; iter++) {
+    if (q1.length <= q2.length) {
+      const { meet, next } = step(q1, v1, v2, p1);
+      if (meet) return reconstruct(s, t, meet, p1, p2);
+      q1 = next;
+    } else {
+      const { meet, next } = step(q2, v2, v1, p2);
+      if (meet) return reconstruct(s, t, meet, p1, p2);
+      q2 = next;
+    }
+    if (q1.length === 0 && q2.length === 0) break;
+  }
+  return [];
+}
+
+function reconstruct(s: string, t: string, meet: string, p1: Map<string, string>, p2: Map<string, string>): string[] {
+  const left: string[] = [];
+  let cur = meet;
+  while (cur && cur !== s) { left.push(cur); cur = p1.get(cur)!; }
+  left.push(s);
+  left.reverse();
+
+  const right: string[] = [];
+  cur = p2.get(meet)!;
+  while (cur && cur !== t) { right.push(cur); cur = p2.get(cur)!; }
+  if (t !== meet) right.push(t);
+
+  return [...left, ...right];
+}
