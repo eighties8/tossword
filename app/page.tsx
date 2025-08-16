@@ -68,7 +68,7 @@ export default function WordBreakerGame() {
   const DEBUG_MODE = true
   
   // HINT TEXT AUTO FLAG: Set to true to automatically show hints when focusing on new rows
-  const HINT_TEXT_AUTO = true
+  const HINT_TEXT_AUTO = false
   
   const [isLoading, setIsLoading] = useState(true)
   const [showHowToPlay, setShowHowToPlay] = useState(false)
@@ -1109,41 +1109,60 @@ export default function WordBreakerGame() {
               </div>
                )
              })}
-            {/* BFS number for mystery word - shows ? until solved, then user's score */}
-            <div 
-              className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
-              onTouchStart={() => {
-                // Show tooltip on touch for mobile
-                const tooltip = document.getElementById('mystery-tooltip')
-                if (tooltip) {
-                  tooltip.classList.remove('hidden')
-                  setTimeout(() => tooltip.classList.add('hidden'), 3000) // Hide after 3 seconds
-                }
-              }}
-              onMouseEnter={() => {
-                // Show tooltip on hover for desktop
-                const tooltip = document.getElementById('mystery-tooltip')
-                if (tooltip) tooltip.classList.remove('hidden')
-              }}
-              onMouseLeave={() => {
-                // Hide tooltip on hover out for desktop
-                const tooltip = document.getElementById('mystery-tooltip')
-                if (tooltip) tooltip.classList.add('hidden')
-              }}
-            >
-              <span className="text-yellow-400 text-lg font-bold font-inter">
-                {gameState.gameWon ? gameState.attempts.length : "?"}
-              </span>
-              
-              {/* Custom tooltip for mystery word BFS number */}
-              <div
-                id="mystery-tooltip"
-                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words"
-              >
-                {gameState.gameWon ? `Solved in ${gameState.attempts.length} steps!` : "Total steps taken to solve this puzzle"}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                         {/* Padlock icon for mystery word - shows locked until solved, then unlocked */}
+             <div 
+               className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
+               onTouchStart={() => {
+                 // Show tooltip on touch for mobile
+                 const tooltip = document.getElementById('mystery-tooltip')
+                 if (tooltip) {
+                   tooltip.classList.remove('hidden')
+                   setTimeout(() => tooltip.classList.add('hidden'), 3000) // Hide after 3 seconds
+                 }
+               }}
+               onMouseEnter={() => {
+                 // Show tooltip on hover for desktop
+                 const tooltip = document.getElementById('mystery-tooltip')
+                 if (tooltip) tooltip.classList.remove('hidden')
+               }}
+               onMouseLeave={() => {
+                 // Hide tooltip on hover out for desktop
+                 const tooltip = document.getElementById('mystery-tooltip')
+                 if (tooltip) tooltip.classList.add('hidden')
+               }}
+             >
+               {gameState.gameWon ? (
+                 // Unlocked padlock icon when puzzle is solved
+                //  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                //    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                //    <rect width="16" height="12" x="4" y="11" rx="2" ry="2"/>
+                //    <path d="M8 15h8"/>
+                //  </svg>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"
+                  className="w-5 h-5 text-green-400">
+                  <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                </svg>
+               ) : (
+                 // Locked padlock icon when puzzle is unsolved
+                 <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                   <rect width="16" height="12" x="4" y="11" rx="2" ry="2"/>
+                   <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                 </svg>
+               )}
+                
+                {/* Custom tooltip for mystery word padlock */}
+                <div
+                  id="mystery-tooltip"
+                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words"
+                >
+                  {gameState.gameWon ? "Puzzle unlocked! Well done!" : "Puzzle locked - solve it to unlock!"}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
               </div>
-            </div>
           </div>
 
 
