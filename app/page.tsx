@@ -986,15 +986,28 @@ export default function WordBreakerGame() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>, index: number) => {
       if (e.key === "Backspace" || e.key === "Delete") {
-        // Clear the current cell first
-        handleLetterInput(index, "")
-        if (index > 0) {
-          // Then move to previous cell with a delay so clearing is visible
+        // Treat mobile delete (including iOS keyboard X) as an explicit delete
+        // If current cell is empty, delete the previous cell's contents too
+        e.preventDefault()
+        const currentEmpty = !gameState.inputLetters[index]
+        if (currentEmpty && index > 0) {
+          // Wipe previous cell and move there
+          handleLetterInput(index - 1, "")
           setTimeout(() => {
-          setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
+            setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
             inputRefs.current[index - 1]?.focus()
-          }, 50)
+          }, 0)
+        } else {
+          // Wipe current cell, then move left
+          handleLetterInput(index, "")
+          if (index > 0) {
+            setTimeout(() => {
+              setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
+              inputRefs.current[index - 1]?.focus()
+            }, 0)
+          }
         }
+        return
       }
       if (e.key === "ArrowLeft") {
         if (index > 0) {
@@ -1335,8 +1348,8 @@ export default function WordBreakerGame() {
                 //  </svg>
                 <svg xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round"
+                  stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round"
                   className="w-5 h-5 text-white">
                   <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 9.9-1" />
