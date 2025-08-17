@@ -37,6 +37,7 @@ interface GameState {
   showAutoHint: boolean // Auto-hint display state
   autoHintText: string // Text to show in auto-hint
   hintShownForRow: number // Track which row has already shown a hint
+  hideAttemptsDuringReveal: boolean // Temporarily hide attempts while mystery animates
 }
 
 const PUZZLES = [
@@ -94,6 +95,7 @@ export default function WordBreakerGame() {
     showAutoHint: false, // Auto-hint display state
     autoHintText: "", // Text to show in auto-hint
     hintShownForRow: -1, // Track which row has already shown a hint
+    hideAttemptsDuringReveal: false,
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -117,6 +119,7 @@ export default function WordBreakerGame() {
       showAutoHint: false,
       autoHintText: "",
       hintShownForRow: -1,
+      hideAttemptsDuringReveal: false,
     }))
     
     // Clear solution cache
@@ -169,6 +172,7 @@ export default function WordBreakerGame() {
       showAutoHint: false,
       autoHintText: "",
       hintShownForRow: -1,
+      hideAttemptsDuringReveal: false,
     })
 
     // Mark game as ready after initialization
@@ -542,9 +546,16 @@ export default function WordBreakerGame() {
     }
 
     if (isWon) {
+      // Hide attempts while mystery word animates, then show celebration
+      setGameState((prev) => ({ ...prev, hideAttemptsDuringReveal: true }))
+      // Start mystery word animation almost immediately
       setTimeout(() => {
         setGameState((prev) => ({ ...prev, showWinAnimation: true }))
-      }, 500)
+      }, 100)
+      // Unhide attempts after mystery animation completes (~1s + 4*200ms = 1.8s)
+      setTimeout(() => {
+        setGameState((prev) => ({ ...prev, hideAttemptsDuringReveal: false }))
+      }, 1900)
     } else {
       setTimeout(() => {
         inputRefs.current[0]?.focus()
@@ -623,7 +634,7 @@ export default function WordBreakerGame() {
       case "present":
         return "bg-yellow-500"
       default:
-        return "bg-gray-600"
+        return "bg-gray-400"
     }
   }, [])
 
@@ -1017,13 +1028,13 @@ export default function WordBreakerGame() {
           {/* Tossword Logo - Placeholder for now */}
           <div className="mb-6">
             <div className="grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4">
-              <div className="bg-gray-500 rounded flex items-center justify-center">
+              <div className="bg-gray-400 rounded flex items-center justify-center">
                 <span className="text-white text-sm font-bold">?</span>
               </div>
-              <div className="bg-gray-500 rounded flex items-center justify-center">
+              <div className="bg-gray-400 rounded flex items-center justify-center">
                 <span className="text-white text-sm font-bold">?</span>
               </div>
-              <div className="bg-gray-500 rounded flex items-center justify-center">
+              <div className="bg-gray-400 rounded flex items-center justify-center">
                 <span className="text-white text-sm font-bold">?</span>
               </div>
               <div className="bg-gray-400 rounded"></div>
@@ -1065,7 +1076,7 @@ export default function WordBreakerGame() {
               <div className="mt-4 p-2 bg-gray-200 rounded text-xs text-gray-600">
                 <p>Debug: settingsLoaded={settingsLoaded.toString()}</p>
                 <p>Debug: debugMode={debugMode.toString()}</p>
-                <p>Debug: localStorage debug={typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-debug-mode') : null}</p>
+                <p>Debug: persistedDebug={(settingsLoaded ? (debugMode ? 'true' : 'false') : '...')}</p>
               </div>
             )}
           </div>
@@ -1241,9 +1252,15 @@ export default function WordBreakerGame() {
                return (
               <div
                 key={index}
-                className={`w-12 h-12 flex items-center justify-center shadow-lg relative ${
-                     isLetterFound ? "bg-emerald-600" : "bg-gray-600"
-                } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}`}
+                className={`w-12 h-12 flex items-center justify-center ${
+                  isLetterFound
+                    ? `shadow-lg relative bg-emerald-500 ${
+                        gameState.showWinAnimation && gameState.gameWon
+                          ? "animate-[spinX_1s_ease-in-out_1]"
+                          : ""
+                      }`
+                    : "bg-gray-500"
+                }`}
                 style={{
                   animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
                 }}
@@ -1267,11 +1284,13 @@ export default function WordBreakerGame() {
                 }}
               >
                 <span
-                     className={`font-bold font-inter leading-none ${
-                       isLetterFound ? "text-white text-lg" : "text-gray-400 text-3xl"
-                  }`}
+                  className={
+                    isLetterFound
+                      ? "text-white text-lg font-bold font-inter leading-none"
+                      : "text-white text-2xl font-bold leading-none"
+                  }
                 >
-                     {isLetterFound ? letter : "*"}
+                  {isLetterFound ? letter : "\u2022"}
                 </span>
                 
                 {/* Custom tooltip for mystery word letters */}
@@ -1287,7 +1306,7 @@ export default function WordBreakerGame() {
              })}
                          {/* Padlock icon for mystery word - shows locked until solved, then unlocked */}
              <div 
-               className="w-12 h-12 bg-gray-600 flex items-center justify-center shadow-md cursor-pointer relative"
+               className="w-12 h-12 bg-gray-500 flex items-center justify-center shadow-md cursor-pointer relative"
                onTouchStart={() => {
                  // Show tooltip on touch for mobile
                  const tooltip = document.getElementById('mystery-tooltip')
@@ -1318,13 +1337,13 @@ export default function WordBreakerGame() {
                   viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round"
-                  className="w-5 h-5 text-green-400">
+                  className="w-5 h-5 text-white">
                   <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 9.9-1" />
                 </svg>
                ) : (
                  // Locked padlock icon when puzzle is unsolved
-                 <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                    <rect width="16" height="12" x="4" y="11" rx="2" ry="2"/>
                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
                  </svg>
@@ -1356,8 +1375,8 @@ export default function WordBreakerGame() {
                                     return (
                 <div
                   key={index}
-                  className={`w-12 h-12 bg-gray-500 flex items-center justify-center shadow-md ${
-                            shouldHighlight ? "discard !bg-[oklch(0.145_0_0)]" : ""
+                  className={`w-12 h-12 bg-gray-400 flex items-center justify-center shadow-md ${
+                            shouldHighlight ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""
                           } relative`}
                           onTouchStart={() => {
                             // Show tooltip on touch for mobile
@@ -1399,10 +1418,10 @@ export default function WordBreakerGame() {
               })}
               {/* Step number for start word - shows total steps needed */}
               <div 
-                className="w-12 h-12 bg-gray-600 flex items-center justify-center shadow-md cursor-pointer"
+                className="w-12 h-12 bg-gray-500 flex items-center justify-center shadow-md cursor-pointer"
                 title="Minimum steps to solve this puzzle"
               >
-                <span className="text-yellow-400 text-lg font-bold font-inter">
+                <span className="end-of-row text-white text-lg font-bold font-inter">
                   {(() => {
                     const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
                     return path.length > 0 ? path.length - 1 : "?"
@@ -1421,6 +1440,9 @@ export default function WordBreakerGame() {
             // When solved, show hints on all attempts. When playing, only show hints on the last attempt
             const isLastAttempt = gameState.gameWon ? true : true
             const isCompleted = gameState.gameWon && actualIndex === gameState.attempts.length - 1
+            if (gameState.gameWon && gameState.hideAttemptsDuringReveal) {
+              return null
+            }
             const results = checkWord(attempt, gameState.mysteryWord)
             const shouldShowHint = !gameState.isHardMode && isLastAttempt
             // Get hints for the next word in the BFS path, not the mystery word
@@ -1450,7 +1472,7 @@ export default function WordBreakerGame() {
                   gameState.gameWon ? "animate-[slideInFromTop_0.5s_ease-out_forwards]" : ""
                 }`}
                 style={{
-                  animationDelay: gameState.gameWon ? `${1500 + actualIndex * 200}ms` : "0ms",
+                  animationDelay: gameState.gameWon ? `${actualIndex * 200}ms` : "0ms",
                   visibility: gameState.gameWon && actualIndex > 0 ? "hidden" : "visible"
                 }}
               >
@@ -1458,18 +1480,17 @@ export default function WordBreakerGame() {
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
                     // Hint styling takes priority over mystery word reveal styling
-                    const bgColor = shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : "bg-gray-600"
-                    const borderColor =
-                      results[letterIndex] === "correct"
-                        ? "border-b-[3px] border-b-emerald-500"
+                    const bgColor = results[letterIndex] === "correct"
+                      ? "bg-emerald-500"
                         : results[letterIndex] === "present"
-                          ? "border-b-[3px] border-b-amber-500"
-                          : ""
+                        ? "bg-amber-500"
+                        : (shouldHighlight ? "!bg-[#aaaaaa]" : "bg-gray-400")
+                    const borderColor = ""
                     
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-12 h-12 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${shouldHighlight ? "discard" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
+                        className={`w-12 h-12 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${shouldHighlight ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
                         style={{
                           animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms",
                         }}
@@ -1516,7 +1537,7 @@ export default function WordBreakerGame() {
                   })}
                   {/* Entry order for completed rows when game is won */}
                   <div 
-                    className="w-12 h-12 bg-gray-600 flex items-center justify-center shadow-md cursor-pointer relative"
+                    className="w-12 h-12 bg-gray-500 flex items-center justify-center shadow-md cursor-pointer relative"
                     onTouchStart={() => {
                       // Show tooltip on touch for mobile
                       const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
@@ -1541,7 +1562,7 @@ export default function WordBreakerGame() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <span className="text-yellow-400 text-lg font-bold font-inter">
+                      <span className="end-of-row text-white text-lg font-bold font-inter">
                         {entryOrder}
                       </span>
                     )}
@@ -1607,7 +1628,7 @@ export default function WordBreakerGame() {
                 })}
                 {/* "?" placeholder that shows clue for next word in BFS path */}
                 <div 
-                  className="w-12 h-12 bg-gray-600 flex items-center justify-center cursor-pointer relative"
+                  className="w-12 h-12 bg-gray-500 flex items-center justify-center cursor-pointer relative"
                   onTouchStart={() => {
                     // Show tooltip on touch for mobile
                     const tooltip = document.getElementById('clue-tooltip')
@@ -1627,7 +1648,7 @@ export default function WordBreakerGame() {
                     if (tooltip) tooltip.classList.add('hidden')
                   }}
                 >
-                  <span className="text-yellow-400 text-lg font-bold font-inter">?</span>
+                  <span className="end-of-row text-white text-lg font-bold font-inter">?</span>
                   
                   {/* Custom tooltip for clue button */}
                   <div
@@ -1674,7 +1695,7 @@ export default function WordBreakerGame() {
                 ].join(" ")}
                 aria-live="polite"
               >
-                <div className="h-12 w-full border-2 border-gray-600 bg-gray-800 shadow-lg flex items-center justify-center">
+                <div className="h-12 w-full border-2 border-gray-600 bg-gray-800 shadow-lg flex items-center justify-center px-4 py-2">
                   <p className="text-gray-400 text-sm font-inter">
                     {gameState.errorMessage}
                   </p>
@@ -1727,13 +1748,12 @@ export default function WordBreakerGame() {
                         <div className="flex justify-center gap-1 mb-1">
                       {word.split("").map((letter, letterIndex) => {
                         const results = checkWord(word, gameState.mysteryWord)
-                                                             const bgColor = "bg-gray-700"
-                              const borderColor =
-                          results[letterIndex] === "correct"
-                                  ? "border-b-[3px] border-b-emerald-500"
+                                                             const bgColor = results[letterIndex] === "correct"
+                              ? "bg-emerald-500"
                             : results[letterIndex] === "present"
-                                    ? "border-b-[3px] border-b-amber-500"
-                                    : ""
+                                ? "bg-amber-500"
+                                : "bg-gray-700"
+                              const borderColor = ""
                               
                               // Check if this letter should show hint underline
                               const shouldHighlight = shouldShowHint && optimalHints.includes(letterIndex)
@@ -1742,7 +1762,7 @@ export default function WordBreakerGame() {
                           <div
                             key={letterIndex}
                                   className={`w-12 h-12 ${bgColor} flex items-center justify-center shadow-md ${
-                                    shouldHighlight ? "discard !bg-[oklch(0.145_0_0)]" : ""
+                                    shouldHighlight ? "tossable !bg-white !text-gray-600 !border !border-gray-400" : ""
                                   } ${borderColor}`}
                                   title={(() => {
                                     if (shouldHighlight) return "Hint: Change this letter to reach the next word"
@@ -1752,7 +1772,7 @@ export default function WordBreakerGame() {
                                   })()}
                                 >
                                   <span className={`text-lg font-bold font-inter ${
-                                    shouldHighlight ? "text-gray-400" : "text-white"
+                                    shouldHighlight ? "text-gray-600" : "text-white"
                                   }`}>
                                     {letter}
                                   </span>
@@ -1762,10 +1782,10 @@ export default function WordBreakerGame() {
                           {/* Step number indicator - shows entry order for reveal sequence */}
                           {!isTarget && (
                             <div 
-                              className="w-12 h-12 bg-gray-600 flex items-center justify-center shadow-md cursor-pointer"
+                              className="w-12 h-12 bg-gray-500 flex items-center justify-center shadow-md cursor-pointer"
                               title={`Word ${stepIndex + 1}`}
                             >
-                              <span className="text-yellow-400 text-lg font-bold font-inter">
+                              <span className="end-of-row text-white text-lg font-bold font-inter">
                                 {stepIndex + 1}
                               </span>
                             </div>
@@ -1833,7 +1853,7 @@ export default function WordBreakerGame() {
                 <button
                   onClick={() => setGameState((prev) => ({ ...prev, isHardMode: !prev.isHardMode }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    gameState.isHardMode ? "bg-emerald-600" : "bg-gray-600"
+                    gameState.isHardMode ? "bg-emerald-600" : "bg-gray-400"
                   }`}
                 >
                   <span
@@ -1859,7 +1879,7 @@ export default function WordBreakerGame() {
                     }
                   }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    debugMode ? "bg-emerald-600" : "bg-gray-600"
+                    debugMode ? "bg-emerald-500" : "bg-gray-400"
                   }`}
                 >
                   <span
@@ -1885,7 +1905,7 @@ export default function WordBreakerGame() {
                     }
                   }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    hintTextAuto ? "bg-emerald-600" : "bg-gray-600"
+                    hintTextAuto ? "bg-emerald-500" : "bg-gray-400"
                   }`}
                 >
                   <span
@@ -1902,7 +1922,7 @@ export default function WordBreakerGame() {
                   <h3 className="text-white font-semibold">Dark Theme</h3>
                   <p className="text-gray-400 text-sm">Switch between light and dark themes</p>
                 </div>
-                <button disabled className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-600">
+                <button disabled className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-400">
                   <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
                 </button>
               </div>
@@ -1973,7 +1993,7 @@ export default function WordBreakerGame() {
                 <p className="font-semibold text-white">Color Guide:</p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-emerald-600 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-emerald-500 flex items-center justify-center">
                       <span className="text-white font-bold text-sm">W</span>
                     </div>
                     <span className="text-sm">Letter is in the word and in the correct spot</span>
@@ -1985,7 +2005,7 @@ export default function WordBreakerGame() {
                     <span className="text-sm">Letter is in the word but in the wrong spot</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gray-600 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gray-400 flex items-center justify-center">
                       <span className="text-white font-bold text-sm">U</span>
                     </div>
                     <span className="text-sm">Letter is not in the word</span>
