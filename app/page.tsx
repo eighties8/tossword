@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
+
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -99,6 +100,8 @@ export default function WordBreakerGame() {
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const deletingRef = useRef(false)
+  const debugModeRef = useRef(false)
 
   const solutionPathCache = useRef<Map<string, string[]>>(new Map())
   const hintsCache = useRef<Map<string, number[]>>(new Map())
@@ -135,7 +138,7 @@ export default function WordBreakerGame() {
 
   const initializeGame = useCallback(() => {
     let puzzle
-    if (debugMode) {
+    if (debugModeRef.current) {
       // Force OCEAN → FIELD puzzle in debug mode
       puzzle = { root: "OCEAN", mystery: "FIELD" }
     } else {
@@ -177,7 +180,7 @@ export default function WordBreakerGame() {
 
     // Mark game as ready after initialization
     setIsLoading(false)
-  }, [gameState.isHardMode, debugMode])
+  }, [gameState.isHardMode])
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -186,18 +189,31 @@ export default function WordBreakerGame() {
       try {
         const ls = window.localStorage
         if (!ls) return true
-        const value = ls.getItem('wordbreaker-debug-mode')
-        // If not set, default to true when storage is present but unset
-        return value === null ? true : value === 'true'
+        let value = ls.getItem('wordbreaker-debug-mode')
+        // If not set, persist a default of true for consistency across reloads (esp. iOS)
+        if (value === null) {
+          ls.setItem('wordbreaker-debug-mode', 'true')
+          value = 'true'
+        }
+        return value === 'true'
       } catch {
         // Any access error (e.g., privacy mode) → default to true
         return true
       }
     })()
 
-    const savedHintTextAuto = typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-hint-text-auto') === 'true' : false
+    const savedHintTextAuto = (() => {
+      if (typeof window === 'undefined') return false
+      try {
+        const v = window.localStorage?.getItem('wordbreaker-hint-text-auto')
+        return v === 'true'
+      } catch {
+        return false
+      }
+    })()
 
     setDebugMode(savedDebugMode)
+    debugModeRef.current = savedDebugMode
     setHintTextAuto(savedHintTextAuto)
     setSettingsLoaded(true)
   }, [])
@@ -1368,20 +1384,22 @@ export default function WordBreakerGame() {
                }}
              >
                {gameState.gameWon ? (
-                 // Unlocked padlock icon when puzzle is solved
-                //  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                //    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-                //    <rect width="16" height="12" x="4" y="11" rx="2" ry="2"/>
-                //    <path d="M8 15h8"/>
-                //  </svg>
-                <svg xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2"
-                  strokeLinecap="round" strokeLinejoin="round"
-                  className="w-5 h-5 text-white">
-                  <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                </svg>
+                 gameState.hideAttemptsDuringReveal ? (
+                   <svg
+                     xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeWidth="2"
+                     strokeLinecap="round" strokeLinejoin="round"
+                     className="w-6 h-6 text-green-500"
+                   >
+                     <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
+                     <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                   </svg>
+                 ) : (
+                   <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                   </svg>
+                 )
                ) : (
                  // Locked padlock icon when puzzle is unsolved
                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
