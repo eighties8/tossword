@@ -1033,6 +1033,34 @@ export default function WordBreakerGame() {
     [handleLetterInput, gameState.inputLetters, submitWord],
   )
 
+  // iOS/Safari sometimes sends delete as an InputEvent with inputType
+  const handleBeforeInput = useCallback(
+    (e: any, index: number) => {
+      const inputType = (e && (e as any).inputType) || ""
+      if (inputType === "deleteContentBackward") {
+        // Treat as a delete key press
+        e.preventDefault?.()
+        const currentEmpty = !gameState.inputLetters[index]
+        if (currentEmpty && index > 0) {
+          handleLetterInput(index - 1, "")
+          setTimeout(() => {
+            setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
+            inputRefs.current[index - 1]?.focus()
+          }, 0)
+        } else {
+          handleLetterInput(index, "")
+          if (index > 0) {
+            setTimeout(() => {
+              setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
+              inputRefs.current[index - 1]?.focus()
+            }, 0)
+          }
+        }
+      }
+    },
+    [gameState.inputLetters, handleLetterInput],
+  )
+
   // Show splash screen first
   if (showSplash) {
   return (
