@@ -177,9 +177,22 @@ export default function WordBreakerGame() {
 
   // Load settings from localStorage on component mount
   useEffect(() => {
-    const savedDebugMode = typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-debug-mode') === 'true' : false
+    const savedDebugMode = (() => {
+      if (typeof window === 'undefined') return true
+      try {
+        const ls = window.localStorage
+        if (!ls) return true
+        const value = ls.getItem('wordbreaker-debug-mode')
+        // If not set, default to true when storage is present but unset
+        return value === null ? true : value === 'true'
+      } catch {
+        // Any access error (e.g., privacy mode) → default to true
+        return true
+      }
+    })()
+
     const savedHintTextAuto = typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-hint-text-auto') === 'true' : false
-    
+
     setDebugMode(savedDebugMode)
     setHintTextAuto(savedHintTextAuto)
     setSettingsLoaded(true)
@@ -1015,6 +1028,7 @@ export default function WordBreakerGame() {
               </div>
               <div className="bg-gray-800 border-2 border-gray-600 rounded"></div>
               <div className="bg-yellow-400 border-2 border-yellow-500 rounded"></div>
+              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
               <div className="bg-green-500 border-2 border-green-600 rounded"></div>
               <div className="bg-green-500 border-2 border-green-600 rounded"></div>
               <div className="bg-green-500 border-2 border-green-600 rounded"></div>
