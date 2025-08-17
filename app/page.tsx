@@ -65,15 +65,18 @@ const HARD_PUZZLES = [
 
 export default function WordBreakerGame() {
   // DEBUG FLAG: Set to true to force OCEAN → FIELD puzzle only
-  const DEBUG_MODE = true
-  
+  const [debugMode, setDebugMode] = useState(false)
+
   // HINT TEXT AUTO FLAG: Set to true to automatically show hints when focusing on new rows
-  const HINT_TEXT_AUTO = false
+  const [hintTextAuto, setHintTextAuto] = useState(false)
   
   const [isLoading, setIsLoading] = useState(true)
-  const [showHowToPlay, setShowHowToPlay] = useState(false)
-
+    const [showHowToPlay, setShowHowToPlay] = useState(false)
+  const [showStats, setShowStats] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
+  const [selectedPuzzle, setSelectedPuzzle] = useState<{ root: string; mystery: string } | null>(null)
 
   const [gameState, setGameState] = useState<GameState>({
     mysteryWord: "",
@@ -129,15 +132,19 @@ export default function WordBreakerGame() {
 
   const initializeGame = useCallback(() => {
     let puzzle
-    if (DEBUG_MODE) {
+    if (debugMode) {
       // Force OCEAN → FIELD puzzle in debug mode
       puzzle = { root: "OCEAN", mystery: "FIELD" }
     } else {
       // Normal random puzzle selection
       puzzle = gameState.isHardMode
-        ? HARD_PUZZLES[Math.floor(Math.random() * HARD_PUZZLES.length)]
-        : PUZZLES[Math.floor(Math.random() * PUZZLES.length)]
+      ? HARD_PUZZLES[Math.floor(Math.random() * HARD_PUZZLES.length)]
+      : PUZZLES[Math.floor(Math.random() * PUZZLES.length)]
     }
+    
+    // Store the selected puzzle so splash screen can use it
+    setSelectedPuzzle(puzzle)
+    
     const mysteryWord = puzzle.mystery.toUpperCase()
     const rootWord = puzzle.root.toUpperCase()
 
@@ -163,14 +170,26 @@ export default function WordBreakerGame() {
       autoHintText: "",
       hintShownForRow: -1,
     })
-    
+
     // Mark game as ready after initialization
     setIsLoading(false)
-  }, [gameState.isHardMode])
+  }, [gameState.isHardMode, debugMode])
+
+  // Load settings from localStorage on component mount
+  useEffect(() => {
+    const savedDebugMode = typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-debug-mode') === 'true' : false
+    const savedHintTextAuto = typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-hint-text-auto') === 'true' : false
+    
+    setDebugMode(savedDebugMode)
+    setHintTextAuto(savedHintTextAuto)
+    setSettingsLoaded(true)
+  }, [])
 
   useEffect(() => {
-    initializeGame()
-  }, [])
+    if (settingsLoaded) {
+      initializeGame()
+    }
+  }, [settingsLoaded, initializeGame])
   
   // Ensure loading state is properly managed
   useEffect(() => {
@@ -182,7 +201,7 @@ export default function WordBreakerGame() {
   
   // Auto-show hint when game starts (after loading completes)
   useEffect(() => {
-    if (HINT_TEXT_AUTO && !gameState.gameWon && !gameState.isHardMode && !isLoading && gameState.mysteryWord && gameState.rootWord) {
+    if (hintTextAuto && !gameState.gameWon && !gameState.isHardMode && !isLoading && gameState.mysteryWord && gameState.rootWord) {
       // Show hint immediately when game is ready
       const showHint = () => {
         const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
@@ -374,9 +393,9 @@ export default function WordBreakerGame() {
         newInput[index] = ""
       } else {
         // Set a new letter
-        const filteredLetter = letter.replace(/[^A-Za-z]/g, "")
-        if (!filteredLetter) return
-        newInput[index] = filteredLetter.toUpperCase()
+      const filteredLetter = letter.replace(/[^A-Za-z]/g, "")
+      if (!filteredLetter) return
+      newInput[index] = filteredLetter.toUpperCase()
       }
 
       setGameState((prev) => ({ ...prev, inputLetters: newInput }))
@@ -470,8 +489,8 @@ export default function WordBreakerGame() {
       errorMessage: "",
     }))
     
-    // Show auto-hint for next word after successful submission (if not won and flag enabled)
-    if (HINT_TEXT_AUTO && !isWon && !gameState.isHardMode) {
+         // Show auto-hint for next word after successful submission (if not won and flag enabled)
+     if (hintTextAuto && !isWon && !gameState.isHardMode) {
       // Small delay to ensure state is updated
       setTimeout(() => {
         const currentWord = word.toUpperCase()
@@ -935,7 +954,7 @@ export default function WordBreakerGame() {
         if (index > 0) {
           // Then move to previous cell with a delay so clearing is visible
           setTimeout(() => {
-            setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
+          setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
             inputRefs.current[index - 1]?.focus()
           }, 50)
         }
@@ -964,6 +983,71 @@ export default function WordBreakerGame() {
     [handleLetterInput, gameState.inputLetters, submitWord],
   )
 
+  // Show splash screen first
+  if (showSplash) {
+  return (
+      <div className={`min-h-screen bg-gray-100 flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
+        <div className="text-center max-w-md">
+          {/* Tossword Logo - Placeholder for now */}
+          <div className="mb-6">
+            <div className="grid grid-cols-3 gap-2 w-24 h-24 mx-auto mb-4">
+              <div className="bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
+                <span className="text-white text-sm font-bold">*</span>
+              </div>
+              <div className="bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
+                <span className="text-white text-sm font-bold">*</span>
+              </div>
+              <div className="bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
+                <span className="text-white text-sm font-bold">*</span>
+              </div>
+              <div className="bg-gray-800 border-2 border-gray-600 rounded"></div>
+              <div className="bg-yellow-400 border-2 border-yellow-500 rounded"></div>
+              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
+              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
+              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
+              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
+            </div>
+          </div>
+          
+          {/* Game Title */}
+          <h1 className="text-5xl font-bold text-gray-900 mb-4 font-poppins">Tossword</h1>
+          
+          {/* Today's Tossword */}
+          <p className="text-lg text-gray-700 mb-4 font-inter">
+            Today's tossword is <strong>{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
+            {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
+          </p>
+          
+          {/* Instructions */}
+          <p className="text-lg text-gray-700 mb-8 font-inter">
+            Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word.
+          </p>
+          
+          {/* Play Button */}
+          <button
+            onClick={() => setShowSplash(false)}
+            className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer"
+          >
+            Play
+          </button>
+          
+          {/* Game Info */}
+          <div className="mt-8 text-sm text-gray-500 font-inter">
+            <p>Word Ladder Puzzle Game</p>
+            <p>Challenge your vocabulary and logic</p>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 p-2 bg-gray-200 rounded text-xs text-gray-600">
+                <p>Debug: settingsLoaded={settingsLoaded.toString()}</p>
+                <p>Debug: debugMode={debugMode.toString()}</p>
+                <p>Debug: localStorage debug={typeof window !== 'undefined' ? localStorage.getItem('wordbreaker-debug-mode') : null}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Show loading screen until game is ready
   if (isLoading) {
     return (
@@ -980,59 +1064,122 @@ export default function WordBreakerGame() {
   }
 
   return (
-    <div className={`min-h-screen bg-black flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
-      <div className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-700 shadow-2xl">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2 font-poppins">Tossword</h1>
-          <p className="text-gray-300 text-sm font-inter">
-            Begin unlocking today's mystery word by changing one letter from the Tossword <strong>"{gameState.rootWord}"</strong>. You can rearrange letters to make the new word but you must use all but one letter from the previous word.
-            Today's word can be unlocked in <strong>{(() => {
-              const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-              return path.length > 0 ? path.length - 1 : "?"
-            })()} words.</strong>
-          </p>
+    <div className={`min-h-screen bg-white flex flex-col ${inter.variable} ${poppins.variable}`}>
+      {/* Header */}
+      <header className="bg-white text-gray-900 py-4 px-6 border-b border-gray-300 shadow-sm">
+        <div className="max-w-md mx-auto flex justify-between items-center">
+          <div className="text-xl font-bold font-poppins">Tossword</div>
+          <div className="flex items-center gap-3">
+            {/* Debug-only buttons */}
+            {debugMode && (
+              <>
+                <button
+                  onClick={showSolutionPath}
+                  className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  title="Show Solution (Debug)"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                </button>
 
-                {(() => {
-                  const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                  if (path.length >= 2) {
-                    // Find the next word based on current game state
-                    let nextWord = ""
-                    if (gameState.attempts.length === 0) {
-                      // If no attempts yet, show clue for first step
-                      nextWord = path[1].toLowerCase()
-                    } else {
-                      // Find the next word in the path after the last attempt
-                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                      const attemptIndex = path.findIndex(word => word === lastAttempt)
-                      if (attemptIndex >= 0 && attemptIndex + 1 < path.length) {
-                        nextWord = path[attemptIndex + 1].toLowerCase()
-                      }
-                    }
-                    
-                    if (nextWord) {
-                      const clue = getWordClue(nextWord)
-                      if (clue) {
-                        return null // Clue display removed - now shown on hover in guess word columns
-                      } else {
-                        console.log(`❌ No clue found for: "${nextWord}"`)
-                      }
-                    }
-                    
-                    // Special case: if user is one step away from mystery word, show mystery word clue
-                    if (gameState.attempts.length > 0) {
-                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                      const attemptIndex = path.findIndex(word => word === lastAttempt)
-                      if (attemptIndex >= 0 && attemptIndex + 1 === path.length - 1) {
-                        // User is one step away from mystery word
-                        const mysteryWordClue = getWordClue(gameState.mysteryWord.toLowerCase())
-                        if (mysteryWordClue) {
-                          return null // Clue display removed - now shown on hover in guess word columns
-                        }
-                      }
-                    }
-                  }
-                  return null
-                })()}
+                <button
+                  onClick={resetGame}
+                  className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  title="Reset Game (Debug)"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  onClick={initializeGame}
+                  className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  title="New Game (Debug)"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Always visible buttons */}
+            <button
+              onClick={() => setShowHowToPlay(true)}
+              className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+              title="How to Play"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => setShowStats(true)}
+              className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+              title="Statistics"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => setShowSettings(true)}
+              className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+              title="Settings"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Game Content */}
+      <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 font-poppins">Tossword</h1>
         </div>
 
         {/* {gameState.gameWon && (
@@ -1042,10 +1189,10 @@ export default function WordBreakerGame() {
           </div>
         )} */}
 
-        <div className="space-y-2 mb-2">
+        <div className="space-y-1 mb-2">
           {/* Found Letters Display - Right aligned with last letter of mystery word */}
           {/* <div className="flex justify-end mb-2" style={{ width: "256px", margin: "0 auto" }}>
-            <div className="flex gap-1 mb-2">
+            <div className="flex gap-1 mb-1">
               {foundLetters.map((item, index) => (
                 <div key={index} className="w-12 h-12 bg-amber-500 flex items-center justify-center shadow-md">
                   <span className="text-white text-lg font-bold font-inter">{item.letter}</span>
@@ -1054,7 +1201,7 @@ export default function WordBreakerGame() {
             </div>
           </div> */}
 
-          <div className="w-[312px] mx-auto flex justify-center gap-1 mb-2">
+          <div className="w-[312px] mx-auto flex justify-center gap-1 mb-1">
                          {gameState.mysteryWord.split("").map((letter, index) => {
                // Reveal letters that actually exist in any guessed word
                const isLetterFound = gameState.attempts.some(attempt => {
@@ -1065,8 +1212,8 @@ export default function WordBreakerGame() {
                return (
               <div
                 key={index}
-                className={`w-12 h-12 border-2 flex items-center justify-center shadow-lg relative ${
-                     isLetterFound ? "border-emerald-500 bg-emerald-600" : "border-gray-600 bg-gray-800"
+                className={`w-12 h-12 flex items-center justify-center shadow-lg relative ${
+                     isLetterFound ? "bg-emerald-600" : "bg-gray-800"
                 } ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}`}
                 style={{
                   animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
@@ -1111,7 +1258,7 @@ export default function WordBreakerGame() {
              })}
                          {/* Padlock icon for mystery word - shows locked until solved, then unlocked */}
              <div 
-               className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
+               className="w-12 h-12 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
                onTouchStart={() => {
                  // Show tooltip on touch for mobile
                  const tooltip = document.getElementById('mystery-tooltip')
@@ -1162,14 +1309,14 @@ export default function WordBreakerGame() {
                   {gameState.gameWon ? "Puzzle unlocked! Well done!" : "Puzzle locked - solve it to unlock!"}
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                 </div>
-              </div>
+            </div>
           </div>
 
 
 
           {/* Start word row - only show when there are 0 attempts */}
           {gameState.attempts.length === 0 ? (
-            <div className="w-[312px] mx-auto flex justify-center gap-1 mb-2">
+            <div className="w-[312px] mx-auto flex justify-center gap-1 mb-1">
               {gameState.rootWord.split("").map((letter, index) => {
                 const shouldShowHint = !gameState.isHardMode && gameState.attempts.length === 0
                 const optimalHints = shouldShowHint
@@ -1180,7 +1327,7 @@ export default function WordBreakerGame() {
                                     return (
                 <div
                   key={index}
-                  className={`w-12 h-12 border-2 border-gray-600 bg-gray-700 flex items-center justify-center shadow-md ${
+                  className={`w-12 h-12 bg-gray-700 flex items-center justify-center shadow-md ${
                             shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
                           } relative`}
                           onTouchStart={() => {
@@ -1218,12 +1365,12 @@ export default function WordBreakerGame() {
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                             </div>
                           )}
-                        </div>
+                </div>
               )
               })}
               {/* Step number for start word - shows total steps needed */}
               <div 
-                className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+                className="w-12 h-12 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
                 title="Minimum steps to solve this puzzle"
               >
                 <span className="text-yellow-400 text-lg font-bold font-inter">
@@ -1261,10 +1408,10 @@ export default function WordBreakerGame() {
             
                          // Calculate remaining steps to target based on BFS path during gameplay
              // Only show entry order when game is won
-             const currentWord = attempt
-             const targetWord = gameState.mysteryWord
-             const path = bidirectionalBFS(currentWord.toUpperCase(), targetWord.toUpperCase())
-             const remainingSteps = path.length > 0 ? path.length - 1 : 0
+            const currentWord = attempt
+            const targetWord = gameState.mysteryWord
+            const path = bidirectionalBFS(currentWord.toUpperCase(), targetWord.toUpperCase())
+            const remainingSteps = path.length > 0 ? path.length - 1 : 0
              const entryOrder = gameState.gameWon ? sliceIndex + 1 : remainingSteps
 
             return (
@@ -1293,7 +1440,7 @@ export default function WordBreakerGame() {
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
+                        className={`w-12 h-12 ${bgColor} flex items-center justify-center shadow-md ${borderColor} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
                         style={{
                           animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms",
                         }}
@@ -1340,7 +1487,7 @@ export default function WordBreakerGame() {
                   })}
                   {/* Entry order for completed rows when game is won */}
                   <div 
-                    className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
+                    className="w-12 h-12 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
                     onTouchStart={() => {
                       // Show tooltip on touch for mobile
                       const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
@@ -1422,7 +1569,7 @@ export default function WordBreakerGame() {
                       onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onFocus={() => handleFocus(index)}
-                      className={`w-12 h-12 border-2 border-gray-600 bg-gray-800 text-center text-lg font-bold text-white focus:outline-none shadow-lg font-inter ${
+                      className={`w-12 h-12 bg-gray-800 text-center text-lg font-bold text-white focus:outline-none shadow-lg font-inter ${
                         gameState.activeIndex === index ? "focus:outline-none focus:shadow-[inset_0_0_0_1px_theme('colors.blue.500')]" : ""
                       }`}
                       maxLength={1}
@@ -1431,7 +1578,7 @@ export default function WordBreakerGame() {
                 })}
                 {/* "?" placeholder that shows clue for next word in BFS path */}
                 <div 
-                  className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
+                  className="w-12 h-12 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer relative"
                   onTouchStart={() => {
                     // Show tooltip on touch for mobile
                     const tooltip = document.getElementById('clue-tooltip')
@@ -1459,136 +1606,67 @@ export default function WordBreakerGame() {
                     className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words"
                   >
                     {(() => {
-                      // Get clue for the next word in the BFS path
-                      if (gameState.attempts.length > 0) {
-                        // If there are attempts, get clue for next word after last attempt
-                        const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                        const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
-                        if (path.length >= 2) {
-                          const nextWord = path[1].toLowerCase()
-                          const clue = getWordClue(nextWord)
+                    // Get clue for the next word in the BFS path
+                    if (gameState.attempts.length > 0) {
+                      // If there are attempts, get clue for next word after last attempt
+                      const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                      const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                      if (path.length >= 2) {
+                        const nextWord = path[1].toLowerCase()
+                        const clue = getWordClue(nextWord)
                           return clue ? `"${clue}"` : `No clue for "${nextWord}"`
-                        }
-                      } else {
-                        // If no attempts yet, get clue for first word in BFS path
-                        const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                        if (path.length >= 2) {
-                          const nextWord = path[1].toLowerCase()
-                          const clue = getWordClue(nextWord)
-                          return clue ? `"${clue}"` : `No clue for "${nextWord}"`
-                        }
                       }
-                      return "No clue available"
-                    })()}
+                    } else {
+                      // If no attempts yet, get clue for first word in BFS path
+                      const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                      if (path.length >= 2) {
+                        const nextWord = path[1].toLowerCase()
+                        const clue = getWordClue(nextWord)
+                          return clue ? `"${clue}"` : `No clue for "${nextWord}"`
+                      }
+                    }
+                    return "No clue available"
+                  })()}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                  </div>
                 </div>
               </div>
-              {gameState.errorMessage && (
+              </div>
+              {/* {gameState.errorMessage && (
                 <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg">
                   <p className="text-red-300 text-center text-sm font-inter">{gameState.errorMessage}</p>
                 </div>
-              )}
+              )} */}
+              {/* Error message (matches grid cell + fades/collapses) */}
+              <div
+                className={[
+                  "w-[312px] mx-auto overflow-hidden",
+                  "transition-[max-height,opacity,margin] duration-300 ease-in-out",
+                  gameState.errorMessage ? "max-h-12 opacity-100 my-2" : "max-h-0 opacity-0 my-0",
+                ].join(" ")}
+                aria-live="polite"
+              >
+                <div className="h-12 w-full border-2 border-gray-600 bg-gray-800 shadow-lg flex items-center justify-center">
+                  <p className="text-gray-400 text-sm font-inter">
+                    {gameState.errorMessage}
+                  </p>
+                </div>
+              </div>
             </>
           )}
         </div>
 
-        {/* Action Buttons - constrained to grid width */}
-        <div className="w-[312px] mx-auto">
-            <div className="grid grid-cols-6 gap-1">
-              <button
-                onClick={showSolutionPath}
-                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-                title="Show Solution"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </button>
 
-              <button
-                onClick={resetGame}
-                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-                title="Reset Game"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={initializeGame}
-                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-                title="New Game"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => setShowHowToPlay(true)}
-                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-                title="How to Play"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => setShowSettings(true)}
-                className="w-12 h-12 bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all duration-200 flex items-center justify-center shadow-md"
-                title="Settings"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
-              {/* Smiley face icon to complete 6-column layout */}
-              <div className="w-12 h-12 bg-gray-700 flex items-center justify-center shadow-md">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
 
         {/* Solution Modal */}
         {gameState.showSolution && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl">
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+            onClick={() => setGameState((prev) => ({ ...prev, showSolution: false }))}
+          >
+            <div 
+              className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white font-poppins">
                 {gameState.solutionPath.length > 0
@@ -1617,7 +1695,7 @@ export default function WordBreakerGame() {
                     
                     return (
                   <div key={stepIndex} className="text-center">
-                        <div className="flex justify-center gap-1 mb-2">
+                        <div className="flex justify-center gap-1 mb-1">
                       {word.split("").map((letter, letterIndex) => {
                         const results = checkWord(word, gameState.mysteryWord)
                                                              const bgColor = "bg-gray-700"
@@ -1634,13 +1712,13 @@ export default function WordBreakerGame() {
                         return (
                           <div
                             key={letterIndex}
-                                  className={`w-12 h-12 border-2 border-gray-600 ${bgColor} flex items-center justify-center shadow-md ${
+                                  className={`w-12 h-12 ${bgColor} flex items-center justify-center shadow-md ${
                                     shouldHighlight ? "!bg-[oklch(0.145_0_0)]" : ""
                                   } ${borderColor}`}
                                   title={(() => {
                                     if (shouldHighlight) return "Hint: Change this letter to reach the next word"
                                     if (results[letterIndex] === "correct") return "Correct letter in correct position"
-                                    if (results[letterIndex] === "present") return "Letter is in the word but wrong position"
+                                    if (results[letterIndex] === "present") return "Letter is in the wrong position"
                                     return "Letter not in the word"
                                   })()}
                                 >
@@ -1655,7 +1733,7 @@ export default function WordBreakerGame() {
                           {/* Step number indicator - shows entry order for reveal sequence */}
                           {!isTarget && (
                             <div 
-                              className="w-12 h-12 border-2 border-gray-600 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
+                              className="w-12 h-12 bg-gray-800 flex items-center justify-center shadow-md cursor-pointer"
                               title={`Word ${stepIndex + 1}`}
                             >
                               <span className="text-yellow-400 text-lg font-bold font-inter">
@@ -1696,9 +1774,15 @@ export default function WordBreakerGame() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-600">
-            <div className="flex justify-between items-center mb-6">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowSettings(false)}
+        >
+          <div 
+            className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-white font-poppins">Settings</h2>
               <button
                 onClick={() => setShowSettings(false)}
@@ -1710,11 +1794,11 @@ export default function WordBreakerGame() {
               </button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 text-gray-300 font-inter">
               {/* Hard Mode Toggle */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-white font-semibold font-inter">Hard Mode</h3>
+                  <h3 className="text-white font-semibold">Hard Mode</h3>
                   <p className="text-gray-400 text-sm">No hints - pure challenge!</p>
                 </div>
                 <button
@@ -1731,24 +1815,107 @@ export default function WordBreakerGame() {
                 </button>
               </div>
 
+              {/* Debug Mode Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-semibold">Debug Mode</h3>
+                  <p className="text-gray-400 text-sm">Force OCEAN → FIELD puzzle for testing</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newDebugMode = !debugMode
+                    setDebugMode(newDebugMode)
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('wordbreaker-debug-mode', newDebugMode.toString())
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    debugMode ? "bg-emerald-600" : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      debugMode ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Hint Text Auto Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-semibold">Auto Hints</h3>
+                  <p className="text-gray-400 text-sm">Automatically show hints for next words</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const newHintTextAuto = !hintTextAuto
+                    setHintTextAuto(newHintTextAuto)
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('wordbreaker-hint-text-auto', newHintTextAuto.toString())
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    hintTextAuto ? "bg-emerald-600" : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      hintTextAuto ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
               {/* Dark Theme Toggle (placeholder for future implementation) */}
               <div className="flex items-center justify-between opacity-50">
                 <div>
-                  <h3 className="text-white font-semibold font-inter">Dark Theme</h3>
+                  <h3 className="text-white font-semibold">Dark Theme</h3>
                   <p className="text-gray-400 text-sm">Switch between light and dark themes</p>
                 </div>
                 <button disabled className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-600">
                   <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
                 </button>
               </div>
+
+              {/* Reset Game Button */}
+              <div className="pt-4 border-t border-gray-600">
+                <p className="text-gray-400 text-sm mb-3 text-center">
+                  Settings are saved automatically. Click below to start a new game with current settings.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowSettings(false)
+                    initializeGame()
+                  }}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Reset Game (Apply Settings)
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+      </div>
 
+      {/* Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white text-gray-900 py-4 px-6 border-t border-gray-300 shadow-sm md:relative">
+        <div className="max-w-md mx-auto text-center">
+          <p className="text-sm text-gray-600 font-inter">© Red Mountain Media, LLC 2025</p>
+        </div>
+      </footer>
+
+      {/* How To Play Modal */}
       {showHowToPlay && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowHowToPlay(false)}
+        >
+          <div 
+            className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-white font-poppins">How To Play</h2>
               <button
@@ -1762,7 +1929,7 @@ export default function WordBreakerGame() {
             </div>
 
             <div className="space-y-4 text-gray-300 font-inter">
-              <p>Change one letter at a time to reach the mystery word!</p>
+              <p>Using this word as a starting point, change one letter at a time, in any order,to unlock the mystery word!</p>
 
               <div className="space-y-2">
                 <p className="font-semibold text-white">Rules:</p>
