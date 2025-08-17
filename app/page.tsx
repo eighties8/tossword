@@ -1016,22 +1016,22 @@ export default function WordBreakerGame() {
         <div className="text-center max-w-md">
           {/* Tossword Logo - Placeholder for now */}
           <div className="mb-6">
-            <div className="grid grid-cols-3 gap-2 w-24 h-24 mx-auto mb-4">
-              <div className="bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
-                <span className="text-white text-sm font-bold">*</span>
+            <div className="grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4">
+              <div className="bg-gray-500 rounded flex items-center justify-center">
+                <span className="text-white text-sm font-bold">?</span>
               </div>
-              <div className="bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
-                <span className="text-white text-sm font-bold">*</span>
+              <div className="bg-gray-500 rounded flex items-center justify-center">
+                <span className="text-white text-sm font-bold">?</span>
               </div>
-              <div className="bg-gray-800 border-2 border-gray-600 rounded flex items-center justify-center">
-                <span className="text-white text-sm font-bold">*</span>
+              <div className="bg-gray-500 rounded flex items-center justify-center">
+                <span className="text-white text-sm font-bold">?</span>
               </div>
-              <div className="bg-gray-800 border-2 border-gray-600 rounded"></div>
-              <div className="bg-yellow-400 border-2 border-yellow-500 rounded"></div>
-              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
-              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
-              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
-              <div className="bg-green-500 border-2 border-green-600 rounded"></div>
+              <div className="bg-gray-400 rounded"></div>
+              <div className="bg-yellow-400 rounded"></div>
+              <div className="bg-green-500 rounded"></div>
+              <div className="bg-green-500 rounded"></div>
+              <div className="bg-green-500 rounded"></div>
+              <div className="bg-green-500 rounded"></div>
             </div>
           </div>
           
@@ -1094,7 +1094,10 @@ export default function WordBreakerGame() {
       {/* Header */}
       <header className="bg-white text-gray-900 py-4 px-6 border-b border-gray-300 shadow-sm">
         <div className="max-w-md mx-auto flex justify-between items-center">
-          <div className="text-xl font-bold font-poppins">Tossword</div>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
+            <img src="/tossword-logo.webp" alt="Tossword" className="h-6 w-auto" />
+            <span className="text-lg font-bold font-poppins uppercase">Tossword</span>
+          </div>
           <div className="flex items-center gap-3">
             {/* Debug-only buttons */}
             {debugMode && (
@@ -1205,7 +1208,7 @@ export default function WordBreakerGame() {
       <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2 font-poppins">Tossword</h1>
+            {/* Removed redundant in-page title */}
         </div>
 
         {/* {gameState.gameWon && (
