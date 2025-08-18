@@ -44,6 +44,8 @@ interface GameState {
   showWinMessage: boolean
   // Index of the final unrevealed mystery letter to delay reveal for; null when not delaying
   finalRevealIndex: number | null
+  // During win sequence, how many rows from the bottom have been revealed
+  winRevealRowsShown: number
 }
 
 const PUZZLES = [
@@ -101,6 +103,7 @@ export default function TosswordGame() {
     hideAttemptsDuringReveal: false,
     showWinMessage: false,
     finalRevealIndex: null,
+    winRevealRowsShown: 0,
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -129,6 +132,7 @@ export default function TosswordGame() {
       hideAttemptsDuringReveal: false,
       showWinMessage: false,
       finalRevealIndex: null,
+      winRevealRowsShown: 0,
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -174,6 +178,7 @@ export default function TosswordGame() {
       hideAttemptsDuringReveal: false,
       showWinMessage: false,
       finalRevealIndex: null,
+      winRevealRowsShown: 0,
     })
 
     setIsLoading(false)
@@ -218,6 +223,16 @@ export default function TosswordGame() {
     }
   }, [settingsLoaded, initializeGame])
 
+  // Hide any visible tooltips when the puzzle is solved
+  useEffect(() => {
+    if (gameState.gameWon) {
+      try {
+        const nodes = document.querySelectorAll('.puzzle-tooltip')
+        nodes.forEach((el) => el.classList.add('hidden'))
+      } catch {}
+    }
+  }, [gameState.gameWon])
+
   // Win message trigger: wait for ALL animations after reveal, then +1.25s, then fade-in message
   useEffect(() => {
     if (gameState.gameWon && !gameState.hideAttemptsDuringReveal) {
@@ -238,19 +253,22 @@ export default function TosswordGame() {
     }
   }, [gameState.gameWon, gameState.hideAttemptsDuringReveal, gameState.attempts.length])
 
-  // Countdown to next puzzle (midnight US Central Time)
+  // Countdown to next puzzle (midnight US Eastern Time)
   useEffect(() => {
     const format = (totalSeconds: number) => {
-      if (totalSeconds <= 0) return '00:00:00'
-      const hh = Math.floor(totalSeconds / 3600)
-      const mm = Math.floor((totalSeconds % 3600) / 60)
-      const ss = totalSeconds % 60
-      const pad = (n: number) => `${n}`.padStart(2, '0')
-      return `${pad(hh)}:${pad(mm)}:${pad(ss)}`
+      if (totalSeconds <= 0) return '0 hours: 00 minutes: 00 seconds'
+      const hours = Math.floor(totalSeconds / 3600)
+      const minutes = Math.floor((totalSeconds % 3600) / 60)
+      const seconds = totalSeconds % 60
+      const pad2 = (n: number) => `${n}`.padStart(2, '0')
+      const hoursLabel = hours === 1 ? 'hour' : 'hours'
+      const minutesLabel = minutes === 1 ? 'minute' : 'minutes'
+      const secondsLabel = seconds === 1 ? 'second' : 'seconds'
+      return `${hours} ${hoursLabel}: ${pad2(minutes)} ${minutesLabel}: ${pad2(seconds)} ${secondsLabel}`
     }
     const update = () => {
       const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Chicago',
+        timeZone: 'America/New_York',
         hour12: false,
         hour: '2-digit', minute: '2-digit', second: '2-digit',
       }).formatToParts(new Date())
@@ -454,24 +472,26 @@ export default function TosswordGame() {
     hintsCache.current.clear()
 
     if (isFinalLetterSolve) {
-      // Identify the last unrevealed mystery letter index (based on prior attempts)
-      const lastIdx = unsolvedIndices[0]
+      // Final-letter solve: first reveal ALL rows by marking gameWon without hiding attempts
       updateRevealedLetters(word)
-      setGameState((prev) => ({ ...prev, finalRevealIndex: lastIdx, attempts: newAttempts, inputLetters: ["", "", "", "", ""], activeIndex: 0, errorMessage: "" }))
-      // Focus new empty row
-      setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
-      // Let layout update, then release the held letter to trigger the reveal animation
-      setTimeout(() => { setGameState((prev) => ({ ...prev, finalRevealIndex: null })) }, 100)
+      const attemptsCountAfter = newAttempts.length
+      setGameState((prev) => ({
+        ...prev,
+        attempts: newAttempts,
+        inputLetters: ["", "", "", "", ""],
+        activeIndex: 0,
+        errorMessage: "",
+        gameWon: true,
+        hideAttemptsDuringReveal: false,
+        showWinAnimation: false,
+        winRevealRowsShown: 0,
+      }))
 
-      const totalDelay = MYSTERY_LETTER_FADE_MS + AFTER_FADE_BUFFER_MS
+      // After the sequential row reveals complete, trigger the mystery-word wheel animation
+      const finalDelay = 500 * (attemptsCountAfter) + 100
       setTimeout(() => {
-        const solvedNow = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
-        if (solvedNow) {
-          setGameState((prev) => ({ ...prev, gameWon: true, hideAttemptsDuringReveal: true }))
-          setTimeout(() => { setGameState((prev) => ({ ...prev, showWinAnimation: true })) }, 100)
-          setTimeout(() => { setGameState((prev) => ({ ...prev, hideAttemptsDuringReveal: false })) }, 1900)
-        }
-      }, totalDelay)
+        setGameState((prev) => ({ ...prev, showWinAnimation: true }))
+      }, finalDelay)
       return
     }
 
@@ -809,7 +829,7 @@ export default function TosswordGame() {
               <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
                 You solved the puzzle in {gameState.attempts.length} steps. Great Job!
               </h2>
-              <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (US Central)</p>
+              <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (EST)</p>
             </div>
             {!gameState.showWinMessage && null}
           </div>
@@ -823,8 +843,8 @@ export default function TosswordGame() {
                 return (
                   <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"}`}
                        style={{ animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms" }}
-                       onTouchStart={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
-                       onMouseEnter={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
+                       onTouchStart={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
+                       onMouseEnter={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
                        onMouseLeave={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.add('hidden') }}>
                     <span className={isLetterFound ? "text-white text-lg font-bold font-inter leading-none mystery-letter-reveal" : "text-white text-2xl font-bold leading-none"}>{isLetterFound ? letter : "\u2022"}</span>
                     <div id={`mystery-letter-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
@@ -865,11 +885,11 @@ export default function TosswordGame() {
                       key={index}
                       className={`w-12 h-12 bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} relative`}
                       onTouchStart={() => {
-                        if (!shouldHighlight) return
+                        if (!shouldHighlight || gameState.gameWon) return
                         const tooltip = document.getElementById(`start-tooltip-${index}`)
                         if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
                       }}
-                      onMouseEnter={() => { if (shouldHighlight) { document.getElementById(`start-tooltip-${index}`)?.classList.remove('hidden') } }}
+                      onMouseEnter={() => { if (shouldHighlight && !gameState.gameWon) { document.getElementById(`start-tooltip-${index}`)?.classList.remove('hidden') } }}
                       onMouseLeave={() => { if (shouldHighlight) { document.getElementById(`start-tooltip-${index}`)?.classList.add('hidden') } }}
                     >
                       <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-400" : "text-white"}`}>{letter}</span>
@@ -890,6 +910,7 @@ export default function TosswordGame() {
                 <div
                   className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
                   onTouchStart={() => {
+                    if (gameState.gameWon) return
                     const tooltip = document.getElementById('start-steps-tooltip')
                     if (tooltip) {
                       tooltip.classList.remove('hidden')
@@ -897,6 +918,7 @@ export default function TosswordGame() {
                     }
                   }}
                   onMouseEnter={() => {
+                    if (gameState.gameWon) return
                     const tooltip = document.getElementById('start-steps-tooltip')
                     if (tooltip) tooltip.classList.remove('hidden')
                   }}
@@ -926,10 +948,13 @@ export default function TosswordGame() {
             ) : null}
           </div>
 
-          {(gameState.gameWon ? gameState.attempts : gameState.attempts.slice(-1)).map((attempt, sliceIndex) => {
+          {(gameState.gameWon ? [gameState.rootWord, ...gameState.attempts] : gameState.attempts.slice(-1)).map((attempt, sliceIndex) => {
             const actualIndex = gameState.gameWon ? sliceIndex : gameState.attempts.length - 1
-            const isLastAttempt = gameState.gameWon ? true : true
-            const isCompleted = gameState.gameWon && actualIndex === gameState.attempts.length - 1
+            const isLastAttempt = true
+            const lastAttemptRowIndex = gameState.gameWon ? gameState.attempts.length : gameState.attempts.length - 1
+            const isCompleted = actualIndex === lastAttemptRowIndex
+            const totalRows = gameState.gameWon ? (gameState.attempts.length + 1) : 1
+            const revealStep = gameState.gameWon ? ((totalRows - 2) - actualIndex) : 0 // bottom row already visible
             if (gameState.gameWon && gameState.hideAttemptsDuringReveal) { return null }
             const results = checkWord(attempt, gameState.mysteryWord)
             const shouldShowHint = !gameState.isHardMode && isLastAttempt
@@ -945,7 +970,11 @@ export default function TosswordGame() {
             const entryOrder = gameState.gameWon ? sliceIndex + 1 : remainingSteps
 
             return (
-              <div key={actualIndex} className={`w-[328px] mx-auto flex items-center gap-2 justify-center mb-2 ${gameState.gameWon ? "animate-[slideInFromTop_0.5s_ease-out_forwards]" : ""}`} style={{ animationDelay: gameState.gameWon ? `${actualIndex * 200}ms` : "0ms", visibility: gameState.gameWon && actualIndex > 0 ? "hidden" : "visible" }}>
+              <div
+                key={actualIndex}
+                className={`w-[328px] mx-auto flex items-center gap-2 justify-center mb-2 ${gameState.gameWon && actualIndex !== lastAttemptRowIndex ? "animate-[rowReveal_0.5s_ease-out_both]" : ""}`}
+                style={{ animationDelay: gameState.gameWon ? `${Math.max(0, revealStep) * 500}ms` : "0ms", visibility: gameState.gameWon && gameState.hideAttemptsDuringReveal && actualIndex > 0 ? "hidden" : "visible" }}
+              >
                 <div className="flex gap-2">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlightCell = shouldShowHint && optimalHints.includes(letterIndex)
@@ -954,15 +983,15 @@ export default function TosswordGame() {
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
+                        className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} ${(gameState.showWinAnimation && isCompleted && gameState.gameWon === false) ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
                         style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}
                         onTouchStart={() => {
-                          if (!shouldHighlightCell) return
+                          if (!shouldHighlightCell || gameState.gameWon) return
                           const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
                           if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
                         }}
                         onMouseEnter={() => {
-                          if (!shouldHighlightCell) return
+                          if (!shouldHighlightCell || gameState.gameWon) return
                           const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
                           if (tooltip) tooltip.classList.remove('hidden')
                         }}
@@ -988,10 +1017,12 @@ export default function TosswordGame() {
                   <div
                     className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
                     onTouchStart={() => {
+                      if (gameState.gameWon) return
                       const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
                       if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
                     }}
                     onMouseEnter={() => {
+                      if (gameState.gameWon) return
                       const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
                       if (tooltip) tooltip.classList.remove('hidden')
                     }}
