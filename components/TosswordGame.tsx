@@ -51,6 +51,8 @@ interface GameState {
   showInvalidWord: boolean
   showHardModeViolation: boolean
   gameOver: boolean
+  // Track which letters were newly revealed for shake animation
+  newlyRevealedLetters: number[]
 }
 
 const PUZZLES = [
@@ -114,6 +116,7 @@ export default function TosswordGame() {
     showInvalidWord: false,
     showHardModeViolation: false,
     gameOver: false,
+    newlyRevealedLetters: [],
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -236,6 +239,7 @@ export default function TosswordGame() {
       showInvalidWord: false,
       showHardModeViolation: false,
       gameOver: false,
+      newlyRevealedLetters: [],
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -287,6 +291,7 @@ export default function TosswordGame() {
       showInvalidWord: false,
       showHardModeViolation: false,
       gameOver: false,
+      newlyRevealedLetters: [],
     })
 
     setIsLoading(false)
@@ -531,8 +536,40 @@ export default function TosswordGame() {
   const updateRevealedLetters = useCallback((guess: string) => {
     const results = checkWord(guess, gameState.mysteryWord)
     const newRevealed = [...gameState.revealedLetters]
-    results.forEach((result, index) => { if (result === "correct") { newRevealed[index] = true } })
-    setGameState((prev) => ({ ...prev, revealedLetters: newRevealed }))
+    const newlyRevealed: number[] = []
+    
+    // Find where each letter from the guess appears in the mystery word
+    const guessLetters = guess.toUpperCase().split("")
+    const mysteryLetters = gameState.mysteryWord.toUpperCase().split("")
+    
+    guessLetters.forEach((guessLetter, guessIndex) => {
+      // Find all positions in mystery word where this letter appears
+      mysteryLetters.forEach((mysteryLetter, mysteryIndex) => {
+        if (guessLetter === mysteryLetter && !newRevealed[mysteryIndex]) {
+          // This letter is newly revealed in the mystery word at this position
+          newlyRevealed.push(mysteryIndex)
+          newRevealed[mysteryIndex] = true
+        }
+      })
+    })
+    
+    // Debug: Check if we're detecting letters
+    if (newlyRevealed.length > 0) {
+      console.log('🎯 SHAKE: Letters detected:', newlyRevealed, 'from word:', guess)
+    }
+    
+    setGameState((prev) => ({ 
+      ...prev, 
+      revealedLetters: newRevealed,
+      newlyRevealedLetters: newlyRevealed
+    }))
+    
+    // Clear the newly revealed letters after animation completes
+    if (newlyRevealed.length > 0) {
+      setTimeout(() => {
+        setGameState((prev) => ({ ...prev, newlyRevealedLetters: [] }))
+      }, 500) // Match the CSS animation duration
+    }
   }, [gameState.mysteryWord, gameState.revealedLetters, checkWord])
 
   const findSolutionPath = useCallback((start: string, target: string): string[] => {
@@ -587,6 +624,8 @@ export default function TosswordGame() {
   const submitWord = useCallback(() => {
     if (gameState.gameWon) return
     const word = gameState.inputLetters.join("")
+    console.log('🚀 submitWord called with word:', word)
+    
     if (word.length !== 5) {
       setGameState((prev) => ({ ...prev, errorMessage: "Please enter exactly 5 letters", inputLetters: ["", "", "", "", ""], activeIndex: 0 }))
       const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
@@ -609,6 +648,8 @@ export default function TosswordGame() {
     }
     const newAttempts = [...gameState.attempts, word]
     const isWon = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+    console.log('📝 Word validated, calling updateRevealedLetters...')
+    
     // Determine unrevealed letters based on UI logic (letters not yet present in any prior attempt)
     const mysteryLetters = gameState.mysteryWord.split("")
     const previouslyFound = mysteryLetters.map((ltr) => gameState.attempts.some((a) => a.includes(ltr)))
@@ -620,6 +661,7 @@ export default function TosswordGame() {
 
     if (isFinalLetterSolve) {
       // Final-letter solve: first reveal ALL rows by marking gameWon without hiding attempts
+      console.log('🏆 Final letter solve detected!')
       updateRevealedLetters(word)
       const attemptsCountAfter = newAttempts.length
       setGameState((prev) => ({
@@ -642,6 +684,7 @@ export default function TosswordGame() {
       return
     }
 
+    console.log('🔄 Calling updateRevealedLetters for regular submission...')
     updateRevealedLetters(word)
     setGameState((prev) => ({ ...prev, attempts: newAttempts, inputLetters: ["", "", "", "", ""], gameWon: isWon, activeIndex: 0, errorMessage: "" }))
     if (hintTextAuto && !isWon && !gameState.isHardMode) {
@@ -1023,9 +1066,17 @@ export default function TosswordGame() {
                 const isHeldForFinalReveal = gameState.finalRevealIndex === index
                 const isLetterFoundGeneric = gameState.attempts.some(attempt => attempt.includes(letter))
                 const isLetterFound = !isHeldForFinalReveal && isLetterFoundGeneric
+                const shouldShake = gameState.newlyRevealedLetters.includes(index)
+                
                 return (
-                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"}`}
-                       style={{ animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms" }}
+                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"} ${shouldShake ? "shake-animation" : ""}`}
+                       style={{ 
+                         animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
+                         // Obvious debug indicator - red background when shake should be active
+                         ...(shouldShake && { 
+                           backgroundColor: 'red !important'
+                         })
+                       }}
                        onTouchStart={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                        onMouseEnter={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
                        onMouseLeave={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.add('hidden') }}>

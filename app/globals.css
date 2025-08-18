@@ -221,10 +221,51 @@
   100% { opacity: 1; transform: rotateY(0deg)   scale(1.0); }
 }
 
+/* Subtle shake effect for newly revealed letters - applied to container */
+@keyframes letterRevealShake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-8px); }
+  50%  { transform: translateX(8px); }
+  75%  { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
 .mystery-letter-reveal {
   display: inline-block;
   backface-visibility: hidden;
   transform-style: preserve-3d;
-  animation: mysteryLetterFade 1000ms ease-in-out forwards;
+  /* Temporarily disabled flip animation for testing shake */
+  /* animation: mysteryLetterFade 1000ms ease-in-out forwards; */
   will-change: opacity, transform;
+}
+
+/* Apply shake effect to the puzzle-grid container */
+.puzzle-grid.shake {
+  animation: letterRevealShake 500ms ease-in-out forwards !important;
+  transform: translateX(0) !important;
+}
+
+/* Aggressive shake effect that overrides inline styles */
+@keyframes shakeEffect {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  50% { transform: translateX(8px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+/* Force shake with maximum specificity and important declarations */
+.shake-animation {
+  animation: shakeEffect 500ms ease-in-out !important;
+  animation-delay: 0ms !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+/* Also target by attribute selector for maximum override */
+[class*="shake-animation"] {
+  animation: shakeEffect 500ms ease-in-out !important;
+  animation-delay: 0ms !important;
+  position: relative !important;
+  z-index: 9999 !important;
 }
