@@ -213,6 +213,16 @@
   white-space: no-wrap !important;
 }
 
+.splashHelp svg {
+  background:#daa520;
+  background:#ccc;
+  padding:3px 3px 2px 3px;
+  min-width:30px;
+  min-height:30px;
+  border-radius:6px;
+  border-bottom:3px solid rgba(0,0,0,.25)
+}
+
 
 /* Working wheel-of-fortune flip animation for newly revealed letters */
 @keyframes letterRevealFlip {

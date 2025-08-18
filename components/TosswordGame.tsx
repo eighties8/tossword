@@ -1062,7 +1062,7 @@ export default function TosswordGame() {
             Today's start word is <strong className="text-emerald-500">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
-          <p className="text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word.</p>
+          <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. Click the <HelpCircle className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
           <button
             ref={playButtonRef}
             onClick={() => setShowSplash(false)}
