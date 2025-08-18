@@ -2,7 +2,7 @@
 import type { KeyboardEvent } from "react"
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Image from "next/image"
-import { Lightbulb, HelpCircle, KeyRound, Crown } from "lucide-react"
+import { Lightbulb, HelpCircle, KeyRound, Crown, Delete } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
@@ -1359,7 +1359,7 @@ export default function TosswordGame() {
                           ].join(' ')}
                           aria-label={k === 'BACKSPACE' ? 'Backspace' : k}
                         >
-                          {k === 'BACKSPACE' ? <span className="text-xl">⌫</span> : k}
+                          {k === 'BACKSPACE' ? <Delete className="w-5 h-5" /> : k}
                         </button>
                       )
                     })}
