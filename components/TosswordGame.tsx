@@ -847,9 +847,9 @@ export default function TosswordGame() {
                 ) : (
                   <KeyRound className="w-6 h-6 text-white" />
                 )}
-                <div id="mystery-tooltip" className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
-                  {gameState.gameWon ? "Puzzle unlocked! Well done!" : "Puzzle locked - solve it to unlock!"}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                <div id="mystery-tooltip" className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left whitespace-nowrap puzzle-tooltip">
+                  {gameState.gameWon ? "Puzzle unlocked! Well done!" : "Unlock the puzzle!"}
+                  <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                 </div>
               </div>
             </div>
@@ -861,12 +861,27 @@ export default function TosswordGame() {
                   const optimalHints = shouldShowHint ? getOptimalLetterHints(gameState.rootWord, gameState.mysteryWord) : []
                   const shouldHighlight = shouldShowHint && optimalHints.includes(index)
                   return (
-                    <div key={index} className={`w-12 h-12 bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} relative"`}>
+                    <div
+                      key={index}
+                      className={`w-12 h-12 bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} relative`}
+                      onTouchStart={() => {
+                        if (!shouldHighlight) return
+                        const tooltip = document.getElementById(`start-tooltip-${index}`)
+                        if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
+                      }}
+                      onMouseEnter={() => { if (shouldHighlight) { document.getElementById(`start-tooltip-${index}`)?.classList.remove('hidden') } }}
+                      onMouseLeave={() => { if (shouldHighlight) { document.getElementById(`start-tooltip-${index}`)?.classList.add('hidden') } }}
+                    >
                       <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-400" : "text-white"}`}>{letter}</span>
                       {shouldHighlight && (
-                        <div id={`start-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
-                          Hint: Change this letter to reach the next word
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        <div
+                          id={`start-tooltip-${index}`}
+                          className={`absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left puzzle-tooltip ${index <= 2 ? 'left-full ml-2' : 'right-full mr-2'}`}
+                        >
+                          Tossable
+                          <div
+                            className={`absolute top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-transparent ${index <= 2 ? '-left-1 border-r-4 border-r-gray-900' : '-right-1 border-l-4 border-l-gray-900'}`}
+                          ></div>
                         </div>
                       )}
                     </div>
@@ -897,14 +912,14 @@ export default function TosswordGame() {
                   {/* Tooltip with BFS steps */}
                   <div
                     id="start-steps-tooltip"
-                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words"
+                    className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left whitespace-nowrap puzzle-tooltip"
                   >
                     {(() => {
                       const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
                       const steps = path.length > 0 ? path.length - 1 : '?' 
-                      return `Minimum steps: ${steps}`
+                      return `Now solvable in: ${steps} steps`
                     })()}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                   </div>
                 </div>
               </div>
@@ -937,11 +952,35 @@ export default function TosswordGame() {
                     const bgColor = results[letterIndex] === "correct" ? "bg-emerald-500" : results[letterIndex] === "present" ? "bg-amber-500" : (shouldHighlightCell ? "bg-[#aaaaaa]" : "bg-gray-400")
                     const borderColor = ""
                     return (
-                      <div key={letterIndex} className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`} style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}>
+                      <div
+                        key={letterIndex}
+                        className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`}
+                        style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}
+                        onTouchStart={() => {
+                          if (!shouldHighlightCell) return
+                          const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
+                          if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
+                        }}
+                        onMouseEnter={() => {
+                          if (!shouldHighlightCell) return
+                          const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
+                          if (tooltip) tooltip.classList.remove('hidden')
+                        }}
+                        onMouseLeave={() => {
+                          if (!shouldHighlightCell) return
+                          const tooltip = document.getElementById(`tooltip-${actualIndex}-${letterIndex}`)
+                          if (tooltip) tooltip.classList.add('hidden')
+                        }}
+                      >
                         <span className={`text-lg font-bold font-inter ${shouldHighlightCell ? "text-gray-400" : "text-white"}`}>{letter}</span>
-                        <div id={`tooltip-${actualIndex}-${letterIndex}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
+                        <div
+                          id={`tooltip-${actualIndex}-${letterIndex}`}
+                          className={`absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left break-words puzzle-tooltip ${letterIndex <= 2 ? 'left-full ml-2' : 'right-full mr-2'}`}
+                        >
                           {(() => { if (shouldHighlightCell) return "Tossable"; if (results[letterIndex] === "correct") return "Correct letter in correct position"; if (results[letterIndex] === "present") return "Letter is in the word but wrong position"; return "Letter not in the word" })()}
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                          <div
+                            className={`absolute top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-transparent ${letterIndex <= 2 ? '-left-1 border-r-4 border-r-gray-900' : '-right-1 border-l-4 border-l-gray-900'}`}
+                          ></div>
                         </div>
                       </div>
                     )
@@ -970,9 +1009,9 @@ export default function TosswordGame() {
                     ) : (
                       <Lightbulb className="w-6 h-6 text-white" />
                     )}
-                    <div id={`entry-tooltip-${actualIndex}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
+                    <div id={`entry-tooltip-${actualIndex}`} className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left break-words puzzle-tooltip">
                       {gameState.gameWon ? `Word entered ${entryOrder}${entryOrder === 1 ? 'st' : entryOrder === 2 ? 'nd' : entryOrder === 3 ? 'rd' : 'th'}` : `Remaining steps to solve: ${entryOrder}`}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                     </div>
                   </div>
                 </div>
@@ -1012,7 +1051,7 @@ export default function TosswordGame() {
                      onMouseEnter={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                      onMouseLeave={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
                   <BookA className="w-6 h-6 text-white" />
-                  <div id="clue-tooltip" className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
+                  <div id="clue-tooltip" className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left break-words puzzle-tooltip">
                     {(() => {
                       if (gameState.attempts.length > 0) {
                         const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
@@ -1024,7 +1063,7 @@ export default function TosswordGame() {
                       }
                       return "No clue available"
                     })()}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                   </div>
                 </div>
               </div>

@@ -197,6 +197,10 @@
   background-color: goldenrod !important;
 }
 
+.puzzle-tooltip {
+  white-space: no-wrap !important;
+}
+
 
 /* Wheel-of-Fortune style flip-in for revealed letter (no color changes) */
 @keyframes mysteryLetterFade {
