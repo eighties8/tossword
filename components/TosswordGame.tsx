@@ -813,7 +813,7 @@ export default function TosswordGame() {
                   const optimalHints = shouldShowHint ? getOptimalLetterHints(gameState.rootWord, gameState.mysteryWord) : []
                   const shouldHighlight = shouldShowHint && optimalHints.includes(index)
                   return (
-                    <div key={index} className={`w-12 h-12 bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} relative"`}>
+                    <div key={index} className={`w-12 h-12 bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} relative"`}>
                       <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-400" : "text-white"}`}>{letter}</span>
                       {shouldHighlight && (
                         <div id={`start-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
@@ -886,10 +886,10 @@ export default function TosswordGame() {
                 <div className="flex gap-2">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlightCell = shouldShowHint && optimalHints.includes(letterIndex)
-                    const bgColor = results[letterIndex] === "correct" ? "bg-emerald-500" : results[letterIndex] === "present" ? "bg-amber-500" : (shouldHighlightCell ? "!bg-[#aaaaaa]" : "bg-gray-400")
+                    const bgColor = results[letterIndex] === "correct" ? "bg-emerald-500" : results[letterIndex] === "present" ? "bg-amber-500" : (shouldHighlightCell ? "bg-[#aaaaaa]" : "bg-gray-400")
                     const borderColor = ""
                     return (
-                      <div key={letterIndex} className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`} style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}>
+                      <div key={letterIndex} className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`} style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}>
                         <span className={`text-lg font-bold font-inter ${shouldHighlightCell ? "text-gray-400" : "text-white"}`}>{letter}</span>
                         <div id={`tooltip-${actualIndex}-${letterIndex}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                           {(() => { if (shouldHighlightCell) return "Tossable"; if (results[letterIndex] === "correct") return "Correct letter in correct position"; if (results[letterIndex] === "present") return "Letter is in the word but wrong position"; return "Letter not in the word" })()}
@@ -942,7 +942,7 @@ export default function TosswordGame() {
 
               <div className="w-[328px] mx-auto flex justify-center gap-2">
                 {gameState.inputLetters.map((letter, index) => (
-                  <input key={index} ref={(el) => { inputRefs.current[index] = el }} type="text" value={letter} onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))} onKeyDown={(e) => handleKeyDown(e, index)} onFocus={() => handleFocus(index)} className={`w-12 h-12 rounded-lg bg-transparent border border-gray-500 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter ${gameState.activeIndex === index ? "" : ""}`} maxLength={1} />
+                  <input key={index} ref={(el) => { inputRefs.current[index] = el }} type="text" value={letter} onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))} onKeyDown={(e) => handleKeyDown(e, index)} onFocus={() => handleFocus(index)} className={`w-12 h-12 rounded-lg bg-transparent border border-gray-500 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`} maxLength={1} />
                 ))}
                 <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
                      onTouchStart={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
