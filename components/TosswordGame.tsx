@@ -882,7 +882,7 @@ export default function TosswordGame() {
             Play
           </button>
           <div className="mt-8 text-sm text-gray-700 font-inter">
-            <p>Word Ladder Puzzle Game</p>
+            <p>Solve the mystery word in as few steps as possible</p>
             <p>Challenge your vocabulary and logic</p>
           </div>
         </div>

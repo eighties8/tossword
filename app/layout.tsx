@@ -11,7 +11,7 @@ const SITE_URL = 'https://tossword.app' // TODO: set to your domain
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Tossword — Word Ladder Puzzle Game',
+    default: 'Tossword — Solve the mystery word in as few steps as possible',
     template: '%s · Tossword',
   },
   description:
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: '/',
     siteName: 'Tossword',
-    title: 'Tossword — Word Ladder Puzzle Game',
+    title: 'Tossword — Solve the mystery word in as few steps as possible',
     description:
       'A fast, clean, accessible word ladder game. Change one letter at a time to reach the goal.',
     images: [
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@tossword', // Optional: set your Twitter handle
-    title: 'Tossword — Word Ladder Puzzle Game',
+    title: 'Tossword — Solve the mystery word in as few steps as possible',
     description:
       'A fast, clean, accessible word ladder game. Change one letter at a time to reach the goal.',
     images: ['/placeholder.jpg'],
