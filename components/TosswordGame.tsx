@@ -553,11 +553,6 @@ export default function TosswordGame() {
       })
     })
     
-    // Debug: Check if we're detecting letters
-    if (newlyRevealed.length > 0) {
-      console.log('🎯 SHAKE: Letters detected:', newlyRevealed, 'from word:', guess)
-    }
-    
     setGameState((prev) => ({ 
       ...prev, 
       revealedLetters: newRevealed,
@@ -624,7 +619,6 @@ export default function TosswordGame() {
   const submitWord = useCallback(() => {
     if (gameState.gameWon) return
     const word = gameState.inputLetters.join("")
-    console.log('🚀 submitWord called with word:', word)
     
     if (word.length !== 5) {
       setGameState((prev) => ({ ...prev, errorMessage: "Please enter exactly 5 letters", inputLetters: ["", "", "", "", ""], activeIndex: 0 }))
@@ -648,7 +642,6 @@ export default function TosswordGame() {
     }
     const newAttempts = [...gameState.attempts, word]
     const isWon = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
-    console.log('📝 Word validated, calling updateRevealedLetters...')
     
     // Determine unrevealed letters based on UI logic (letters not yet present in any prior attempt)
     const mysteryLetters = gameState.mysteryWord.split("")
@@ -684,7 +677,6 @@ export default function TosswordGame() {
       return
     }
 
-    console.log('🔄 Calling updateRevealedLetters for regular submission...')
     updateRevealedLetters(word)
     setGameState((prev) => ({ ...prev, attempts: newAttempts, inputLetters: ["", "", "", "", ""], gameWon: isWon, activeIndex: 0, errorMessage: "" }))
     if (hintTextAuto && !isWon && !gameState.isHardMode) {

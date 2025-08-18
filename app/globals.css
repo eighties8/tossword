@@ -245,16 +245,16 @@
   transform: translateX(0) !important;
 }
 
-/* Aggressive shake effect that overrides inline styles */
+/* Simple shake effect for newly revealed letters - side to side movement that works */
 @keyframes shakeEffect {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-8px); }
-  50% { transform: translateX(8px); }
-  75% { transform: translateX(-4px); }
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-8px); }
+  50%  { transform: translateX(8px); }
+  75%  { transform: translateX(-4px); }
   100% { transform: translateX(0); }
 }
 
-/* Force shake with maximum specificity and important declarations */
+/* Apply shake effect to elements with shake-animation class */
 .shake-animation {
   animation: shakeEffect 500ms ease-in-out !important;
   animation-delay: 0ms !important;
