@@ -21,6 +21,9 @@ const poppins = Poppins({
 
 type LetterState = "correct" | "present" | "absent"
 
+const MYSTERY_LETTER_FADE_MS = 1000
+const AFTER_FADE_BUFFER_MS = 500
+
 interface GameState {
   mysteryWord: string
   rootWord: string
@@ -39,6 +42,8 @@ interface GameState {
   hintShownForRow: number
   hideAttemptsDuringReveal: boolean
   showWinMessage: boolean
+  // Index of the final unrevealed mystery letter to delay reveal for; null when not delaying
+  finalRevealIndex: number | null
 }
 
 const PUZZLES = [
@@ -95,6 +100,7 @@ export default function TosswordGame() {
     hintShownForRow: -1,
     hideAttemptsDuringReveal: false,
     showWinMessage: false,
+    finalRevealIndex: null,
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -122,6 +128,7 @@ export default function TosswordGame() {
       hintShownForRow: -1,
       hideAttemptsDuringReveal: false,
       showWinMessage: false,
+      finalRevealIndex: null,
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -166,6 +173,7 @@ export default function TosswordGame() {
       hintShownForRow: -1,
       hideAttemptsDuringReveal: false,
       showWinMessage: false,
+      finalRevealIndex: null,
     })
 
     setIsLoading(false)
@@ -436,7 +444,37 @@ export default function TosswordGame() {
     }
     const newAttempts = [...gameState.attempts, word]
     const isWon = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+    // Determine unrevealed letters based on UI logic (letters not yet present in any prior attempt)
+    const mysteryLetters = gameState.mysteryWord.split("")
+    const previouslyFound = mysteryLetters.map((ltr) => gameState.attempts.some((a) => a.includes(ltr)))
+    const unsolvedIndices = previouslyFound
+      .map((found, idx) => (found ? -1 : idx))
+      .filter((v) => v !== -1)
+    const isFinalLetterSolve = isWon && unsolvedIndices.length === 1
     hintsCache.current.clear()
+
+    if (isFinalLetterSolve) {
+      // Identify the last unrevealed mystery letter index (based on prior attempts)
+      const lastIdx = unsolvedIndices[0]
+      updateRevealedLetters(word)
+      setGameState((prev) => ({ ...prev, finalRevealIndex: lastIdx, attempts: newAttempts, inputLetters: ["", "", "", "", ""], activeIndex: 0, errorMessage: "" }))
+      // Focus new empty row
+      setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
+      // Let layout update, then release the held letter to trigger the reveal animation
+      setTimeout(() => { setGameState((prev) => ({ ...prev, finalRevealIndex: null })) }, 100)
+
+      const totalDelay = MYSTERY_LETTER_FADE_MS + AFTER_FADE_BUFFER_MS
+      setTimeout(() => {
+        const solvedNow = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+        if (solvedNow) {
+          setGameState((prev) => ({ ...prev, gameWon: true, hideAttemptsDuringReveal: true }))
+          setTimeout(() => { setGameState((prev) => ({ ...prev, showWinAnimation: true })) }, 100)
+          setTimeout(() => { setGameState((prev) => ({ ...prev, hideAttemptsDuringReveal: false })) }, 1900)
+        }
+      }, totalDelay)
+      return
+    }
+
     updateRevealedLetters(word)
     setGameState((prev) => ({ ...prev, attempts: newAttempts, inputLetters: ["", "", "", "", ""], gameWon: isWon, activeIndex: 0, errorMessage: "" }))
     if (hintTextAuto && !isWon && !gameState.isHardMode) {
@@ -779,7 +817,9 @@ export default function TosswordGame() {
           <div className="mb-2">
             <div className="w-[328px] mx-auto flex justify-center gap-2 mb-2">
               {gameState.mysteryWord.split("").map((letter, index) => {
-                const isLetterFound = gameState.attempts.some(attempt => attempt.includes(letter))
+                const isHeldForFinalReveal = gameState.finalRevealIndex === index
+                const isLetterFoundGeneric = gameState.attempts.some(attempt => attempt.includes(letter))
+                const isLetterFound = !isHeldForFinalReveal && isLetterFoundGeneric
                 return (
                   <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"}`}
                        style={{ animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms" }}
@@ -943,8 +983,8 @@ export default function TosswordGame() {
           {!gameState.gameWon && (
             <>
               <div className={`w-[328px] mx-auto overflow-hidden transition-[max-height,opacity,margin] duration-1300 ease-in-out ${gameState.showAutoHint ? 'max-h-12 my-2 opacity-100' : 'max-h-0 my-0 opacity-0'}`}>
-                <div className="h-12 w-full border-2 border-gray-600 bg-gray-800 shadow-lg flex items-center justify-center">
-                  <p className="text-gray-300 text-sm font-inter" aria-live="polite">{gameState.autoHintText}</p>
+                <div className="h-12 w-full bg-gray-400 shadow-lg flex items-center justify-center">
+                  <p className="text-white text-sm font-inter" aria-live="polite">{gameState.autoHintText}</p>
                 </div>
               </div>
 
@@ -989,9 +1029,9 @@ export default function TosswordGame() {
                 </div>
               </div>
 
-              <div className={["w-[328px] mx-auto overflow-hidden","transition-[max-height,opacity,margin] duration-300 ease-in-out", gameState.errorMessage ? "max-h-12 opacity-100 my-2" : "max-h-0 opacity-0 my-0"].join(" ")} aria-live="polite">
-                <div className="h-12 w-full border-2 border-gray-600 bg-gray-800 shadow-lg flex items-center justify-center px-4 py-2">
-                  <p className="text-gray-400 text-sm font-inter">{gameState.errorMessage}</p>
+              <div className={["w-[328px] mx-auto overflow-hidden","transition-[max-height,opacity,margin] duration-300 ease-in-out rounded-lg puzzle-error-message", gameState.errorMessage ? "opacity-100 my-2" : "opacity-0 my-0"].join(" ")} aria-live="polite">
+                <div className="h-12 w-full flex items-center justify-center px-4">
+                  <p className="text-white text-sm font-inter">{gameState.errorMessage}</p>
                 </div>
               </div>
             </>
