@@ -979,7 +979,7 @@ export default function TosswordGame() {
         </div>
       </header>
 
-      <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
+      <div className="flex-1 flex items-center justify-center md:pb-4">
         <div ref={puzzleRef} className={`w-full max-w-md puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
           <div className="text-center mb-6 min-h-[64px]">
             <div className={[
@@ -1243,7 +1243,8 @@ export default function TosswordGame() {
                     className={`w-12 h-12 rounded-lg bg-transparent border border-gray-400 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`}
                     maxLength={1}
                     autoComplete="off"
-                    inputMode="text"
+                    inputMode={typeof window !== 'undefined' && window.innerWidth < 768 ? "none" : "text"}
+                    readOnly={typeof window !== 'undefined' && window.innerWidth < 768}
                     aria-label={`Letter ${index + 1}`}
                   />
                 ))}
