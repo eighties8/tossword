@@ -1249,12 +1249,12 @@ export default function TosswordGame() {
                   {/* Tooltip with BFS steps */}
                   <div
                     id="start-steps-tooltip"
-                    className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left whitespace-nowrap puzzle-tooltip"
+                    className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[250px] text-left whitespace-nowrap puzzle-tooltip"
                   >
                     {(() => {
                       const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                      const steps = path.length > 0 ? path.length - 1 : '?' 
-                      return `Now solvable in: ${steps} steps`
+                      const steps = path.length > 0 ? path.length : '?' 
+                      return `Chain ${steps} words or less to solve`
                     })()}
                     <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                   </div>
