@@ -613,9 +613,9 @@ export default function TosswordGame() {
   if (showSplash) {
     return (
       <div className={`min-h-screen bg-gray-100 flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md text-gray-700">
           <div className="mb-6">
-            <div className="grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4">
+            <div className="puzzle-splash-grid grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4 bg-[#444] p-2 rounded-lg">
               <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">?</span></div>
               <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">?</span></div>
               <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">?</span></div>
@@ -627,14 +627,14 @@ export default function TosswordGame() {
               <div className="bg-green-500 rounded"></div>
             </div>
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-4 font-poppins">Tossword</h1>
+          <h1 className="text-5xl font-bold text-gray-700 mb-4 font-poppins">Tossword</h1>
           <p className="text-lg text-gray-700 mb-4 font-inter">
-            Today's tossword is <strong>{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
+            Today's start word is <strong className="text-emerald-500">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
           <p className="text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word.</p>
-          <button onClick={() => setShowSplash(false)} className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer">Play</button>
-          <div className="mt-8 text-sm text-gray-500 font-inter">
+          <button onClick={() => setShowSplash(false)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer">Play</button>
+          <div className="mt-8 text-sm text-gray-700 font-inter">
             <p>Word Ladder Puzzle Game</p>
             <p>Challenge your vocabulary and logic</p>
           </div>
@@ -691,7 +691,7 @@ export default function TosswordGame() {
       </header>
 
       <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md puzzle">
           <div className="text-center mb-6"></div>
 
           <div className="mb-2">
@@ -699,7 +699,7 @@ export default function TosswordGame() {
               {gameState.mysteryWord.split("").map((letter, index) => {
                 const isLetterFound = gameState.attempts.some(attempt => attempt.includes(letter))
                 return (
-                  <div key={index} className={`w-12 h-12 flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-gray-500"}`}
+                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-gray-500"}`}
                        style={{ animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms" }}
                        onTouchStart={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                        onMouseEnter={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
@@ -712,7 +712,7 @@ export default function TosswordGame() {
                   </div>
                 )
               })}
-              <div className="w-12 h-12 bg-gray-500 flex items-center justify-center cursor-pointer relative"
+              <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
                    onTouchStart={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                    onMouseEnter={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                    onMouseLeave={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
@@ -747,7 +747,7 @@ export default function TosswordGame() {
                   const optimalHints = shouldShowHint ? getOptimalLetterHints(gameState.rootWord, gameState.mysteryWord) : []
                   const shouldHighlight = shouldShowHint && optimalHints.includes(index)
                   return (
-                    <div key={index} className={`w-12 h-12 bg-gray-400 flex items-center justify-center ${shouldHighlight ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} relative"`}>
+                    <div key={index} className={`w-12 h-12 bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} relative"`}>
                       <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-400" : "text-white"}`}>{letter}</span>
                       {shouldHighlight && (
                         <div id={`start-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
@@ -758,13 +758,43 @@ export default function TosswordGame() {
                     </div>
                   )
                 })}
-                <div className="w-12 h-12 bg-gray-500 flex items-center justify-center cursor-pointer" title="Minimum steps to solve this puzzle">
-                  <span className="end-of-row text-white text-lg font-bold font-inter">
+                <div
+                  className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
+                  onTouchStart={() => {
+                    const tooltip = document.getElementById('start-steps-tooltip')
+                    if (tooltip) {
+                      tooltip.classList.remove('hidden')
+                      setTimeout(() => tooltip.classList.add('hidden'), 3000)
+                    }
+                  }}
+                  onMouseEnter={() => {
+                    const tooltip = document.getElementById('start-steps-tooltip')
+                    if (tooltip) tooltip.classList.remove('hidden')
+                  }}
+                  onMouseLeave={() => {
+                    const tooltip = document.getElementById('start-steps-tooltip')
+                    if (tooltip) tooltip.classList.add('hidden')
+                  }}
+                  title="Minimum steps to solve this puzzle"
+                >
+                  {/* Start/Begin icon (flag) */}
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 21V5"/>
+                    <path d="M4 5c6-2 8 2 14 0v10c-6 2-8-2-14 0"/>
+                  </svg>
+
+                  {/* Tooltip with BFS steps */}
+                  <div
+                    id="start-steps-tooltip"
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words"
+                  >
                     {(() => {
                       const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                      return path.length > 0 ? path.length - 1 : "?"
+                      const steps = path.length > 0 ? path.length - 1 : '?' 
+                      return `Minimum steps: ${steps}`
                     })()}
-                  </span>
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -796,7 +826,7 @@ export default function TosswordGame() {
                     const bgColor = results[letterIndex] === "correct" ? "bg-emerald-500" : results[letterIndex] === "present" ? "bg-amber-500" : (shouldHighlightCell ? "!bg-[#aaaaaa]" : "bg-gray-400")
                     const borderColor = ""
                     return (
-                      <div key={letterIndex} className={`w-12 h-12 ${bgColor} flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`} style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}>
+                      <div key={letterIndex} className={`w-12 h-12 ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable !bg-white !text-gray-400 !border !border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted ? "animate-[spinX_1s_ease-in-out_1]" : ""} relative`} style={{ animationDelay: gameState.showWinAnimation && isCompleted ? `${letterIndex * 200}ms` : "0ms" }}>
                         <span className={`text-lg font-bold font-inter ${shouldHighlightCell ? "text-gray-400" : "text-white"}`}>{letter}</span>
                         <div id={`tooltip-${actualIndex}-${letterIndex}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                           {(() => { if (shouldHighlightCell) return "Tossable"; if (results[letterIndex] === "correct") return "Correct letter in correct position"; if (results[letterIndex] === "present") return "Letter is in the word but wrong position"; return "Letter not in the word" })()}
@@ -805,7 +835,7 @@ export default function TosswordGame() {
                       </div>
                     )
                   })}
-                  <div className="w-12 h-12 bg-gray-500 flex items-center justify-center cursor-pointer relative">
+                  <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative">
                     {gameState.gameWon && entryOrder === 0 ? (
                       <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     ) : (
@@ -831,9 +861,9 @@ export default function TosswordGame() {
 
               <div className="w-[328px] mx-auto flex justify-center gap-2">
                 {gameState.inputLetters.map((letter, index) => (
-                  <input key={index} ref={(el) => { inputRefs.current[index] = el }} type="text" value={letter} onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))} onKeyDown={(e) => handleKeyDown(e, index)} onFocus={() => handleFocus(index)} className={`w-12 h-12 bg-transparent border border-gray-500 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter ${gameState.activeIndex === index ? "" : ""}`} maxLength={1} />
+                  <input key={index} ref={(el) => { inputRefs.current[index] = el }} type="text" value={letter} onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))} onKeyDown={(e) => handleKeyDown(e, index)} onFocus={() => handleFocus(index)} className={`w-12 h-12 rounded-lg bg-transparent border border-gray-500 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter ${gameState.activeIndex === index ? "" : ""}`} maxLength={1} />
                 ))}
-                <div className="w-12 h-12 bg-gray-500 flex items-center justify-center cursor-pointer relative"
+                <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
                      onTouchStart={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                      onMouseEnter={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                      onMouseLeave={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
