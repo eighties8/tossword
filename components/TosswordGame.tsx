@@ -1355,11 +1355,11 @@ export default function TosswordGame() {
                             'h-[60px] rounded-md text-sm font-medium',
                             keyStyle,
                             'active:opacity-80',
-                            k === 'ENTER' ? 'px-3 flex-1 max-w-[90px]' : k === 'BACKSPACE' ? 'px-3 flex-1 max-w-[120px]' : 'flex-1'
+                            k === 'ENTER' ? 'px-3 flex-1 max-w-[90px]' : k === 'BACKSPACE' ? 'px-3 flex-1 max-w-[120px] flex items-center justify-center' : 'flex-1'
                           ].join(' ')}
                           aria-label={k === 'BACKSPACE' ? 'Backspace' : k}
                         >
-                          {k === 'BACKSPACE' ? <Delete className="w-5 h-5" /> : k}
+                          {k === 'BACKSPACE' ? <div className="flex items-center justify-center w-full h-full"><Delete className="w-6 h-6" /></div> : k}
                         </button>
                       )
                     })}
