@@ -115,6 +115,8 @@ export default function TosswordGame() {
   const hintsCache = useRef<Map<string, number[]>>(new Map())
   const puzzleRef = useRef<HTMLDivElement | null>(null)
   const confettiFiredRef = useRef(false)
+  const hasPrimedFocusRef = useRef(false)
+  const focusTimersRef = useRef<number[]>([])
 
   const launchConfettiOverPuzzle = useCallback((durationMs: number = 1600) => {
     if (typeof window === 'undefined') return
@@ -190,6 +192,13 @@ export default function TosswordGame() {
     try {
       const nodes = document.querySelectorAll('.puzzle-tooltip')
       nodes.forEach((el) => el.classList.add('hidden'))
+    } catch {}
+  }, [])
+
+  const clearFocusTimers = useCallback(() => {
+    try {
+      focusTimersRef.current.forEach((id) => clearTimeout(id))
+      focusTimersRef.current = []
     } catch {}
   }, [])
 
@@ -409,11 +418,18 @@ export default function TosswordGame() {
   }, [isLoading, gameState.mysteryWord, gameState.rootWord, gameState.gameWon, gameState.isHardMode])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRefs.current[0]?.focus()
-    }, 100)
+    if (hasPrimedFocusRef.current) return
+    if (showSplash || gameState.gameWon) return
+    if (!gameState.inputLetters.every((l) => l === '')) return
+    const timer = window.setTimeout(() => {
+      if (!hasPrimedFocusRef.current) {
+        inputRefs.current[0]?.focus()
+        hasPrimedFocusRef.current = true
+      }
+    }, 120)
+    focusTimersRef.current.push(timer)
     return () => clearTimeout(timer)
-  }, [gameState.mysteryWord])
+  }, [gameState.mysteryWord, gameState.gameWon, showSplash, gameState.inputLetters])
 
   // When splash is visible, focus the Play button
   useEffect(() => {
@@ -424,23 +440,35 @@ export default function TosswordGame() {
   }, [showSplash])
 
   useEffect(() => {
-    if (!isLoading && gameState.mysteryWord && gameState.rootWord) {
-      const focusTimer1 = setTimeout(() => { inputRefs.current[0]?.focus() }, 200)
-      const focusTimer2 = setTimeout(() => { inputRefs.current[0]?.focus() }, 500)
-      const focusTimer3 = setTimeout(() => { inputRefs.current[0]?.focus() }, 1000)
-      return () => { clearTimeout(focusTimer1); clearTimeout(focusTimer2); clearTimeout(focusTimer3) }
-    }
-  }, [isLoading, gameState.mysteryWord, gameState.rootWord])
+    if (hasPrimedFocusRef.current) return
+    if (isLoading || showSplash || gameState.gameWon) return
+    if (!(gameState.mysteryWord && gameState.rootWord)) return
+    if (!gameState.inputLetters.every((l) => l === '')) return
+    const t = window.setTimeout(() => {
+      if (!hasPrimedFocusRef.current) {
+        inputRefs.current[0]?.focus()
+        hasPrimedFocusRef.current = true
+      }
+    }, 200)
+    focusTimersRef.current.push(t)
+    return () => clearTimeout(t)
+  }, [isLoading, gameState.mysteryWord, gameState.rootWord, gameState.gameWon, showSplash, gameState.inputLetters])
 
   useEffect(() => {
-    if (!showSplash && !isLoading && gameState.mysteryWord && gameState.rootWord && !gameState.gameWon) {
-      const timer = setTimeout(() => {
+    if (hasPrimedFocusRef.current) return
+    if (showSplash || isLoading || gameState.gameWon) return
+    if (!(gameState.mysteryWord && gameState.rootWord)) return
+    if (!gameState.inputLetters.every((l) => l === '')) return
+    const timer = window.setTimeout(() => {
+      if (!hasPrimedFocusRef.current) {
         inputRefs.current[0]?.focus()
         try { inputRefs.current[0]?.setSelectionRange?.(0, 1) } catch {}
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [showSplash, isLoading, gameState.mysteryWord, gameState.rootWord, gameState.gameWon])
+        hasPrimedFocusRef.current = true
+      }
+    }, 120)
+    focusTimersRef.current.push(timer)
+    return () => clearTimeout(timer)
+  }, [showSplash, isLoading, gameState.mysteryWord, gameState.rootWord, gameState.gameWon, gameState.inputLetters])
 
   const isValidMove = useCallback((fromWord: string, toWord: string): boolean => {
     const toWordLower = toWord.toLowerCase()
