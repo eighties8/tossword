@@ -568,7 +568,16 @@ export default function TosswordGame() {
       newInput[index] = filteredLetter.toUpperCase()
     }
     setGameState((prev) => ({ ...prev, inputLetters: newInput }))
-    if (letter !== "" && index < 4) { setTimeout(() => { inputRefs.current[index + 1]?.focus() }, 0) }
+    if (letter !== "" && index < 4) { 
+      setTimeout(() => { inputRefs.current[index + 1]?.focus() }, 0) 
+    } else if (letter !== "" && index === 4) {
+      // Keep focus on the last cell when the last letter is entered
+      setGameState((prev) => ({ ...prev, activeIndex: 4 }))
+      // Explicitly maintain focus on the last cell
+      setTimeout(() => {
+        inputRefs.current[4]?.focus()
+      }, 0)
+    }
   }, [gameState.gameWon, gameState.inputLetters, hideAllTooltips])
 
   const handleFocus = useCallback((index: number) => {
@@ -683,6 +692,12 @@ export default function TosswordGame() {
     } else if (key.length === 1 && key.match(/[A-Z]/)) {
       if (gameState.activeIndex < 5) {
         handleLetterInput(gameState.activeIndex, key)
+        // Ensure focus is maintained after letter input, especially for the last cell
+        if (gameState.activeIndex === 4) {
+          setTimeout(() => {
+            inputRefs.current[4]?.focus()
+          }, 0)
+        }
       }
     }
   }, [gameState.gameWon, gameState.gameOver, gameState.activeIndex, submitWord, handleLetterInput])
