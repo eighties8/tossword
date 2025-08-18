@@ -665,7 +665,13 @@ export default function TosswordGame() {
       submitWord()
     } else if (key === 'BACKSPACE') {
       if (gameState.activeIndex > 0) {
-        handleLetterInput(gameState.activeIndex - 1, '')
+        // Clear current letter and move back
+        handleLetterInput(gameState.activeIndex, '')
+        setGameState(prev => ({ ...prev, activeIndex: prev.activeIndex - 1 }))
+        // Focus the previous input field
+        setTimeout(() => {
+          inputRefs.current[gameState.activeIndex - 1]?.focus()
+        }, 0)
       }
     } else if (key.length === 1 && key.match(/[A-Z]/)) {
       if (gameState.activeIndex < 5) {
