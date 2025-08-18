@@ -1263,28 +1263,77 @@ export default function TosswordGame() {
                 </div>
               </div>
 
-              {/* Mobile on-screen keyboard */}
-              <div className="w-full px-3 mt-4 md:hidden select-none">
+                             {/* Mobile on-screen keyboard */}
+               <div className="w-full px-1 mt-4 md:hidden select-none">
                 {[
                   ['Q','W','E','R','T','Y','U','I','O','P'],
                   ['A','S','D','F','G','H','J','K','L'],
                   ['ENTER','Z','X','C','V','B','N','M','BACKSPACE'],
                 ].map((row, rIdx) => (
                   <div key={rIdx} className="flex justify-center gap-1 mb-1">
-                    {row.map((k) => (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() => handleVirtualKey(k)}
-                        className={[
-                          'h-[50px] rounded-md text-sm font-medium text-white bg-gray-700 active:bg-gray-600',
-                          k === 'ENTER' ? 'px-3 flex-1 max-w-[80px]' : k === 'BACKSPACE' ? 'px-3 flex-1 max-w-[80px]' : 'flex-1'
-                        ].join(' ')}
-                        aria-label={k === 'BACKSPACE' ? 'Backspace' : k}
-                      >
-                        {k === 'BACKSPACE' ? '⌫' : k}
-                      </button>
-                    ))}
+                    {row.map((k) => {
+                                             // Determine key styling based on letter state
+                       let keyStyle = 'bg-gray-400 text-white' // Default medium gray
+                       
+                       if (k === 'ENTER' || k === 'BACKSPACE') {
+                         keyStyle = 'bg-gray-600 text-white' // Keep ENTER/BACKSPACE dark
+                       } else if (k.length === 1) {
+                                                                          // Only start coloring after first guess
+                         if (gameState.attempts.length > 0) {
+                           // Check if this letter has been used in any attempt
+                           let letterUsed = false
+                           let bestFeedback = null // 'green', 'yellow', or 'gray'
+                           
+                           // Check all attempts to find the best feedback for this letter
+                           for (const attempt of gameState.attempts) {
+                             if (attempt.includes(k)) {
+                               letterUsed = true
+                               for (let i = 0; i < attempt.length; i++) {
+                                 if (attempt[i] === k) {
+                                   const mysteryLetter = gameState.mysteryWord[i]
+                                   if (attempt[i] === mysteryLetter) {
+                                     bestFeedback = 'green' // Correct position (highest priority)
+                                     break
+                                   } else if (gameState.mysteryWord.includes(attempt[i])) {
+                                     if (bestFeedback !== 'green') {
+                                       bestFeedback = 'yellow' // Wrong position (medium priority)
+                                     }
+                                   }
+                                 }
+                               }
+                               // If we found green feedback, no need to check further
+                               if (bestFeedback === 'green') break
+                             }
+                           }
+                           
+                           // Apply the best feedback color
+                           if (bestFeedback === 'green') {
+                             keyStyle = 'bg-emerald-500 text-white'
+                           } else if (bestFeedback === 'yellow') {
+                             keyStyle = 'bg-amber-500 text-white'
+                           } else if (letterUsed) {
+                             keyStyle = 'bg-gray-800 text-white' // Used but no feedback
+                           }
+                         }
+                      }
+                      
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => handleVirtualKey(k)}
+                          className={[
+                            'h-[60px] rounded-md text-sm font-medium',
+                            keyStyle,
+                            'active:opacity-80',
+                            k === 'ENTER' ? 'px-3 flex-1 max-w-[90px]' : k === 'BACKSPACE' ? 'px-3 flex-1 max-w-[90px]' : 'flex-1'
+                          ].join(' ')}
+                          aria-label={k === 'BACKSPACE' ? 'Backspace' : k}
+                        >
+                          {k === 'BACKSPACE' ? '⌫' : k}
+                        </button>
+                      )
+                    })}
                   </div>
                 ))}
               </div>
@@ -1359,7 +1408,7 @@ export default function TosswordGame() {
 
       <footer className="fixed bottom-0 left-0 right-0 bg-white text-gray-900 py-4 px-6 border-t border-gray-300 shadow-sm md:relative">
         <div className="max-w-md mx-auto text-center">
-          <p className="text-sm text-gray-600 font-inter">© Red Mountain Media, LLC 2025</p>
+          <p className="text-sm text-gray-600 font-inter">© Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span></p>
         </div>
       </footer>
 
