@@ -214,11 +214,24 @@
 }
 
 
-/* Wheel-of-Fortune style flip-in for revealed letter (no color changes) */
-@keyframes mysteryLetterFade {
-  0%   { opacity: 0; transform: rotateY(-90deg) scale(1.58); }
-  60%  { opacity: 1; transform: rotateY(10deg)  scale(1.0); }
-  100% { opacity: 1; transform: rotateY(0deg)   scale(1.0); }
+/* Working wheel-of-fortune flip animation for newly revealed letters */
+@keyframes letterRevealFlip {
+  0%   { 
+    opacity: 0; 
+    transform: rotateY(-90deg) scale(1.1); 
+  }
+  40%  { 
+    opacity: 0; 
+    transform: rotateY(-10deg) scale(1.1); 
+  }
+  60%  { 
+    opacity: 1; 
+    transform: rotateY(10deg) scale(1.0); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: rotateY(0deg) scale(1.0); 
+  }
 }
 
 /* Subtle shake effect for newly revealed letters - applied to container */
@@ -254,18 +267,45 @@
   100% { transform: translateX(0); }
 }
 
-/* Apply shake effect to elements with shake-animation class */
-.shake-animation {
-  animation: shakeEffect 500ms ease-in-out !important;
+/* Apply flip effect to elements with flip-animation class */
+.flip-animation {
+  animation: letterFlipIn 400ms ease-in !important;
   animation-delay: 0ms !important;
   position: relative !important;
   z-index: 9999 !important;
+  perspective: 1000px !important;
+  transform-style: preserve-3d !important;
 }
 
 /* Also target by attribute selector for maximum override */
-[class*="shake-animation"] {
-  animation: shakeEffect 500ms ease-in-out !important;
+[class*="flip-animation"] {
+  animation: letterFlipIn 400ms ease-in !important;
   animation-delay: 0ms !important;
   position: relative !important;
   z-index: 9999 !important;
+  perspective: 1000px !important;
+  transform-style: preserve-3d !important;
+}
+
+/* Simple flip-in animation for newly revealed letters - using rotateX for top-to-bottom flip */
+@keyframes letterFlipIn {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(-180deg);
+  }
+}
+
+/* Fade-in animation for the letter text that starts halfway through */
+@keyframes letterFadeIn {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

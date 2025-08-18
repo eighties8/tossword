@@ -51,8 +51,10 @@ interface GameState {
   showInvalidWord: boolean
   showHardModeViolation: boolean
   gameOver: boolean
-  // Track which letters were newly revealed for shake animation
-  newlyRevealedLetters: number[]
+  // Track which letters were newly revealed for flip animation
+  newlyFlippedLetters: number[]
+  // Track which letters are currently animating (to delay reveal)
+  animatingLetters: number[]
 }
 
 const PUZZLES = [
@@ -116,7 +118,8 @@ export default function TosswordGame() {
     showInvalidWord: false,
     showHardModeViolation: false,
     gameOver: false,
-    newlyRevealedLetters: [],
+    newlyFlippedLetters: [],
+    animatingLetters: [],
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -239,7 +242,8 @@ export default function TosswordGame() {
       showInvalidWord: false,
       showHardModeViolation: false,
       gameOver: false,
-      newlyRevealedLetters: [],
+      newlyFlippedLetters: [],
+      animatingLetters: [],
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -291,7 +295,8 @@ export default function TosswordGame() {
       showInvalidWord: false,
       showHardModeViolation: false,
       gameOver: false,
-      newlyRevealedLetters: [],
+      newlyFlippedLetters: [],
+      animatingLetters: [],
     })
 
     setIsLoading(false)
@@ -299,18 +304,18 @@ export default function TosswordGame() {
 
   useEffect(() => {
     const savedDebugMode = (() => {
-      if (typeof window === 'undefined') return true
+      if (typeof window === 'undefined') return false
       try {
         const ls = window.localStorage
-        if (!ls) return true
+        if (!ls) return false
         let value = ls.getItem('tossword-debug-mode')
         if (value === null) {
-          ls.setItem('tossword-debug-mode', 'true')
-          value = 'true'
+          // Don't set localStorage automatically - let it remain null until user explicitly sets it
+          return false
         }
         return value === 'true'
       } catch {
-        return true
+        return false
       }
     })()
 
@@ -548,22 +553,55 @@ export default function TosswordGame() {
         if (guessLetter === mysteryLetter && !newRevealed[mysteryIndex]) {
           // This letter is newly revealed in the mystery word at this position
           newlyRevealed.push(mysteryIndex)
-          newRevealed[mysteryIndex] = true
+          // Don't reveal the letter yet - start animation first
         }
       })
     })
     
-    setGameState((prev) => ({ 
-      ...prev, 
-      revealedLetters: newRevealed,
-      newlyRevealedLetters: newlyRevealed
-    }))
-    
-    // Clear the newly revealed letters after animation completes
     if (newlyRevealed.length > 0) {
-      setTimeout(() => {
-        setGameState((prev) => ({ ...prev, newlyRevealedLetters: [] }))
-      }, 500) // Match the CSS animation duration
+      // Check if this is the winning word - if so, don't animate the final letter
+      const isWinningWord = guess.toLowerCase() === gameState.mysteryWord.toLowerCase()
+      const lettersToAnimate = isWinningWord ? newlyRevealed.slice(0, -1) : newlyRevealed
+      
+      if (lettersToAnimate.length > 0) {
+        // Start animation for non-final letters
+        setGameState((prev) => ({ 
+          ...prev, 
+          newlyFlippedLetters: lettersToAnimate,
+          animatingLetters: lettersToAnimate
+        }))
+        
+        // Reveal letters halfway through animation (200ms for 400ms total)
+        setTimeout(() => {
+          lettersToAnimate.forEach(index => {
+            newRevealed[index] = true
+          })
+          setGameState((prev) => ({ 
+            ...prev, 
+            revealedLetters: newRevealed
+          }))
+        }, 200)
+        
+        // Clear animation classes after animation completes
+        setTimeout(() => {
+          setGameState((prev) => ({ 
+            ...prev, 
+            newlyFlippedLetters: [],
+            animatingLetters: []
+          }))
+        }, 400) // Match the CSS animation duration
+      }
+      
+      // For winning word, reveal the final letter immediately without animation
+      if (isWinningWord && newlyRevealed.length > 0) {
+        newlyRevealed.forEach(index => {
+          newRevealed[index] = true
+        })
+        setGameState((prev) => ({ 
+          ...prev, 
+          revealedLetters: newRevealed
+        }))
+      }
     }
   }, [gameState.mysteryWord, gameState.revealedLetters, checkWord])
 
@@ -642,6 +680,21 @@ export default function TosswordGame() {
     }
     const newAttempts = [...gameState.attempts, word]
     const isWon = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+    
+    // Debug mode: always show current solvable word progression
+    if (debugMode) {
+      const currentWord = word.toUpperCase()
+      const path = bidirectionalBFS(currentWord, gameState.mysteryWord.toUpperCase())
+      console.log('🔍 DEBUG MODE - Current word progression:')
+      console.log(`Current word: ${currentWord}`)
+      console.log(`Target: ${gameState.mysteryWord.toUpperCase()}`)
+      console.log(`BFS path: ${path.join(' → ')}`)
+      console.log(`Path length: ${path.length}`)
+      if (path.length >= 2) {
+        console.log(`Next optimal word: ${path[1]}`)
+      }
+      console.log('---')
+    }
     
     // Determine unrevealed letters based on UI logic (letters not yet present in any prior attempt)
     const mysteryLetters = gameState.mysteryWord.split("")
@@ -950,6 +1003,40 @@ export default function TosswordGame() {
     }
   }, [gameState.inputLetters, handleLetterInput])
 
+  // Debug mode: show word progression after each word submission
+  useEffect(() => {
+    if (debugMode && gameState.attempts.length > 0) {
+      const lastAttempt = gameState.attempts[gameState.attempts.length - 1]
+      const currentWord = lastAttempt.toUpperCase()
+      const path = bidirectionalBFS(currentWord, gameState.mysteryWord.toUpperCase())
+      console.log('🔍 DEBUG MODE - Word progression after submission:')
+      console.log(`Current word: ${currentWord}`)
+      console.log(`Target: ${gameState.mysteryWord.toUpperCase()}`)
+      console.log(`BFS path: ${path.join(' → ')}`)
+      console.log(`Path length: ${path.length}`)
+      if (path.length >= 2) {
+        console.log(`Next optimal word: ${path[1]}`)
+      }
+      console.log('---')
+    }
+  }, [debugMode, gameState.attempts, gameState.mysteryWord])
+
+  // Debug mode: show initial word progression when puzzle loads
+  useEffect(() => {
+    if (debugMode && gameState.rootWord && gameState.mysteryWord && gameState.attempts.length === 0) {
+      const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+      console.log('🔍 DEBUG MODE - Initial puzzle progression:')
+      console.log(`Root word: ${gameState.rootWord.toUpperCase()}`)
+      console.log(`Target: ${gameState.mysteryWord.toUpperCase()}`)
+      console.log(`BFS path: ${path.join(' → ')}`)
+      console.log(`Path length: ${path.length}`)
+      if (path.length >= 2) {
+        console.log(`First optimal word: ${path[1]}`)
+      }
+      console.log('---')
+    }
+  }, [debugMode, gameState.rootWord, gameState.mysteryWord, gameState.attempts.length])
+
   if (showSplash) {
     return (
       <div className={`min-h-screen bg-gray-100 flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
@@ -1058,21 +1145,20 @@ export default function TosswordGame() {
                 const isHeldForFinalReveal = gameState.finalRevealIndex === index
                 const isLetterFoundGeneric = gameState.attempts.some(attempt => attempt.includes(letter))
                 const isLetterFound = !isHeldForFinalReveal && isLetterFoundGeneric
-                const shouldShake = gameState.newlyRevealedLetters.includes(index)
+                // Don't flip the last letter that gets revealed - it will flip during the final win sequence
+                const isLastLetterToReveal = gameState.revealedLetters.filter(r => r).length === 4 && !gameState.revealedLetters[index]
+                const shouldFlip = gameState.newlyFlippedLetters.includes(index) && !isLastLetterToReveal
+                const isAnimating = gameState.animatingLetters.includes(index)
                 
                 return (
-                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"} ${shouldShake ? "shake-animation" : ""}`}
+                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
                        style={{ 
-                         animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms",
-                         // Obvious debug indicator - red background when shake should be active
-                         ...(shouldShake && { 
-                           backgroundColor: 'red !important'
-                         })
+                         animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms"
                        }}
                        onTouchStart={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                        onMouseEnter={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
                        onMouseLeave={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.add('hidden') }}>
-                    <span className={isLetterFound ? "text-white text-lg font-bold font-inter leading-none mystery-letter-reveal" : "text-white text-2xl font-bold leading-none"}>{isLetterFound ? letter : "\u2022"}</span>
+                    <span className={`${isLetterFound && !isAnimating ? "text-white text-lg font-bold font-inter leading-none mystery-letter-reveal" : "text-white text-2xl font-bold leading-none"} ${isAnimating ? "animate-[letterFadeIn_400ms_ease-in_200ms_forwards]" : ""}`}>{isLetterFound && !isAnimating ? letter : "\u2022"}</span>
                     <div id={`mystery-letter-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                       {isLetterFound ? `Letter "${letter}" found in your guesses` : "Mystery letter - keep guessing to reveal"}
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
@@ -1318,19 +1404,27 @@ export default function TosswordGame() {
                      onMouseEnter={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                      onMouseLeave={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
                                      <HelpCircle className="w-6 h-6 text-white" />
-                  <div id="clue-tooltip" className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left break-words puzzle-tooltip">
+                  <div id="clue-tooltip" className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left whitespace-nowrap puzzle-tooltip">
                     {(() => {
                       if (gameState.attempts.length > 0) {
                         const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
                         const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
-                        if (path.length >= 2) { const nextWord = path[1].toLowerCase(); const clue = getWordClue(nextWord); return clue ? `"${clue}"` : `No clue for "${nextWord}"` }
+                        if (path.length >= 2) { 
+                          const nextWord = path[1].toLowerCase(); 
+                          const clue = getWordClue(nextWord); 
+                          return clue ? `"${clue}"` : (debugMode ? `No clue for "${nextWord}"` : "I have no clue!")
+                        }
                       } else {
                         const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                        if (path.length >= 2) { const nextWord = path[1].toLowerCase(); const clue = getWordClue(nextWord); return clue ? `"${clue}"` : `No clue for "${nextWord}"` }
+                        if (path.length >= 2) { 
+                          const nextWord = path[1].toLowerCase(); 
+                          const clue = getWordClue(nextWord); 
+                          return clue ? `"${clue}"` : (debugMode ? `No clue for "${nextWord}"` : "I have no clue!")
+                        }
                       }
                       return "No clue available"
                     })()}
-                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
+                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                   </div>
                 </div>
               </div>
