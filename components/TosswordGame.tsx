@@ -2,7 +2,7 @@
 import type { KeyboardEvent } from "react"
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Image from "next/image"
-import { Lightbulb, BookA } from "lucide-react"
+import { Lightbulb, BookA, KeyRound, Crown } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
@@ -100,6 +100,7 @@ export default function TosswordGame() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const deletingRef = useRef(false)
   const debugModeRef = useRef(false)
+  const playButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const solutionPathCache = useRef<Map<string, string[]>>(new Map())
   const hintsCache = useRef<Map<string, number[]>>(new Map())
@@ -298,6 +299,14 @@ export default function TosswordGame() {
     }, 100)
     return () => clearTimeout(timer)
   }, [gameState.mysteryWord])
+
+  // When splash is visible, focus the Play button
+  useEffect(() => {
+    if (showSplash) {
+      const t = setTimeout(() => { playButtonRef.current?.focus() }, 100)
+      return () => clearTimeout(t)
+    }
+  }, [showSplash])
 
   useEffect(() => {
     if (!isLoading && gameState.mysteryWord && gameState.rootWord) {
@@ -688,7 +697,13 @@ export default function TosswordGame() {
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
           <p className="text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word.</p>
-          <button onClick={() => setShowSplash(false)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer">Play</button>
+          <button
+            ref={playButtonRef}
+            onClick={() => setShowSplash(false)}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer focus-visible:outline focus-visible:outline-[4px] focus-visible:outline-gray-700 focus-visible:outline-offset-2"
+          >
+            Play
+          </button>
           <div className="mt-8 text-sm text-gray-700 font-inter">
             <p>Word Ladder Puzzle Game</p>
             <p>Challenge your vocabulary and logic</p>
@@ -715,14 +730,14 @@ export default function TosswordGame() {
       <header className="bg-white text-gray-900 py-4 px-6 border-b border-gray-300 shadow-sm">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
-            <Image src="/tossword-logo.webp" alt="Tossword logo" width={120} height={24} className="h-6 w-auto" />
-            <span className="text-lg font-bold font-poppins uppercase">Tossword</span>
+            <Image src="/tossword-logo.webp" alt="Tossword logo" width={24} height={24} className="h-6 w-6" />
+            <span className="hidden md:inline text-lg text-gray-700 font-bold font-poppins uppercase">Tossword</span>
           </div>
           <div className="flex items-center gap-3">
             {debugMode && (
               <>
                 <button onClick={showSolutionPath} className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer" title="Show Solution (Debug)">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                  <Lightbulb className="w-6 h-6" />
                 </button>
                 <button onClick={resetGame} className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer" title="Reset Game (Debug)">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -746,7 +761,7 @@ export default function TosswordGame() {
       </header>
 
       <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
-        <div className="w-full max-w-md puzzle">
+        <div className={`w-full max-w-md puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
           <div className="text-center mb-6 min-h-[64px]">
             <div className={[
               "transition-opacity duration-900 ease-in-out",
@@ -758,6 +773,7 @@ export default function TosswordGame() {
               </h2>
               <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (US Central)</p>
             </div>
+            {!gameState.showWinMessage && null}
           </div>
           <div className={`transition-transform duration-900 ease-in-out`} style={{ transform: gameState.showWinMessage ? "translateY(0)" : "translateY(-64px)" }}>
           <div className="mb-2">
@@ -765,7 +781,7 @@ export default function TosswordGame() {
               {gameState.mysteryWord.split("").map((letter, index) => {
                 const isLetterFound = gameState.attempts.some(attempt => attempt.includes(letter))
                 return (
-                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-gray-500"}`}
+                  <div key={index} className={`w-12 h-12 rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"}`}
                        style={{ animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms" }}
                        onTouchStart={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                        onMouseEnter={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
@@ -778,26 +794,18 @@ export default function TosswordGame() {
                   </div>
                 )
               })}
-              <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
+              <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
                    onTouchStart={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                    onMouseEnter={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                    onMouseLeave={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
                 {gameState.gameWon ? (
                   gameState.hideAttemptsDuringReveal ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-green-500">
-                      <rect x="3" y="11" width="18" height="10" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                    </svg>
+                    <Crown className="w-6 h-6 text-white" />
                   ) : (
-                    <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Crown className="w-6 h-6 text-white" />
                   )
                 ) : (
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <rect width="16" height="12" x="4" y="11" rx="2" ry="2"/>
-                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-                  </svg>
+                  <KeyRound className="w-6 h-6 text-white" />
                 )}
                 <div id="mystery-tooltip" className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                   {gameState.gameWon ? "Puzzle unlocked! Well done!" : "Puzzle locked - solve it to unlock!"}
@@ -825,7 +833,7 @@ export default function TosswordGame() {
                   )
                 })}
                 <div
-                  className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
+                  className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
                   onTouchStart={() => {
                     const tooltip = document.getElementById('start-steps-tooltip')
                     if (tooltip) {
@@ -899,7 +907,7 @@ export default function TosswordGame() {
                     )
                   })}
                   <div
-                    className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
+                    className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
                     onTouchStart={() => {
                       const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
                       if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
@@ -915,7 +923,7 @@ export default function TosswordGame() {
                   >
                     {gameState.gameWon ? (
                       entryOrder === 0 ? (
-                        <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        <Crown className="w-8 h-8 text-white" />
                       ) : (
                         <span className="end-of-row text-white text-lg font-bold font-inter">{entryOrder}</span>
                       )
@@ -942,9 +950,24 @@ export default function TosswordGame() {
 
               <div className="w-[328px] mx-auto flex justify-center gap-2">
                 {gameState.inputLetters.map((letter, index) => (
-                  <input key={index} ref={(el) => { inputRefs.current[index] = el }} type="text" value={letter} onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))} onKeyDown={(e) => handleKeyDown(e, index)} onFocus={() => handleFocus(index)} className={`w-12 h-12 rounded-lg bg-transparent border border-gray-500 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`} maxLength={1} />
+                  <input
+                    key={index}
+                    id={`guess-${index}`}
+                    name={`guess-${index}`}
+                    ref={(el) => { inputRefs.current[index] = el }}
+                    type="text"
+                    value={letter}
+                    onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    onFocus={() => handleFocus(index)}
+                    className={`w-12 h-12 rounded-lg bg-transparent border border-gray-400 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`}
+                    maxLength={1}
+                    autoComplete="off"
+                    inputMode="text"
+                    aria-label={`Letter ${index + 1}`}
+                  />
                 ))}
-                <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
+                <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
                      onTouchStart={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                      onMouseEnter={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                      onMouseLeave={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>

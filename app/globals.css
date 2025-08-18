@@ -175,9 +175,16 @@
   background:#eee !important
 }
 
-/* .puzzle-grid:last-of-type {
-  background-color: gold;
+.puzzle-row-last {
+  background-color: goldenrod;
 }
-.puzzle-grid:last-of-type svg.text-white {
+.puzzle-row-last svg.text-white {
   color:#444
-} */
+}
+
+.puzzle-solved .puzzle-row-last {
+  background-color: #00bc7d;
+}
+.puzzle-solved .puzzle-row-last svg.text-white {
+  color:#fff
+}

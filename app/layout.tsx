@@ -122,13 +122,11 @@ html {
           `}
         </Script>
 
-        {/* Google AdSense (replace with your publisher ID if different) */}
-        <Script
-          id="adsbygoogle"
+        {/* Google AdSense - use a native <script> to avoid Next.js data-nscript attribute */}
+        <script
           async
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5584270993866771"
+          crossOrigin="anonymous"
         />
 
         {/* Structured Data */}
