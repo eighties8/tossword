@@ -46,6 +46,11 @@ interface GameState {
   finalRevealIndex: number | null
   // During win sequence, how many rows from the bottom have been revealed
   winRevealRowsShown: number
+  solvedLetters: boolean[]
+  attemptResults: LetterState[]
+  showInvalidWord: boolean
+  showHardModeViolation: boolean
+  gameOver: boolean
 }
 
 const PUZZLES = [
@@ -104,6 +109,11 @@ export default function TosswordGame() {
     showWinMessage: false,
     finalRevealIndex: null,
     winRevealRowsShown: 0,
+    solvedLetters: new Array(5).fill(false),
+    attemptResults: new Array(5).fill("absent"),
+    showInvalidWord: false,
+    showHardModeViolation: false,
+    gameOver: false,
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -221,6 +231,11 @@ export default function TosswordGame() {
       showWinMessage: false,
       finalRevealIndex: null,
       winRevealRowsShown: 0,
+      solvedLetters: new Array(5).fill(false),
+      attemptResults: new Array(5).fill("absent"),
+      showInvalidWord: false,
+      showHardModeViolation: false,
+      gameOver: false,
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -267,6 +282,11 @@ export default function TosswordGame() {
       showWinMessage: false,
       finalRevealIndex: null,
       winRevealRowsShown: 0,
+      solvedLetters: new Array(5).fill(false),
+      attemptResults: new Array(5).fill("absent"),
+      showInvalidWord: false,
+      showHardModeViolation: false,
+      gameOver: false,
     })
 
     setIsLoading(false)
@@ -637,6 +657,22 @@ export default function TosswordGame() {
       setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
     }
   }, [gameState.gameWon, gameState.inputLetters, gameState.attempts, gameState.rootWord, gameState.mysteryWord, isValidMove, updateRevealedLetters])
+
+  const handleVirtualKey = useCallback((key: string) => {
+    if (gameState.gameWon || gameState.gameOver) return
+    
+    if (key === 'ENTER') {
+      submitWord()
+    } else if (key === 'BACKSPACE') {
+      if (gameState.activeIndex > 0) {
+        handleLetterInput(gameState.activeIndex - 1, '')
+      }
+    } else if (key.length === 1 && key.match(/[A-Z]/)) {
+      if (gameState.activeIndex < 5) {
+        handleLetterInput(gameState.activeIndex, key)
+      }
+    }
+  }, [gameState.gameWon, gameState.gameOver, gameState.activeIndex, submitWord, handleLetterInput])
 
   const showSolutionPath = useCallback(() => {
     const bfsPath = findBFSSolutionPath(gameState.rootWord, gameState.mysteryWord)
@@ -1225,6 +1261,32 @@ export default function TosswordGame() {
                     <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
                   </div>
                 </div>
+              </div>
+
+              {/* Mobile on-screen keyboard */}
+              <div className="w-full px-3 mt-4 md:hidden select-none">
+                {[
+                  ['Q','W','E','R','T','Y','U','I','O','P'],
+                  ['A','S','D','F','G','H','J','K','L'],
+                  ['ENTER','Z','X','C','V','B','N','M','BACKSPACE'],
+                ].map((row, rIdx) => (
+                  <div key={rIdx} className="flex justify-center gap-1 mb-1">
+                    {row.map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => handleVirtualKey(k)}
+                        className={[
+                          'h-[50px] rounded-md text-sm font-medium text-white bg-gray-700 active:bg-gray-600',
+                          k === 'ENTER' ? 'px-3 flex-1 max-w-[80px]' : k === 'BACKSPACE' ? 'px-3 flex-1 max-w-[80px]' : 'flex-1'
+                        ].join(' ')}
+                        aria-label={k === 'BACKSPACE' ? 'Backspace' : k}
+                      >
+                        {k === 'BACKSPACE' ? '⌫' : k}
+                      </button>
+                    ))}
+                  </div>
+                ))}
               </div>
 
               <div className={["w-[328px] mx-auto overflow-hidden","transition-[max-height,opacity,margin] duration-300 ease-in-out rounded-lg puzzle-error-message", gameState.errorMessage ? "opacity-100 my-2" : "opacity-0 my-0"].join(" ")} aria-live="polite">
