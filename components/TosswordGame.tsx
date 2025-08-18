@@ -672,6 +672,13 @@ export default function TosswordGame() {
         setTimeout(() => {
           inputRefs.current[gameState.activeIndex - 1]?.focus()
         }, 0)
+      } else if (gameState.activeIndex === 0) {
+        // On first cell, just clear the letter and keep focus
+        handleLetterInput(0, '')
+        // Ensure focus is maintained on the first cell
+        setTimeout(() => {
+          inputRefs.current[0]?.focus()
+        }, 0)
       }
     } else if (key.length === 1 && key.match(/[A-Z]/)) {
       if (gameState.activeIndex < 5) {
