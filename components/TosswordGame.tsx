@@ -1240,7 +1240,7 @@ export default function TosswordGame() {
                     onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
                     onKeyDown={(e) => handleKeyDown(e, index)}
                     onFocus={() => handleFocus(index)}
-                    className={`w-12 h-12 rounded-lg bg-transparent border border-gray-400 text-center text-lg font-bold text-gray-900 focus:outline-none font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`}
+                    className={`w-12 h-12 rounded-lg bg-transparent border border-gray-400 text-center text-lg font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`}
                     maxLength={1}
                     autoComplete="off"
                     inputMode={typeof window !== 'undefined' && window.innerWidth < 768 ? "none" : "text"}
