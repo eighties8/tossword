@@ -1359,7 +1359,7 @@ export default function TosswordGame() {
                           ].join(' ')}
                           aria-label={k === 'BACKSPACE' ? 'Backspace' : k}
                         >
-                          {k === 'BACKSPACE' ? <span className="text-lg">⌫</span> : k}
+                          {k === 'BACKSPACE' ? <span className="text-xl">⌫</span> : k}
                         </button>
                       )
                     })}
