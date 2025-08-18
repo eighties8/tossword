@@ -2,6 +2,7 @@
 import type { KeyboardEvent } from "react"
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Image from "next/image"
+import { Lightbulb, BookA } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
@@ -37,6 +38,7 @@ interface GameState {
   autoHintText: string
   hintShownForRow: number
   hideAttemptsDuringReveal: boolean
+  showWinMessage: boolean
 }
 
 const PUZZLES = [
@@ -73,6 +75,7 @@ export default function TosswordGame() {
   const [showSplash, setShowSplash] = useState(true)
   const [settingsLoaded, setSettingsLoaded] = useState(false)
   const [selectedPuzzle, setSelectedPuzzle] = useState<{ root: string; mystery: string } | null>(null)
+  const [countdown, setCountdown] = useState<string>("")
 
   const [gameState, setGameState] = useState<GameState>({
     mysteryWord: "",
@@ -91,6 +94,7 @@ export default function TosswordGame() {
     autoHintText: "",
     hintShownForRow: -1,
     hideAttemptsDuringReveal: false,
+    showWinMessage: false,
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -159,6 +163,7 @@ export default function TosswordGame() {
       autoHintText: "",
       hintShownForRow: -1,
       hideAttemptsDuringReveal: false,
+      showWinMessage: false,
     })
 
     setIsLoading(false)
@@ -202,6 +207,51 @@ export default function TosswordGame() {
       initializeGame()
     }
   }, [settingsLoaded, initializeGame])
+
+  // Win message trigger after animation completes
+  useEffect(() => {
+    if (gameState.gameWon) {
+      // Reveal message shortly after animation finishes (~1.9s)
+      const t = setTimeout(() => {
+        setGameState(prev => ({ ...prev, showWinMessage: true }))
+      }, 2000)
+      return () => clearTimeout(t)
+    } else {
+      // Reset when not won
+      if (gameState.showWinMessage) {
+        setGameState(prev => ({ ...prev, showWinMessage: false }))
+      }
+    }
+  }, [gameState.gameWon])
+
+  // Countdown to next puzzle (midnight US Central Time)
+  useEffect(() => {
+    const format = (totalSeconds: number) => {
+      if (totalSeconds <= 0) return '00:00:00'
+      const hh = Math.floor(totalSeconds / 3600)
+      const mm = Math.floor((totalSeconds % 3600) / 60)
+      const ss = totalSeconds % 60
+      const pad = (n: number) => `${n}`.padStart(2, '0')
+      return `${pad(hh)}:${pad(mm)}:${pad(ss)}`
+    }
+    const update = () => {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Chicago',
+        hour12: false,
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }).formatToParts(new Date())
+      const get = (t: string) => parseInt(parts.find(p => p.type === t)?.value || '0', 10)
+      const h = get('hour')
+      const m = get('minute')
+      const s = get('second')
+      const elapsed = h * 3600 + m * 60 + s
+      const remaining = 86400 - elapsed
+      setCountdown(format(remaining))
+    }
+    update()
+    const id = setInterval(update, 1000)
+    return () => clearInterval(id)
+  }, [])
 
   useEffect(() => {
     if (gameState.mysteryWord && gameState.rootWord && !isLoading) {
@@ -692,7 +742,16 @@ export default function TosswordGame() {
 
       <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
         <div className="w-full max-w-md puzzle">
-          <div className="text-center mb-6"></div>
+          <div className="text-center mb-6">
+            {gameState.showWinMessage && (
+              <>
+                <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
+                  You solved the puzzle in {gameState.attempts.length} steps. Great Job!
+                </h2>
+                <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (US Central)</p>
+              </>
+            )}
+          </div>
 
           <div className="mb-2">
             <div className="w-[328px] mx-auto flex justify-center gap-2 mb-2">
@@ -777,11 +836,8 @@ export default function TosswordGame() {
                   }}
                   title="Minimum steps to solve this puzzle"
                 >
-                  {/* Start/Begin icon (flag) */}
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 21V5"/>
-                    <path d="M4 5c6-2 8 2 14 0v10c-6 2-8-2-14 0"/>
-                  </svg>
+                  {/* Start/Begin icon */}
+                  <Lightbulb className="w-6 h-6 text-white" />
 
                   {/* Tooltip with BFS steps */}
                   <div
@@ -835,11 +891,29 @@ export default function TosswordGame() {
                       </div>
                     )
                   })}
-                  <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative">
-                    {gameState.gameWon && entryOrder === 0 ? (
-                      <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  <div
+                    className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative"
+                    onTouchStart={() => {
+                      const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
+                      if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) }
+                    }}
+                    onMouseEnter={() => {
+                      const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
+                      if (tooltip) tooltip.classList.remove('hidden')
+                    }}
+                    onMouseLeave={() => {
+                      const tooltip = document.getElementById(`entry-tooltip-${actualIndex}`)
+                      if (tooltip) tooltip.classList.add('hidden')
+                    }}
+                  >
+                    {gameState.gameWon ? (
+                      entryOrder === 0 ? (
+                        <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <span className="end-of-row text-white text-lg font-bold font-inter">{entryOrder}</span>
+                      )
                     ) : (
-                      <span className="end-of-row text-white text-lg font-bold font-inter">{entryOrder}</span>
+                      <Lightbulb className="w-6 h-6 text-white" />
                     )}
                     <div id={`entry-tooltip-${actualIndex}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                       {gameState.gameWon ? `Word entered ${entryOrder}${entryOrder === 1 ? 'st' : entryOrder === 2 ? 'nd' : entryOrder === 3 ? 'rd' : 'th'}` : `Remaining steps to solve: ${entryOrder}`}
@@ -867,7 +941,7 @@ export default function TosswordGame() {
                      onTouchStart={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                      onMouseEnter={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
                      onMouseLeave={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
-                  <span className="end-of-row text-white text-lg font-bold font-inter">?</span>
+                  <BookA className="w-6 h-6 text-white" />
                   <div id="clue-tooltip" className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                     {(() => {
                       if (gameState.attempts.length > 0) {
