@@ -120,6 +120,7 @@ export default function TosswordGame() {
       autoHintText: "",
       hintShownForRow: -1,
       hideAttemptsDuringReveal: false,
+      showWinMessage: false,
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -208,21 +209,25 @@ export default function TosswordGame() {
     }
   }, [settingsLoaded, initializeGame])
 
-  // Win message trigger after animation completes
+  // Win message trigger: wait for ALL animations after reveal, then +1.25s, then fade-in message
   useEffect(() => {
-    if (gameState.gameWon) {
-      // Reveal message shortly after animation finishes (~1.9s)
+    if (gameState.gameWon && !gameState.hideAttemptsDuringReveal) {
+      const attemptsCount = Math.max(1, gameState.attempts.length)
+      const slideDurationMs = 500
+      const slideDelayStepMs = 200
+      const slideTotalMs = slideDurationMs + (attemptsCount - 1) * slideDelayStepMs
+      const lettersPerWord = 5
+      const spinDurationMs = 1000
+      const spinDelayStepMs = 200
+      const spinTotalMs = spinDurationMs + (lettersPerWord - 1) * spinDelayStepMs
+      const allAnimsMs = Math.max(slideTotalMs, spinTotalMs)
+      const extraDelayMs = 1250
       const t = setTimeout(() => {
         setGameState(prev => ({ ...prev, showWinMessage: true }))
-      }, 2000)
+      }, allAnimsMs + extraDelayMs)
       return () => clearTimeout(t)
-    } else {
-      // Reset when not won
-      if (gameState.showWinMessage) {
-        setGameState(prev => ({ ...prev, showWinMessage: false }))
-      }
     }
-  }, [gameState.gameWon])
+  }, [gameState.gameWon, gameState.hideAttemptsDuringReveal, gameState.attempts.length])
 
   // Countdown to next puzzle (midnight US Central Time)
   useEffect(() => {
@@ -742,17 +747,19 @@ export default function TosswordGame() {
 
       <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
         <div className="w-full max-w-md puzzle">
-          <div className="text-center mb-6">
-            {gameState.showWinMessage && (
-              <>
-                <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
-                  You solved the puzzle in {gameState.attempts.length} steps. Great Job!
-                </h2>
-                <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (US Central)</p>
-              </>
-            )}
+          <div className="text-center mb-6 min-h-[64px]">
+            <div className={[
+              "transition-opacity duration-900 ease-in-out",
+              gameState.showWinMessage ? "opacity-100 visible" : "opacity-0 invisible"
+            ].join(" ")}
+            aria-hidden={!gameState.showWinMessage}>
+              <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
+                You solved the puzzle in {gameState.attempts.length} steps. Great Job!
+              </h2>
+              <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (US Central)</p>
+            </div>
           </div>
-
+          <div className={`transition-transform duration-900 ease-in-out`} style={{ transform: gameState.showWinMessage ? "translateY(0)" : "translateY(-64px)" }}>
           <div className="mb-2">
             <div className="w-[328px] mx-auto flex justify-center gap-2 mb-2">
               {gameState.mysteryWord.split("").map((letter, index) => {
@@ -966,6 +973,7 @@ export default function TosswordGame() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
 
