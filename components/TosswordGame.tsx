@@ -327,7 +327,7 @@ export default function TosswordGame() {
     }
   }, [gameState.gameWon, gameState.showWinAnimation])
 
-  // Fire confetti after mystery-word flip completes
+  // Fire confetti after mystery-word flip completes (previous behavior)
   useEffect(() => {
     if (gameState.gameWon && gameState.showWinAnimation && !confettiFiredRef.current) {
       const lettersPerWord = 5
@@ -577,17 +577,11 @@ export default function TosswordGame() {
         winRevealRowsShown: 0,
       }))
 
-      // After the sequential row reveals complete, trigger the mystery-word wheel animation
-      // Sequentially reveal rows by switching display from none→flex bottom-up
-      for (let i = 1; i <= attemptsCountAfter; i++) {
-        setTimeout(() => {
-          setGameState((prev) => ({ ...prev, winRevealRowsShown: i }))
-        }, i * 300)
-      }
-      // After the last reveal tick, start the mystery word flip
+      // Single reveal: show all rows at once, then start the mystery-word flip shortly after
+      setGameState((prev) => ({ ...prev, winRevealRowsShown: attemptsCountAfter }))
       setTimeout(() => {
         setGameState((prev) => ({ ...prev, showWinAnimation: true }))
-      }, (attemptsCountAfter + 1) * 500)
+      }, 400)
       return
     }
 
