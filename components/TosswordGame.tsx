@@ -81,6 +81,9 @@ const HARD_PUZZLES = [
   { root: "MUSIC", mystery: "DEPTH" },
 ]
 
+// Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
+const SINGLE_PUZZLE_MODE = true
+
 export default function TosswordGame() {
   const [debugMode, setDebugMode] = useState(false)
   const [hintTextAuto, setHintTextAuto] = useState(false)
@@ -254,7 +257,7 @@ export default function TosswordGame() {
 
   const initializeGame = useCallback(() => {
     let puzzle
-    if (debugModeRef.current) {
+    if (SINGLE_PUZZLE_MODE) {
       puzzle = { root: "OCEAN", mystery: "FIELD" }
     } else {
       puzzle = gameState.isHardMode
@@ -1063,7 +1066,7 @@ export default function TosswordGame() {
           <button
             ref={playButtonRef}
             onClick={() => setShowSplash(false)}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer focus-visible:outline focus-visible:outline-[4px] focus-visible:outline-gray-700 focus-visible:outline-offset-2"
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors font-inter cursor-pointer focus-visible:outline focus-visible:outline-[4px] focus-visible:outline-gray-700 focus-visible:outline-offset-2"
           >
             Play
           </button>
