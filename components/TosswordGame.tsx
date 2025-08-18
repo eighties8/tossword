@@ -786,7 +786,7 @@ export default function TosswordGame() {
                        onTouchStart={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
                        onMouseEnter={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
                        onMouseLeave={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.add('hidden') }}>
-                    <span className={isLetterFound ? "text-white text-lg font-bold font-inter leading-none" : "text-white text-2xl font-bold leading-none"}>{isLetterFound ? letter : "\u2022"}</span>
+                    <span className={isLetterFound ? "text-white text-lg font-bold font-inter leading-none mystery-letter-reveal" : "text-white text-2xl font-bold leading-none"}>{isLetterFound ? letter : "\u2022"}</span>
                     <div id={`mystery-letter-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                       {isLetterFound ? `Letter "${letter}" found in your guesses` : "Mystery letter - keep guessing to reveal"}
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>

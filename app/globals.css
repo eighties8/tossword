@@ -188,3 +188,18 @@
 .puzzle-solved .puzzle-row-last svg.text-white {
   color:#fff
 }
+
+/* Wheel-of-Fortune style flip-in for revealed letter (no color changes) */
+@keyframes mysteryLetterFade {
+  0%   { opacity: 0; transform: rotateY(-90deg) scale(1.58); }
+  60%  { opacity: 1; transform: rotateY(10deg)  scale(1.0); }
+  100% { opacity: 1; transform: rotateY(0deg)   scale(1.0); }
+}
+
+.mystery-letter-reveal {
+  display: inline-block;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  animation: mysteryLetterFade 1000ms ease-in-out forwards;
+  will-change: opacity, transform;
+}
