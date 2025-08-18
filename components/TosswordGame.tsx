@@ -113,6 +113,85 @@ export default function TosswordGame() {
 
   const solutionPathCache = useRef<Map<string, string[]>>(new Map())
   const hintsCache = useRef<Map<string, number[]>>(new Map())
+  const puzzleRef = useRef<HTMLDivElement | null>(null)
+  const confettiFiredRef = useRef(false)
+
+  const launchConfettiOverPuzzle = useCallback((durationMs: number = 1600) => {
+    if (typeof window === 'undefined') return
+    const container = puzzleRef.current
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.ceil(rect.width)
+    canvas.height = Math.ceil(rect.height)
+    canvas.style.position = 'fixed'
+    canvas.style.left = `${Math.max(0, rect.left)}px`
+    canvas.style.top = `${Math.max(0, rect.top)}px`
+    canvas.style.pointerEvents = 'none'
+    canvas.style.zIndex = '9999'
+    document.body.appendChild(canvas)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { document.body.removeChild(canvas); return }
+
+    const colors = ['#10b981','#34d399','#f59e0b','#ef4444','#3b82f6','#a855f7']
+    const rng = (min: number, max: number) => Math.random() * (max - min) + min
+    const particles = Array.from({ length: Math.min(220, Math.max(120, Math.floor((rect.width * rect.height) / 2800))) } , () => ({
+      x: rect.width / 2 + rng(-rect.width * 0.15, rect.width * 0.15),
+      y: -10,
+      size: rng(4, 8),
+      angle: rng(0, Math.PI * 2),
+      rotationSpeed: rng(-0.2, 0.2),
+      vx: rng(-3.5, 3.5),
+      vy: rng(-1, 0) + -rng(3, 6),
+      g: rng(0.12, 0.22),
+      alpha: 1,
+      decay: rng(0.005, 0.012),
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: Math.random() < 0.5 ? 'rect' : 'circle' as 'rect' | 'circle',
+    }))
+
+    const start = performance.now()
+    const tick = (now: number) => {
+      const elapsed = now - start
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      particles.forEach(p => {
+        p.vy += p.g
+        p.x += p.vx
+        p.y += p.vy
+        p.angle += p.rotationSpeed
+        p.alpha -= p.decay
+        ctx.globalAlpha = Math.max(0, p.alpha)
+        ctx.fillStyle = p.color
+        ctx.save()
+        ctx.translate(p.x, p.y)
+        ctx.rotate(p.angle)
+        if (p.shape === 'rect') {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size)
+        } else {
+          ctx.beginPath()
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        ctx.restore()
+      })
+      ctx.globalAlpha = 1
+      const alive = particles.some(p => p.alpha > 0 && p.y < canvas.height + 20)
+      if (elapsed < durationMs || alive) {
+        requestAnimationFrame(tick)
+      } else {
+        document.body.removeChild(canvas)
+      }
+    }
+    requestAnimationFrame(tick)
+  }, [])
+
+  const hideAllTooltips = useCallback(() => {
+    try {
+      const nodes = document.querySelectorAll('.puzzle-tooltip')
+      nodes.forEach((el) => el.classList.add('hidden'))
+    } catch {}
+  }, [])
 
   const resetGame = useCallback(() => {
     setGameState(prev => ({
@@ -233,25 +312,35 @@ export default function TosswordGame() {
     }
   }, [gameState.gameWon])
 
-  // Win message trigger: wait for ALL animations after reveal, then +1.25s, then fade-in message
+  // Win message trigger: wait for the mystery-word flip to complete, then fade-in message
   useEffect(() => {
-    if (gameState.gameWon && !gameState.hideAttemptsDuringReveal) {
-      const attemptsCount = Math.max(1, gameState.attempts.length)
-      const slideDurationMs = 500
-      const slideDelayStepMs = 200
-      const slideTotalMs = slideDurationMs + (attemptsCount - 1) * slideDelayStepMs
+    if (gameState.gameWon && gameState.showWinAnimation) {
       const lettersPerWord = 5
       const spinDurationMs = 1000
       const spinDelayStepMs = 200
       const spinTotalMs = spinDurationMs + (lettersPerWord - 1) * spinDelayStepMs
-      const allAnimsMs = Math.max(slideTotalMs, spinTotalMs)
-      const extraDelayMs = 1250
+      const extraDelayMs = 500
       const t = setTimeout(() => {
         setGameState(prev => ({ ...prev, showWinMessage: true }))
-      }, allAnimsMs + extraDelayMs)
+      }, spinTotalMs + extraDelayMs)
       return () => clearTimeout(t)
     }
-  }, [gameState.gameWon, gameState.hideAttemptsDuringReveal, gameState.attempts.length])
+  }, [gameState.gameWon, gameState.showWinAnimation])
+
+  // Fire confetti after mystery-word flip completes
+  useEffect(() => {
+    if (gameState.gameWon && gameState.showWinAnimation && !confettiFiredRef.current) {
+      const lettersPerWord = 5
+      const spinDurationMs = 1000
+      const spinDelayStepMs = 200
+      const spinTotalMs = spinDurationMs + (lettersPerWord - 1) * spinDelayStepMs
+      const t = setTimeout(() => {
+        confettiFiredRef.current = true
+        launchConfettiOverPuzzle(1600)
+      }, spinTotalMs)
+      return () => clearTimeout(t)
+    }
+  }, [gameState.gameWon, gameState.showWinAnimation, launchConfettiOverPuzzle])
 
   // Countdown to next puzzle (midnight US Eastern Time)
   useEffect(() => {
@@ -422,6 +511,7 @@ export default function TosswordGame() {
   }, [isValidMove])
 
   const handleLetterInput = useCallback((index: number, letter: string) => {
+    hideAllTooltips()
     if (gameState.gameWon) return
     const newInput = [...gameState.inputLetters]
     if (letter === "") { newInput[index] = "" } else {
@@ -431,7 +521,7 @@ export default function TosswordGame() {
     }
     setGameState((prev) => ({ ...prev, inputLetters: newInput }))
     if (letter !== "" && index < 4) { setTimeout(() => { inputRefs.current[index + 1]?.focus() }, 0) }
-  }, [gameState.gameWon, gameState.inputLetters])
+  }, [gameState.gameWon, gameState.inputLetters, hideAllTooltips])
 
   const handleFocus = useCallback((index: number) => {
     setGameState((prev) => ({ ...prev, activeIndex: index }))
@@ -488,10 +578,16 @@ export default function TosswordGame() {
       }))
 
       // After the sequential row reveals complete, trigger the mystery-word wheel animation
-      const finalDelay = 500 * (attemptsCountAfter) + 100
+      // Sequentially reveal rows by switching display from none→flex bottom-up
+      for (let i = 1; i <= attemptsCountAfter; i++) {
+        setTimeout(() => {
+          setGameState((prev) => ({ ...prev, winRevealRowsShown: i }))
+        }, i * 300)
+      }
+      // After the last reveal tick, start the mystery word flip
       setTimeout(() => {
         setGameState((prev) => ({ ...prev, showWinAnimation: true }))
-      }, finalDelay)
+      }, (attemptsCountAfter + 1) * 500)
       return
     }
 
@@ -675,6 +771,7 @@ export default function TosswordGame() {
   }, [gameState.mysteryWord, gameState.revealedLetters, gameState.attempts, checkWord])
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>, index: number) => {
+    hideAllTooltips()
     if (e.key === "Backspace" || e.key === "Delete") {
       e.preventDefault()
       const currentEmpty = !gameState.inputLetters[index]
@@ -707,7 +804,7 @@ export default function TosswordGame() {
       const allLettersFilled = gameState.inputLetters.every((letter) => letter.trim() !== "")
       if (allLettersFilled) { submitWord() }
     }
-  }, [handleLetterInput, gameState.inputLetters, submitWord])
+  }, [handleLetterInput, gameState.inputLetters, submitWord, hideAllTooltips])
 
   const handleBeforeInput = useCallback((e: any, index: number) => {
     const inputType = (e && (e as any).inputType) || ""
@@ -819,7 +916,7 @@ export default function TosswordGame() {
       </header>
 
       <div className="flex-1 flex items-center justify-center p-4 pb-20 md:pb-4">
-        <div className={`w-full max-w-md puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
+        <div ref={puzzleRef} className={`w-full max-w-md puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
           <div className="text-center mb-6 min-h-[64px]">
             <div className={[
               "transition-opacity duration-900 ease-in-out",
@@ -972,8 +1069,17 @@ export default function TosswordGame() {
             return (
               <div
                 key={actualIndex}
-                className={`w-[328px] mx-auto flex items-center gap-2 justify-center mb-2 ${gameState.gameWon && actualIndex !== lastAttemptRowIndex ? "animate-[rowReveal_0.5s_ease-out_both]" : ""}`}
-                style={{ animationDelay: gameState.gameWon ? `${Math.max(0, revealStep) * 500}ms` : "0ms", visibility: gameState.gameWon && gameState.hideAttemptsDuringReveal && actualIndex > 0 ? "hidden" : "visible" }}
+                className={[
+                  'w-[328px] mx-auto flex items-center gap-2 justify-center mb-2',
+                  (gameState.gameWon && actualIndex < lastAttemptRowIndex && (lastAttemptRowIndex - actualIndex) <= gameState.winRevealRowsShown)
+                    ? 'animate-[rowReveal_0.35s_ease-in_forwards]'
+                    : ''
+                ].join(' ')}
+                style={{
+                  display: gameState.gameWon && actualIndex < lastAttemptRowIndex
+                    ? ((lastAttemptRowIndex - actualIndex) <= gameState.winRevealRowsShown ? 'flex' : 'none')
+                    : 'flex',
+                }}
               >
                 <div className="flex gap-2">
                   {attempt.split("").map((letter, letterIndex) => {
