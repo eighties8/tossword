@@ -6,6 +6,9 @@ import { Lightbulb, HelpCircle, KeyRound, Crown, Delete, Sparkles, Brain } from 
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
+// Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
+const SINGLE_PUZZLE_MODE = false
+
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -80,9 +83,6 @@ const HARD_PUZZLES = [
   { root: "FIELD", mystery: "GRASS" },
   { root: "MUSIC", mystery: "DEPTH" },
 ]
-
-// Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
-const SINGLE_PUZZLE_MODE = true
 
 export default function TosswordGame() {
   const [debugMode, setDebugMode] = useState(false)
@@ -659,6 +659,20 @@ export default function TosswordGame() {
 
   const submitWord = useCallback(() => {
     if (gameState.gameWon) return
+    
+    // Check attempt limit
+    const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+    const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+    const maxAttempts = optimalLength + 1 // Easy mode: optimal + 1
+    const remainingAttempts = maxAttempts - gameState.attempts.length
+    
+    if (remainingAttempts <= 0) {
+      setGameState((prev) => ({ ...prev, errorMessage: "Awe, that was your last try today. Sorry, try again tomorrow!", inputLetters: ["", "", "", "", ""], activeIndex: 0 }))
+      const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 5000)
+      setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
+      return () => clearTimeout(timer)
+    }
+    
     const word = gameState.inputLetters.join("")
     
     if (word.length !== 5) {
@@ -762,6 +776,18 @@ export default function TosswordGame() {
     if (gameState.gameWon || gameState.gameOver) return
     
     if (key === 'ENTER') {
+      // Check attempt limit before submitting
+      const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+      const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+      const maxAttempts = optimalLength + 1 // Easy mode: optimal + 1
+      const remainingAttempts = maxAttempts - gameState.attempts.length
+      
+      if (remainingAttempts <= 0) {
+        setGameState((prev) => ({ ...prev, errorMessage: "Awe, that was your last try today. Sorry, try again tomorrow!" }))
+        const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 5000)
+        return () => clearTimeout(timer)
+      }
+      
       submitWord()
     } else if (key === 'BACKSPACE') {
       if (gameState.activeIndex > 0) {
@@ -1059,7 +1085,7 @@ export default function TosswordGame() {
           </div>
           <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</h1>
           <p className="text-lg text-gray-700 mb-4 font-inter">
-            Today's start word is <strong className="text-green-700">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
+            Today's start word is <strong className="text-green-700">{settingsLoaded ? (selectedPuzzle?.root || "Loading...") : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
           <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. Click the <Brain className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
@@ -1129,9 +1155,72 @@ export default function TosswordGame() {
               {/* Main Puzzle Grid */}
         <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
           {/* Mobile-only TOSSWORD title */}
-          <h1 className="logoText text-2xl font-bold text-emerald-700 font-poppins mb-4 md:hidden block">
+          <h1 className="logoText splash text-2xl font-bold font-poppins mb-4 md:hidden block">
           T<span>o</span>ssW<span className="quirk">o</span>rd
           </h1>
+          
+          {/* Attempt Counter - Only show when not solved */}
+          {!gameState.gameWon && (
+            <div className="w-full max-w-[400px] px-[10px] mb-4">
+              {(() => {
+                const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                const maxAttempts = optimalLength + 1 // Easy mode: optimal + 1
+                const remainingAttempts = maxAttempts - gameState.attempts.length
+                const isLastAttempt = remainingAttempts === 1
+                const isOutOfAttempts = remainingAttempts <= 0
+                
+                if (isOutOfAttempts) {
+                  return (
+                    <h2 className="text-lg font-semibold text-red-600 font-inter text-center">
+                      Awe, that was your last try today. Sorry, try again tomorrow!
+                    </h2>
+                  )
+                }
+                
+                return (
+                  <h2 className="text-lg font-semibold text-gray-700 font-inter text-center">
+                    {!gameState.isHardMode && gameState.attempts.length === 0 ? (
+                      // Before first attempt, show puzzle difficulty info and clue
+                      (() => {
+                        const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                        const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                        const nextWord = optimalPath.length >= 2 ? optimalPath[1].toLowerCase() : null
+                        const clue = nextWord ? getWordClue(nextWord) : null
+                        
+                        return (
+                          <>
+                            <span className="text-gray-800 text-xl">This puzzle can be solved in {optimalLength} steps, you have {optimalLength + 1} attempts.</span>
+                            {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
+                          </>
+                        )
+                      })()
+                    ) : (
+                      // After first attempt, show attempts remaining and clue
+                      <>
+                        {isLastAttempt ? (
+                          <span className="text-amber-600 text-xl">Last attempt! </span>
+                        ) : (
+                          <span className="text-gray-800 text-xl">{remainingAttempts} attempts remaining</span>
+                        )}
+                        {!gameState.isHardMode && (() => {
+                          const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                          const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                          if (path.length >= 2) {
+                            const nextWord = path[1].toLowerCase()
+                            const clue = getWordClue(nextWord)
+                            return <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue || 'No clue available'}"</strong></span>
+                          }
+                          return null
+                        })()}
+                      </>
+                    )}
+                  </h2>
+                )
+              })()}
+            </div>
+          )}
+          
           <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
           {/* WIN BANNER */}
           <div
@@ -1486,7 +1575,21 @@ export default function TosswordGame() {
                        let keyStyle = 'bg-gray-400 text-white' // Default medium gray
                        
                        if (k === 'ENTER' || k === 'BACKSPACE') {
-                         keyStyle = 'bg-gray-600 text-white' // Keep ENTER/BACKSPACE dark
+                         // Check if ENTER should be disabled due to attempt limit
+                         if (k === 'ENTER') {
+                           const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                           const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                           const maxAttempts = optimalLength + 1
+                           const remainingAttempts = maxAttempts - gameState.attempts.length
+                           
+                           if (remainingAttempts <= 0) {
+                             keyStyle = 'bg-gray-400 text-gray-300 cursor-not-allowed' // Disabled state
+                           } else {
+                             keyStyle = 'bg-gray-600 text-white' // Normal ENTER state
+                           }
+                         } else {
+                           keyStyle = 'bg-gray-600 text-white' // BACKSPACE always enabled
+                         }
                        } else if (k.length === 1) {
                                                                           // Only start coloring after first guess
                          if (gameState.attempts.length > 0) {
@@ -1532,6 +1635,13 @@ export default function TosswordGame() {
                           key={k}
                           type="button"
                           onClick={() => handleVirtualKey(k)}
+                          disabled={k === 'ENTER' && (() => {
+                            const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                            const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                            const maxAttempts = optimalLength + 1
+                            const remainingAttempts = maxAttempts - gameState.attempts.length
+                            return remainingAttempts <= 0
+                          })()}
                           className={[
                             'h-[60px] rounded-md text-sm font-medium',
                             keyStyle,
@@ -1617,10 +1727,11 @@ export default function TosswordGame() {
                   <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
                 </button>
               </div>
-              <div className="pt-4 border-t border-gray-600">
+              {/* ENABLE LATER IF DESIRED */}
+              {/* <div className="pt-4 border-t border-gray-600">
                 <p className="text-gray-400 text-sm mb-3 text-center">Settings are saved automatically. Click below to start a new game with current settings.</p>
                 <button onClick={() => { setShowSettings(false); initializeGame() }} className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Reset Game (Apply Settings)</button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

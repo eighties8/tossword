@@ -205,6 +205,10 @@ header .logoText span.quirk:after {
   display:none
 }
 
+.logoText.splash span.quirk:after {
+  height: 2px;
+}
+
 .puzzle .puzzle-grid {
   border-bottom:5px solid rgba(0,0,0,.25)
 }
