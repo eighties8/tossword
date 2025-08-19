@@ -1882,15 +1882,18 @@ export default function TosswordGame() {
       </footer>
 
       {showHowToPlay && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowHowToPlay(false)}>
-          <div className="bg-gray-900 rounded-xl p-6 w-full max-w-lg border border-gray-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-white font-poppins">How To Play</h2>
-              <button onClick={() => setShowHowToPlay(false)} className="text-gray-400 hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50" onClick={() => setShowHowToPlay(false)}>
+          <div className="bg-gray-900 rounded-xl w-full max-w-lg max-h-[90vh] border border-gray-700 shadow-2xl flex flex-col cursor-pointer" onClick={() => setShowHowToPlay(false)}>
+            {/* Header - Always visible */}
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-700 flex-shrink-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-white font-poppins">How To Play</h2>
+              <button onClick={(e) => { e.stopPropagation(); setShowHowToPlay(false); }} className="text-gray-400 hover:text-white transition-colors p-1">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="space-y-4 text-gray-300 font-inter">
+            
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-gray-300 font-inter">
               <p>Every day's puzzle starts with a 5-letter word. Using this word as a starting point, change one letter at a time, rearranging letters in any order, to unlock the hidden word</p>
               <p>Use the provided clue <Brain className="inline w-5 h-5" /> along with the highlighted throw-away letter <span className="tossable-icon">A</span> to help you solve the puzzle in the allocated number of words.</p>
               <div className="space-y-2">
