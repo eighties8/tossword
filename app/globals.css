@@ -191,13 +191,14 @@
 .logoText span.quirk::after {
   content: "";
   position: absolute;
-  left: 0;
+  left: -1px;
   right: 0;
-  top: 56%;          /* middle of character box */
-  height: 4px;       /* thickness of line */
-  background: currentColor; /* use same color as text */
-  transform: translateY(-50%); /* center it vertically */
-  color:#444;
+  top: 57%;
+  height: 3px;
+  background: currentColor;
+  transform: translateY(-50%);
+  color: #444;
+  width:110%
 }
 
 header .logoText span.quirk:after {

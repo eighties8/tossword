@@ -1059,7 +1059,7 @@ export default function TosswordGame() {
           </div>
           <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</h1>
           <p className="text-lg text-gray-700 mb-4 font-inter">
-            Today's start word is <strong className="text-emerald-500">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
+            Today's start word is <strong className="text-green-700">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
           <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. Click the <Brain className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
