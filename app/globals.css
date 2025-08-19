@@ -319,3 +319,10 @@
     opacity: 1;
   }
 }
+
+/* Brain icon scaling animation for confetti celebration */
+@keyframes brainScale {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0px lime); }
+  50% { transform: scale(1.75); filter: drop-shadow(0 0 12px lime); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0px lime); }
+}

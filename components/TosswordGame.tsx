@@ -2,7 +2,7 @@
 import type { KeyboardEvent } from "react"
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Image from "next/image"
-import { Lightbulb, HelpCircle, KeyRound, Crown, Delete, SquareArrowDown, Brain } from "lucide-react"
+import { Lightbulb, HelpCircle, KeyRound, Crown, Delete, Sparkles, Brain } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
@@ -1198,9 +1198,11 @@ export default function TosswordGame() {
                    onMouseLeave={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
                 {gameState.gameWon ? (
                   gameState.hideAttemptsDuringReveal ? (
-                    <Crown className="w-8 h-8 text-white milo1" />
+                    <Crown className="w-8 h-8 text-white" />
                   ) : (
-                    <Brain className="w-8 h-8 text-white milo2" />
+                    <Brain className={`w-7 h-7 text-white ${
+                      gameState.showWinAnimation && gameState.gameWon ? 'animate-[brainScale_0.8s_ease-in-out_1800ms_forwards]' : ''
+                    }`} />
                   )
                 ) : (
                   <KeyRound className="w-6 h-6 text-white" />
@@ -1383,7 +1385,7 @@ export default function TosswordGame() {
                   >
                                         {gameState.gameWon ? (
                       sliceIndex === 0 ? (
-                        <SquareArrowDown className="w-8 h-8 text-white" />
+                        <Sparkles className="w-7 h-7 text-white" />
                       ) : (
                         <span className="end-of-row text-white text-lg font-bold font-inter">
                           {sliceIndex}
@@ -1578,7 +1580,7 @@ export default function TosswordGame() {
                            } else if (bestFeedback === 'yellow') {
                              keyStyle = 'bg-amber-500 text-white'
                            } else if (letterUsed) {
-                             keyStyle = 'bg-gray-800 text-white' // Used but no feedback
+                             keyStyle = 'bg-gray-500 text-white' // Eliminated letters (still usable)
                            }
                          }
                       }
