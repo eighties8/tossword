@@ -1171,7 +1171,10 @@ export default function TosswordGame() {
             Today's start word is <strong className="text-green-700">{settingsLoaded ? (selectedPuzzle?.root || "Loading...") : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
-          <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. Click the <Brain className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
+          <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">
+            Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. 
+            Suggested "<b>T</b><span className="aspect-square bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center tossable bg-white text-gray-200 border border-gray-400 relative">O</span><b>SSABLE</b>" letters are highlighted for each start word. 
+            Click the <Brain className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
           <button
             ref={playButtonRef}
             onClick={() => setShowSplash(false)}
