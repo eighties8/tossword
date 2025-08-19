@@ -1097,7 +1097,7 @@ export default function TosswordGame() {
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
             <Image src="/tossword-logo.webp" alt="Tossword logo" width={24} height={24} className="h-6 w-6" />
-            <span className="hidden md:inline text-lg text-gray-700 font-bold font-poppins uppercase">Tossword</span>
+            <span className="hidden md:inline text-lg text-gray-700 font-bold font-poppins">tOsSwOrd</span>
           </div>
           <div className="flex items-center gap-3">
             {debugMode && (
@@ -1126,9 +1126,13 @@ export default function TosswordGame() {
         </div>
       </header>
 
-      {/* Main Puzzle Grid */}
-      <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
-        <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
+              {/* Main Puzzle Grid */}
+        <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
+          {/* Mobile-only TOSSWORD title */}
+          <h1 className="text-2xl font-bold text-emerald-700 font-poppins mb-4 md:hidden block">
+          tOsSwOrd
+          </h1>
+          <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
           {/* WIN BANNER */}
           <div
             className={[
