@@ -266,6 +266,17 @@ header .logoText span.quirk:after {
   border-bottom:4px solid transparent;
 }
 
+.tossable-icon {
+  background:#777;
+  border-radius:5px;
+  color: #fff;
+  padding:4px 9px;
+  outline: 2px dashed #ccc;
+  outline-offset: -4px;
+  outline-width:1.5px!important;
+  outline-color:#eee!important;
+}
+
 .puzzle-row-last {
   background-color: goldenrod;
 }

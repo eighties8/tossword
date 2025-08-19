@@ -1897,13 +1897,14 @@ export default function TosswordGame() {
               </button>
             </div>
             <div className="space-y-4 text-gray-300 font-inter">
-              <p>Using this word as a starting point, change one letter at a time, in any order,to unlock the mystery word!</p>
+              <p>Every day's puzzle starts with a 5-letter word. Using this word as a starting point, change one letter at a time, rearranging letters in any order, to unlock the hidden word</p>
+              <p>Use the provided clue <Brain className="inline w-5 h-5" /> along with the highlighted throw-away letter <span className="tossable-icon">A</span> to help you solve the puzzle in the allocated number of words.</p>
               <div className="space-y-2">
                 <p className="font-semibold text-white">Rules:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Each guess must be a valid 5-letter word</li>
                   <li>You can rearrange letters as long as you change exactly one letter</li>
-                  <li>The starting word shares no letters with the mystery word</li>
+                  <li>The starting word shares no more than 1 letter with the mystery word</li>
                 </ul>
               </div>
               <div className="space-y-2">
@@ -1911,7 +1912,9 @@ export default function TosswordGame() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2"><div className="w-8 h-8 bg-emerald-500 flex items-center justify-center"><span className="text-white font-bold text-sm">W</span></div><span className="text-sm">Letter is in the word and in the correct spot</span></div>
                   <div className="flex items-center gap-2"><div className="w-8 h-8 bg-amber-500 flex items-center justify-center"><span className="text-white font-bold text-sm">I</span></div><span className="text-sm">Letter is in the word but in the wrong spot</span></div>
-                  <div className="flex items-center gap-2"><div className="w-8 h-8 bg-gray-400 flex items-center justify-center"><span className="text-white font-bold text-sm">U</span></div><span className="text-sm">Letter is not in the word</span></div>
+                  <div className="flex items-center gap-2"><span className="tossable-icon">A</span>
+                      <span className="text-sm">Best letter to toss to create the next word and unlock the hidden word</span></div>
+                  {/* <div className="flex items-center gap-2"><div className="w-8 h-8 bg-gray-400 flex items-center justify-center"><span className="text-white font-bold text-sm">U</span></div><span className="text-sm">Letter is not in the word</span></div> */}
                 </div>
               </div>
               <div className="space-y-2">
