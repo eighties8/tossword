@@ -179,6 +179,31 @@
   }
 }
 
+.logoText span {
+  /* color:gray */
+}
+
+.logoText span.quirk {
+  position: relative;
+  color: green !important;
+}
+
+.logoText span.quirk::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56%;          /* middle of character box */
+  height: 4px;       /* thickness of line */
+  background: currentColor; /* use same color as text */
+  transform: translateY(-50%); /* center it vertically */
+  color:#444;
+}
+
+header .logoText span.quirk:after {
+  display:none
+}
+
 .puzzle .puzzle-grid {
   border-bottom:5px solid rgba(0,0,0,.25)
 }

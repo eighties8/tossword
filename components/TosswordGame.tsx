@@ -1057,7 +1057,7 @@ export default function TosswordGame() {
               <div className="bg-green-500 rounded"></div>
             </div>
           </div>
-          <h1 className="text-5xl font-bold text-gray-700 mb-4 font-poppins">tOsSwOrd</h1>
+          <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</h1>
           <p className="text-lg text-gray-700 mb-4 font-inter">
             Today's start word is <strong className="text-emerald-500">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
@@ -1097,7 +1097,7 @@ export default function TosswordGame() {
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
             <Image src="/tossword-logo.webp" alt="Tossword logo" width={24} height={24} className="h-6 w-6" />
-            <span className="hidden md:inline text-lg text-gray-700 font-bold font-poppins">tOsSwOrd</span>
+            <span className="logoText hidden md:inline text-lg text-gray-700 font-bold font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</span>
           </div>
           <div className="flex items-center gap-3">
             {debugMode && (
@@ -1129,8 +1129,8 @@ export default function TosswordGame() {
               {/* Main Puzzle Grid */}
         <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
           {/* Mobile-only TOSSWORD title */}
-          <h1 className="text-2xl font-bold text-emerald-700 font-poppins mb-4 md:hidden block">
-          tOsSwOrd
+          <h1 className="logoText text-2xl font-bold text-emerald-700 font-poppins mb-4 md:hidden block">
+          T<span>o</span>ssW<span className="quirk">o</span>rd
           </h1>
           <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
           {/* WIN BANNER */}
