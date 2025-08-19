@@ -1155,9 +1155,9 @@ export default function TosswordGame() {
               {/* Main Puzzle Grid */}
         <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
           {/* Mobile-only TOSSWORD title */}
-          <h1 className="logoText splash text-2xl font-bold font-poppins mb-4 md:hidden block">
+          {/* <h1 className="logoText splash text-2xl font-bold font-poppins mb-4 md:hidden block">
           T<span>o</span>ssW<span className="quirk">o</span>rd
-          </h1>
+          </h1> */}
           
           {/* Attempt Counter - Only show when not solved */}
           {!gameState.gameWon && (
@@ -1743,7 +1743,7 @@ export default function TosswordGame() {
           <p className="text-sm text-gray-600 font-inter">© Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span></p>
         </div>
       </footer> */}
-      <footer className="fixed bottom-0 left-0 right-0 h-14 bg-white text-gray-900 px-6 border-t border-gray-300 shadow-sm md:relative md:h-auto">
+      <footer className="relative md:fixed md:bottom-0 left-0 right-0 h-14 bg-white text-gray-900 px-6 border-t border-gray-300 shadow-sm md:h-auto">
         <div className="max-w-md h-full mx-auto text-center flex items-center justify-center">
           <p className="text-sm text-gray-600 font-inter p-4">
             © Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span>
