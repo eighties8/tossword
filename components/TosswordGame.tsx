@@ -1129,19 +1129,6 @@ export default function TosswordGame() {
       {/* Main Puzzle Grid */}
       <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
         <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
-          {/* <div className="text-center mb-6">
-            <div className={[
-              "transition-opacity duration-900 ease-in-out",
-              gameState.showWinMessage ? "opacity-100 visible" : "opacity-0 invisible"
-            ].join(" ")}
-            aria-hidden={!gameState.showWinMessage}>
-              <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
-                You solved the puzzle in {gameState.attempts.length} steps. Great Job!
-              </h2>
-              <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (EST)</p>
-            </div>
-            {!gameState.showWinMessage && null}
-          </div> */}
           {/* WIN BANNER */}
           <div
             className={[
@@ -1155,8 +1142,8 @@ export default function TosswordGame() {
             aria-hidden={!gameState.showWinMessage}
           >
             <div className="text-center mb-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
-                You solved the puzzle in {gameState.attempts.length} steps. Great Job!
+            <h2 className="text-2xl md:text-3xl font-bold font-poppins">
+                You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span> Great Job!
               </h2>
               <p className="text-sm text-gray-600 mt-2 font-inter">
                 Next puzzle in {countdown} (EST)
