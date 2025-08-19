@@ -1126,9 +1126,10 @@ export default function TosswordGame() {
         </div>
       </header>
 
-      <div className="flex-1 flex items-center justify-center md:pb-4">
+      {/* Main Puzzle Grid */}
+      <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
         <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
-          <div className="text-center mb-6 min-h-[64px]">
+          {/* <div className="text-center mb-6">
             <div className={[
               "transition-opacity duration-900 ease-in-out",
               gameState.showWinMessage ? "opacity-100 visible" : "opacity-0 invisible"
@@ -1140,9 +1141,31 @@ export default function TosswordGame() {
               <p className="text-sm text-gray-600 mt-2 font-inter">Next puzzle in {countdown} (EST)</p>
             </div>
             {!gameState.showWinMessage && null}
+          </div> */}
+          {/* WIN BANNER */}
+          <div
+            className={[
+              "mx-auto w-full max-w-[400px]",
+              "overflow-hidden will-change-[max-height,opacity,transform]",
+              "transition-[max-height,opacity,transform] duration-500 ease-out",
+              gameState.showWinMessage
+                ? "max-h-40 opacity-100 translate-y-0"   // ~160px – adjust as needed
+                : "max-h-0  opacity-0  -translate-y-1 pointer-events-none",
+            ].join(" ")}
+            aria-hidden={!gameState.showWinMessage}
+          >
+            <div className="text-center mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-emerald-700 font-poppins">
+                You solved the puzzle in {gameState.attempts.length} steps. Great Job!
+              </h2>
+              <p className="text-sm text-gray-600 mt-2 font-inter">
+                Next puzzle in {countdown} (EST)
+              </p>
+            </div>
           </div>
-          <div className={`transition-transform duration-900 ease-in-out`} style={{ transform: gameState.showWinMessage ? "translateY(0)" : "translateY(-64px)" }}>
-          <div className="mb-2">
+          {/* <div className={`transition-transform duration-900 ease-in-out`} style={{ transform: gameState.showWinMessage ? "translateY(0)" : "translateY(-64px)" }}> */}
+          <div className="transition-transform duration-900 ease-in-out">
+            <div className="mb-2">
             <div className="mx-auto flex justify-center gap-2 mb-2">
               {gameState.mysteryWord.split("").map((letter, index) => {
                 const isHeldForFinalReveal = gameState.finalRevealIndex === index
@@ -1581,11 +1604,21 @@ export default function TosswordGame() {
                 ))}
               </div>
 
-              <div className={["mx-auto overflow-hidden","transition-[max-height,opacity,margin] duration-300 ease-in-out rounded-lg puzzle-error-message", gameState.errorMessage ? "opacity-100 my-2" : "opacity-0 my-0"].join(" ")} aria-live="polite">
+              {/* <div className={["mx-auto overflow-hidden","transition-[max-height,opacity,margin] duration-300 ease-in-out rounded-lg puzzle-error-message", gameState.errorMessage ? "opacity-100 my-2" : "opacity-0 my-0"].join(" ")} aria-live="polite">
                 <div className="h-12 w-full flex items-center justify-center px-4">
                   <p className="text-white text-sm font-inter">{gameState.errorMessage}</p>
                 </div>
-              </div>
+              </div> */}
+              {gameState.errorMessage && (
+                <div className="mx-auto mt-3">
+                  <div
+                    role="status"
+                    aria-live="assertive"
+                    className="h-12 w-full flex items-center justify-center px-4 rounded-lg puzzle-error-message bg-gray-800 text-white">
+                      <p className="text-white text-sm font-inter">{gameState.errorMessage}</p>
+                  </div>
+                </div>
+              )}
             </>
           )}
           </div>
@@ -1649,9 +1682,17 @@ export default function TosswordGame() {
         </div>
       )}
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white text-gray-900 py-4 px-6 border-t border-gray-300 shadow-sm md:relative">
+      {/* Footer */}
+      {/* <footer className="fixed bottom-0 left-0 right-0 bg-white text-gray-900 py-4 px-6 border-t border-gray-300 shadow-sm md:relative">
         <div className="max-w-md mx-auto text-center">
           <p className="text-sm text-gray-600 font-inter">© Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span></p>
+        </div>
+      </footer> */}
+      <footer className="fixed bottom-0 left-0 right-0 h-14 bg-white text-gray-900 px-6 border-t border-gray-300 shadow-sm md:relative md:h-auto">
+        <div className="max-w-md h-full mx-auto text-center flex items-center justify-center">
+          <p className="text-sm text-gray-600 font-inter">
+            © Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span>
+          </p>
         </div>
       </footer>
 
