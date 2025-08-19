@@ -1062,7 +1062,7 @@ export default function TosswordGame() {
             Today's start word is <strong className="text-emerald-500">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
           </p>
-          <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. Click the <HelpCircle className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
+          <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">Using this word as a starting point, change one letter at a time, in any order, to unlock today's mystery word. Click the <Brain className="inline w-4 h-4" /> icon to reveal a helpful clue for each word.</p>
           <button
             ref={playButtonRef}
             onClick={() => setShowSplash(false)}
@@ -1400,56 +1400,7 @@ export default function TosswordGame() {
                 </div>
               </div>
 
-              {/* <div className="w-[328px] mx-auto flex justify-center gap-2">
-                {gameState.inputLetters.map((letter, index) => (
-                  <input
-                    key={index}
-                    id={`guess-${index}`}
-                    name={`guess-${index}`}
-                    ref={(el) => { inputRefs.current[index] = el }}
-                    type="text"
-                    value={letter}
-                    onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
-                    onKeyDown={(e) => handleKeyDown(e, index)}
-                    onFocus={() => handleFocus(index)}
-                    className={`w-12 h-12 rounded-lg bg-transparent border border-gray-400 text-center text-lg font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid ${gameState.activeIndex === index ? "" : ""}`}
-                    maxLength={1}
-                    autoComplete="off"
-                    inputMode={typeof window !== 'undefined' && window.innerWidth < 768 ? "none" : "text"}
-                    readOnly={typeof window !== 'undefined' && window.innerWidth < 768}
-                    aria-label={`Letter ${index + 1}`}
-                  />
-                ))}
-                <div className="w-12 h-12 bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
-                     onTouchStart={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
-                     onMouseEnter={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
-                     onMouseLeave={() => { const tooltip = document.getElementById('clue-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
-                                     <HelpCircle className="w-6 h-6 text-white" />
-                  <div id="clue-tooltip" className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left whitespace-nowrap puzzle-tooltip">
-                    {(() => {
-                      if (gameState.attempts.length > 0) {
-                        const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                        const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
-                        if (path.length >= 2) { 
-                          const nextWord = path[1].toLowerCase(); 
-                          const clue = getWordClue(nextWord); 
-                          return clue ? `"${clue}"` : (debugMode ? `No clue for "${nextWord}"` : "I have no clue!")
-                        }
-                      } else {
-                        const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                        if (path.length >= 2) { 
-                          const nextWord = path[1].toLowerCase(); 
-                          const clue = getWordClue(nextWord); 
-                          return clue ? `"${clue}"` : (debugMode ? `No clue for "${nextWord}"` : "I have no clue!")
-                        }
-                      }
-                      return "No clue available"
-                    })()}
-                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
-                  </div>
-                </div>
-              </div> */}
-
+              
               <div className="w-full mx-auto">
                 <div className="grid grid-cols-6 gap-2">
                   {gameState.inputLetters.map((letter, index) => (
@@ -1493,7 +1444,7 @@ export default function TosswordGame() {
                       if (tooltip) tooltip.classList.add('hidden')
                     }}
                   >
-                    <HelpCircle className="w-6 h-6 text-white" />
+                    <Brain className="w-6 h-6 text-white" />
                     <div
                       id="clue-tooltip"
                       className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-3 py-2 
