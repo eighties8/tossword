@@ -58,6 +58,10 @@ interface GameState {
   newlyFlippedLetters: number[]
   // Track which letters are currently animating (to delay reveal)
   animatingLetters: number[]
+  // Word definitions for the solution path
+  wordDefinitions: { [word: string]: { pronunciation: string; definition: string } | null }
+  definitionsLoaded: boolean
+  showDefinitions: boolean
 }
 
 const PUZZLES = [
@@ -83,6 +87,27 @@ const HARD_PUZZLES = [
   { root: "FIELD", mystery: "GRASS" },
   { root: "MUSIC", mystery: "DEPTH" },
 ]
+
+// Function to fetch word definitions from Free Dictionary API
+const fetchWordDefinition = async (word: string): Promise<{ pronunciation: string; definition: string } | null> => {
+  try {
+    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`)
+    if (!response.ok) return null
+    
+    const data = await response.json()
+    if (Array.isArray(data) && data.length > 0) {
+      const entry = data[0]
+      const pronunciation = entry.phonetic || entry.phonetics?.[0]?.text || ''
+      const definition = entry.meanings?.[0]?.definitions?.[0]?.definition || 'No definition available'
+      
+      return { pronunciation, definition }
+    }
+    return null
+  } catch (error) {
+    console.error(`Error fetching definition for ${word}:`, error)
+    return null
+  }
+}
 
 export default function TosswordGame() {
   const [debugMode, setDebugMode] = useState(false)
@@ -123,6 +148,9 @@ export default function TosswordGame() {
     gameOver: false,
     newlyFlippedLetters: [],
     animatingLetters: [],
+    wordDefinitions: {},
+    definitionsLoaded: false,
+    showDefinitions: false,
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -247,6 +275,9 @@ export default function TosswordGame() {
       gameOver: false,
       newlyFlippedLetters: [],
       animatingLetters: [],
+      wordDefinitions: {},
+      definitionsLoaded: false,
+      showDefinitions: false,
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
@@ -300,6 +331,9 @@ export default function TosswordGame() {
       gameOver: false,
       newlyFlippedLetters: [],
       animatingLetters: [],
+      wordDefinitions: {},
+      definitionsLoaded: false,
+      showDefinitions: false,
     })
 
     setIsLoading(false)
@@ -338,11 +372,41 @@ export default function TosswordGame() {
     setSettingsLoaded(true)
   }, [])
 
+  // Reinitialize game when single puzzle mode changes
   useEffect(() => {
     if (settingsLoaded) {
       initializeGame()
     }
   }, [settingsLoaded, initializeGame])
+
+  // Fetch word definitions when game is won
+  useEffect(() => {
+    if (gameState.gameWon && !gameState.definitionsLoaded) {
+      const fetchAllDefinitions = async () => {
+        const allWords = [gameState.rootWord, ...gameState.attempts]
+        const definitions: { [word: string]: { pronunciation: string; definition: string } | null } = {}
+        
+        // Fetch definitions for all words in parallel
+        const definitionPromises = allWords.map(async (word) => {
+          const definition = await fetchWordDefinition(word)
+          return { word, definition }
+        })
+        
+        const results = await Promise.all(definitionPromises)
+        results.forEach(({ word, definition }) => {
+          definitions[word] = definition
+        })
+        
+        setGameState(prev => ({
+          ...prev,
+          wordDefinitions: definitions,
+          definitionsLoaded: true
+        }))
+      }
+      
+      fetchAllDefinitions()
+    }
+  }, [gameState.gameWon, gameState.definitionsLoaded, gameState.rootWord, gameState.attempts])
 
   // Hide any visible tooltips when the puzzle is solved
   useEffect(() => {
@@ -383,6 +447,25 @@ export default function TosswordGame() {
       return () => clearTimeout(t)
     }
   }, [gameState.gameWon, gameState.showWinAnimation, launchConfettiOverPuzzle])
+
+  // Show word definitions 1.5 seconds after confetti ends
+  useEffect(() => {
+    if (gameState.gameWon && gameState.definitionsLoaded && !gameState.showDefinitions) {
+      // Calculate total time: confetti start delay + confetti duration + extra delay
+      const lettersPerWord = 5
+      const spinDurationMs = 1000
+      const spinDelayStepMs = 200
+      const spinTotalMs = spinDurationMs + (lettersPerWord - 1) * spinDelayStepMs
+      const confettiDuration = 1600
+      const extraDelay = 1500
+      const totalDelay = spinTotalMs + confettiDuration + extraDelay
+      
+      const t = setTimeout(() => {
+        setGameState(prev => ({ ...prev, showDefinitions: true }))
+      }, totalDelay)
+      return () => clearTimeout(t)
+    }
+  }, [gameState.gameWon, gameState.definitionsLoaded, gameState.showDefinitions])
 
   // Countdown to next puzzle (midnight US Eastern Time)
   useEffect(() => {
@@ -1679,6 +1762,52 @@ export default function TosswordGame() {
         </div>
       </div>
 
+      {/* WORD DEFINITIONS - Displayed above footer */}
+      {gameState.gameWon && !gameState.definitionsLoaded && (
+        <div className="mx-auto w-full max-w-[400px] mt-6 text-center px-4">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          </div>
+          <p className="text-sm text-gray-600 font-inter mt-2">
+            Loading word definitions...
+          </p>
+        </div>
+      )}
+      
+      {gameState.gameWon && gameState.definitionsLoaded && gameState.showDefinitions && (
+        <div className="mx-auto w-full max-w-[400px] mt-6 px-4 animate-fade-in mb-20 md:mb-20">
+          <div className="space-y-4">
+            {[gameState.rootWord, ...gameState.attempts].map((word, index) => {
+              const definition = gameState.wordDefinitions[word]
+              return (
+                <div key={word} className="bg-white p-4 shadow-sm rounded-lg">
+                  <h4 className="text-lg font-bold font-inter text-gray-900 mb-2">
+                    {word}
+                  </h4>
+                  {definition ? (
+                    <>
+                      {definition.pronunciation && (
+                        <p className="text-sm text-gray-600 font-inter mb-2">
+                          <span className="font-semibold">Pronunciation:</span> {definition.pronunciation}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-700 font-inter">
+                        <span className="font-semibold">Definition:</span> {definition.definition}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500 font-inter italic">
+                      Definition not available
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Settings and How To Play sections remain unchanged from original and are included below */}
       {/* Settings Modal */}
       {showSettings && (
@@ -1743,7 +1872,9 @@ export default function TosswordGame() {
           <p className="text-sm text-gray-600 font-inter">© Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span></p>
         </div>
       </footer> */}
-      <footer className="relative md:fixed md:bottom-0 left-0 right-0 h-14 bg-white text-gray-900 px-6 border-t border-gray-300 shadow-sm md:h-auto">
+
+
+      <footer className="static md:fixed md:bottom-0 left-0 right-0 h-14 bg-white text-gray-900 px-6 border-t border-gray-300 shadow-sm md:h-auto z-40 mt-6">
         <div className="max-w-md h-full mx-auto text-center flex items-center justify-center">
           <p className="text-sm text-gray-600 font-inter p-4">
             © Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span>
