@@ -2,7 +2,7 @@
 import type { KeyboardEvent } from "react"
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import Image from "next/image"
-import { Lightbulb, HelpCircle, KeyRound, Crown, Delete, Sparkles, Brain } from "lucide-react"
+import { Lightbulb, Delete, Brain } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 import wordDefinitionsData from "@/lib/wordDefinitions.json"
@@ -1023,7 +1023,7 @@ export default function TosswordGame() {
       "smear": "spread", "rates": "prices", "roast": "cook", "snort": "sneer",
       "house": "home", "mouse": "rodent", "males": "men", "email": "message", "image": "picture", "magic": "spell",
       "serum": "liquid", "miser": "stingy", "grime": "dirt",
-      "ocean": "sea", "alone": "solitary", "alien": "foreign", "ideal": "perfect", "field": "meadow",
+      "ocean": "sea", "alone": "solitary", "alien": "foreign", "ideal": "exemplary", "field": "meadow",
       "yearn": "desire", "hyena": "animal", "ready": "prepared", "denim": "fabric", "pined": "longed",
       "space": "area", "place": "location", "smile": "grin", "stile": "step",
     }
@@ -1233,7 +1233,7 @@ export default function TosswordGame() {
       </header>
 
         {/* Main Puzzle Grid */}
-        <div className="flex-1 flex flex-col justify-center items-center pb-4 md:pb-4">
+        <div className="flex-1 flex flex-col items-center md:pt-4">
           {/* Mobile-only TOSSWORD title */}
           {/* <h1 className="logoText splash text-2xl font-bold font-poppins mb-4 md:hidden block">
           T<span>o</span>ssW<span className="quirk">o</span>rd
@@ -1241,7 +1241,7 @@ export default function TosswordGame() {
           
           {/* Attempt Counter - Only show when not solved */}
           {!gameState.gameWon && (
-            <div className="w-full max-w-[400px] px-[10px] mb-4">
+            <div className="w-full max-w-[400px] px-[10px]">
               {(() => {
                 const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
                 const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
@@ -1259,7 +1259,7 @@ export default function TosswordGame() {
                 }
                 
                 return (
-                  <h2 className="text-lg font-semibold text-gray-700 font-inter text-center">
+                  <h2 className="text-lg font-semibold text-gray-700 font-inter text-center mt-3">
                     {!gameState.isHardMode && gameState.attempts.length === 0 ? (
                       // Before first attempt, show puzzle difficulty info and clue
                       (() => {
@@ -1307,7 +1307,7 @@ export default function TosswordGame() {
             className={[
               "mx-auto w-full max-w-[400px]",
               "overflow-hidden will-change-[max-height,opacity,transform]",
-              "transition-[max-height,opacity,transform] duration-500 ease-out",
+              "transition-[max-height,opacity,transform] duration-500 ease-out pt-4",
               gameState.showWinMessage
                 ? "max-h-40 opacity-100 translate-y-0"   // ~160px – adjust as needed
                 : "max-h-0  opacity-0  -translate-y-1 pointer-events-none",
@@ -1315,12 +1315,20 @@ export default function TosswordGame() {
             aria-hidden={!gameState.showWinMessage}
           >
             <div className="text-center mb-4">
-            <h2 className="text-2xl md:text-3xl font-bold font-poppins">
+              {/* Only show brain animation for optimal solutions */}
+              {gameState.attempts.length === (() => {
+                const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                return optimalPath.length > 0 ? optimalPath.length - 1 : 0
+              })() && (
+                <div className="flex items-center justify-center mb-3">
+                  <Brain 
+                    className="w-12 h-12 text-emerald-600 animate-[brainScale_2s_ease-in-out_infinite]" 
+                  />
+                </div>
+              )}
+              <h2 className="text-2xl md:text-3xl font-bold font-poppins">
                 You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span> Great Job!
               </h2>
-              <p className="text-sm text-gray-600 mt-2 font-inter">
-                Next puzzle in {countdown} (EST)
-              </p>
             </div>
           </div>
           {/* <div className={`transition-transform duration-900 ease-in-out`} style={{ transform: gameState.showWinMessage ? "translateY(0)" : "translateY(-64px)" }}> */}
@@ -1352,26 +1360,7 @@ export default function TosswordGame() {
                   </div>
                 )
               })}
-              <div className="w-full aspect-square bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
-                   onTouchStart={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) { tooltip.classList.remove('hidden'); setTimeout(() => tooltip.classList.add('hidden'), 3000) } }}
-                   onMouseEnter={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.remove('hidden') }}
-                   onMouseLeave={() => { const tooltip = document.getElementById('mystery-tooltip'); if (tooltip) tooltip.classList.add('hidden') }}>
-                {gameState.gameWon ? (
-                  gameState.hideAttemptsDuringReveal ? (
-                    <Crown className="w-8 h-8 text-white" />
-                  ) : (
-                    <Brain className={`w-7 h-7 text-white ${
-                      gameState.showWinAnimation && gameState.gameWon ? 'animate-[brainScale_0.8s_ease-in-out_1800ms_forwards]' : ''
-                    }`} />
-                  )
-                ) : (
-                  <KeyRound className="w-6 h-6 text-white" />
-                )}
-                <div id="mystery-tooltip" className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left whitespace-nowrap puzzle-tooltip">
-                  {gameState.gameWon ? "Puzzle unlocked! Well done!" : "Unlock the puzzle!"}
-                  <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
-                </div>
-              </div>
+
             </div>
 
             {gameState.attempts.length === 0 ? (
@@ -1407,43 +1396,7 @@ export default function TosswordGame() {
                     </div>
                   )
                 })}
-                <div
-                  className="w-full aspect-square bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
-                  onTouchStart={() => {
-                    if (gameState.gameWon) return
-                    const tooltip = document.getElementById('start-steps-tooltip')
-                    if (tooltip) {
-                      tooltip.classList.remove('hidden')
-                      setTimeout(() => tooltip.classList.add('hidden'), 3000)
-                    }
-                  }}
-                  onMouseEnter={() => {
-                    if (gameState.gameWon) return
-                    const tooltip = document.getElementById('start-steps-tooltip')
-                    if (tooltip) tooltip.classList.remove('hidden')
-                  }}
-                  onMouseLeave={() => {
-                    const tooltip = document.getElementById('start-steps-tooltip')
-                    if (tooltip) tooltip.classList.add('hidden')
-                  }}
-                  title="Minimum steps to solve this puzzle"
-                >
-                  {/* Start/Begin icon */}
-                  <Lightbulb className="w-6 h-6 text-white" />
 
-                  {/* Tooltip with BFS steps */}
-                  <div
-                    id="start-steps-tooltip"
-                    className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[250px] text-left whitespace-nowrap puzzle-tooltip"
-                  >
-                    {(() => {
-                      const path = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                      const steps = path.length > 0 ? path.length : '?' 
-                      return `Chain ${steps} words or less to solve`
-                    })()}
-                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900"></div>
-                  </div>
-                </div>
               </div>
             ) : null}
           </div>
@@ -1490,7 +1443,7 @@ export default function TosswordGame() {
                       : "flex",
                 }}
               >
-                <div className="grid grid-cols-6 gap-2 w-full">
+                <div className="grid grid-cols-5 gap-2 w-full">
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlightCell =
                       shouldShowHint && optimalHints.includes(letterIndex);
@@ -1538,24 +1491,7 @@ export default function TosswordGame() {
                     );
                   })}
             
-                  {/* Last clue/lightbulb cell */}
-                  <div
-                    className="w-full aspect-square bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
-                    /* ... handlers unchanged ... */
-                  >
-                                        {gameState.gameWon ? (
-                      sliceIndex === 0 ? (
-                        <Sparkles className="w-7 h-7 text-white" />
-                      ) : (
-                        <span className="end-of-row text-white text-lg font-bold font-inter">
-                          {sliceIndex}
-                        </span>
-                      )
-                    ) : (
-                      <Lightbulb className="w-6 h-6 text-white" />
-                    )}
-                    {/* tooltip unchanged */}
-                  </div>
+
                 </div>
               </div>
             );
@@ -1571,7 +1507,7 @@ export default function TosswordGame() {
 
               
               <div className="w-full mx-auto">
-                <div className="grid grid-cols-6 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {gameState.inputLetters.map((letter, index) => (
                     <input
                       key={index}
@@ -1594,51 +1530,7 @@ export default function TosswordGame() {
                     />
                   ))}
 
-                  {/* Clue cell */}
-                  <div
-                    className="w-full aspect-square bg-gray-500 rounded-lg puzzle-grid flex items-center justify-center cursor-pointer relative puzzle-row-last"
-                    onTouchStart={() => {
-                      const tooltip = document.getElementById('clue-tooltip')
-                      if (tooltip) {
-                        tooltip.classList.remove('hidden')
-                        setTimeout(() => tooltip.classList.add('hidden'), 3000)
-                      }
-                    }}
-                    onMouseEnter={() => {
-                      const tooltip = document.getElementById('clue-tooltip')
-                      if (tooltip) tooltip.classList.remove('hidden')
-                    }}
-                    onMouseLeave={() => {
-                      const tooltip = document.getElementById('clue-tooltip')
-                      if (tooltip) tooltip.classList.add('hidden')
-                    }}
-                  >
-                    <Brain className="w-6 h-6 text-white" />
-                    <div
-                      id="clue-tooltip"
-                      className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-3 py-2 
-                        bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none 
-                        max-w-[200px] text-left whitespace-nowrap puzzle-tooltip"
-                    >
-                      {(() => {
-                        const getClue = (fromWord: string) => {
-                          const path = bidirectionalBFS(fromWord, gameState.mysteryWord.toUpperCase())
-                          if (path.length >= 2) {
-                            const nextWord = path[1].toLowerCase()
-                            const clue = getWordClue(nextWord)
-                            return clue
-                              ? `"${clue}"`
-                              : (debugMode ? `No clue for "${nextWord}"` : "I have no clue!")
-                          }
-                          return "No clue available"
-                        }
-                        return gameState.attempts.length > 0
-                          ? getClue(gameState.attempts[gameState.attempts.length - 1].toUpperCase())
-                          : getClue(gameState.rootWord.toUpperCase())
-                      })()}
-                      <div className="absolute left-full top-1/2 -translate-y-1/2 w-0 h-0 border-l-4 border-b-4 border-transparent border-l-gray-900"></div>
-                    </div>
-                  </div>
+
                 </div>
               </div>
 
@@ -1759,6 +1651,15 @@ export default function TosswordGame() {
         </div>
       </div>
 
+      {/* NEXT PUZZLE COUNTDOWN - Positioned between puzzle and definitions */}
+      {gameState.gameWon && (
+        <div className="mx-auto w-full max-w-[400px] text-center px-1">
+          <p className="text-sm text-gray-600 font-inter">
+            Next puzzle in <b>{countdown}</b> (EST)
+          </p>
+        </div>
+      )}
+
       {/* WORD DEFINITIONS - Displayed above footer */}
       {gameState.gameWon && !gameState.definitionsLoaded && (
         <div className="mx-auto w-full max-w-[400px] text-center px-4">
@@ -1773,7 +1674,7 @@ export default function TosswordGame() {
       )}
       
       {gameState.gameWon && gameState.definitionsLoaded && gameState.showDefinitions && (
-        <div className="mx-auto w-full max-w-[400px] px-4 animate-fade-in mb-20 md:mb-20">
+        <div className="mx-auto w-full max-w-[400px] px-3 animate-fade-in mb-20 md:mb-20 mt-3">
           <div className="space-y-4">
             {[gameState.rootWord, ...gameState.attempts].map((word, index) => {
               const definition = gameState.wordDefinitions[word]

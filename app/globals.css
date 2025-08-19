@@ -169,7 +169,51 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.6s ease-out forwards;
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@keyframes smoothFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-smooth-fade-in {
+  animation: smoothFadeIn 1.2s ease-out forwards;
+}
+
+@keyframes staggeredFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(15px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-staggered-fade-in {
+  animation: staggeredFadeIn 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Smooth background transition for definitions */
+.definitions-container {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 250, 251, 0.95));
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @keyframes fadeOut {
@@ -277,19 +321,7 @@ header .logoText span.quirk:after {
   outline-color:#eee!important;
 }
 
-.puzzle-row-last {
-  background-color: goldenrod;
-}
-.puzzle-row-last svg.text-white {
-  color:#444
-}
 
-.puzzle-solved .puzzle-row-last {
-  background-color: #00bc7d;
-}
-.puzzle-solved .puzzle-row-last svg.text-white {
-  color:#fff
-}
 
 .puzzle .puzzle-error-message {
   border:1px solid rgba(0,0,0,.25);
