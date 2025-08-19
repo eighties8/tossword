@@ -1154,16 +1154,16 @@ export default function TosswordGame() {
       <div className={`min-h-screen bg-gray-100 flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
         <div className="text-center max-w-md text-gray-700">
           <div className="mb-6">
-            <div className="puzzle-splash-grid grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4 bg-[#444] p-2 rounded-lg">
-              <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">?</span></div>
-              <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">?</span></div>
-              <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">?</span></div>
+            <div className="puzzle-splash-grid grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4 bg-[#444] p-2 rounded-lg text-white text-xl">
+              <div className="bg-green-500 rounded">•</div>
+              <div className="bg-green-500 rounded">•</div>
+              <div className="bg-green-500 rounded">•</div>
+              <div className="bg-green-500 rounded"></div>
               <div className="bg-gray-400 rounded"></div>
               <div className="bg-yellow-400 rounded"></div>
-              <div className="bg-green-500 rounded"></div>
-              <div className="bg-green-500 rounded"></div>
-              <div className="bg-green-500 rounded"></div>
-              <div className="bg-green-500 rounded"></div>
+              <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold">|</span></div>
+              <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold"></span></div>
+              <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold"></span></div>
             </div>
           </div>
           <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</h1>
