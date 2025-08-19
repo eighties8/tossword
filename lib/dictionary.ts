@@ -211,7 +211,7 @@ export const VALID_WORDS = new Set([
   "whine", "whiny", "whip", "whips", "whirl", "whisk", "whist", "white", "whizz", "whoop",
   "whoop", "whore", "whose", "widen", "wider", "widow", "width", "wield", "wight", "wilds",
   "wiles", "wills", "willy", "wimpy", "wince", "winch", "winds", "windy", "wined", "wines",
-  "wings", "winks", "winos", "wiped", "wipes", "wired", "wires", "wiser", "wispy",
+  "wings", "winks", "wiped", "wipes", "wired", "wires", "wiser", "wispy",
   "witch", "witty", "wives", "woken", "wolds", "woman", "women", "wonky", "woods", "woody",
   "wooed", "wooer", "woofs", "wools", "woozy", "words", "wordy", "works", "world", "worms",
   "wormy", "worry", "worse", "worst", "worth", "would", "wound", "woven", "wrack", "wraps",

@@ -7,7 +7,7 @@ import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 import wordDefinitionsData from "@/lib/wordDefinitions.json"
 
-// Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
+// single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
 const SINGLE_PUZZLE_MODE = true
 
 const inter = Inter({
@@ -76,8 +76,6 @@ const PUZZLES = [
   { root: "SWORD", mystery: "BEACH" },
   { root: "HOUSE", mystery: "MAGIC" },
   { root: "OCEAN", mystery: "FIELD" },
-  { root: "SPACE", mystery: "GRACE" },
-  { root: "BRAVE", mystery: "GRAVE" },
   { root: "SMILE", mystery: "GRIME" },
 ]
 
@@ -1005,7 +1003,7 @@ export default function TosswordGame() {
       "apple": "fruit", "apply": "use", "arena": "stadium", "argue": "dispute", "arise": "emerge",
       "array": "arrangement", "aside": "separately", "asset": "property", "audio": "sound", "audit": "examination",
       "avoid": "evade", "await": "wait", "awake": "conscious", "award": "prize", "aware": "conscious",
-      "awful": "terrible", "axiom": "principle",
+      "awful": "terrible", "axiom": "principle", "store": "save", "twins": "pair",
 
       "storm": "tempest", "light": "illumination", "games": "play", "front": "foremost",
       "bread": "food", "honey": "sweet", "cumin": "spice", "depth": "profundity",
@@ -1022,7 +1020,7 @@ export default function TosswordGame() {
       "elfin": "fairy",
       "manic": "crazy", "meant": "intended", "tamed": "domesticated", "short": "brief", "shirt": "garment",
       "fling": "throw", "sling": "strap", "glans": "tip", "glass": "transparent", "grass": "lawn",
-      "smear": "spread", "rates": "prices", "roast": "cook", "snort": "laugh",
+      "smear": "spread", "rates": "prices", "roast": "cook", "snort": "sneer",
       "house": "home", "mouse": "rodent", "males": "men", "email": "message", "image": "picture", "magic": "spell",
       "serum": "liquid", "miser": "stingy", "grime": "dirt",
       "ocean": "sea", "alone": "solitary", "alien": "foreign", "ideal": "perfect", "field": "meadow",
