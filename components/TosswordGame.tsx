@@ -1185,7 +1185,7 @@ export default function TosswordGame() {
             Play
           </button>
           <div className="mt-8 text-sm text-gray-700 font-inter">
-            <p>Solve the mystery word in as few steps as possible</p>
+            <p>Solve the puzzle by building a bridge from the starting word to the hidden word within the allocated number of attempts</p>
             <p>Challenge your vocabulary and logic</p>
           </div>
         </div>
@@ -1278,7 +1278,7 @@ export default function TosswordGame() {
                         
                         return (
                           <>
-                            <span className="text-gray-800 text-xl">This puzzle can be solved in {optimalLength} steps, you have {optimalLength + 1} attempts.</span>
+                            <span className="text-gray-800 text-xl">Today's puzzle can be reached in {optimalLength} attempts, you have {optimalLength + 1} available.</span>
                             {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
                           </>
                         )
