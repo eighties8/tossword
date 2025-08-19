@@ -183,16 +183,12 @@
   }
 }
 
-.logoText span {
-  /* color:gray */
-}
-
 .logoText span.quirk {
   position: relative;
   color: green !important;
 }
 
-.logoText span.quirk::after {
+/* .logoText span.quirk::after {
   content: "";
   position: absolute;
   left: -1px;
@@ -203,6 +199,33 @@
   transform: translateY(-50%);
   color: #444;
   width:110%
+} */
+
+.logoText span.quirk:after{
+  content:"";
+  color:#fff;
+  background:currentColor;
+  width:110%;
+  height:3px;
+  position:absolute;
+  top:57%;
+  left:50%;
+  right:0;
+  /* transform:translateY(-50%); */
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.logoText span.quirk:before {
+  content:"";
+  color:#fff;
+  background:currentColor;
+  width:110%;
+  height:3px;
+  position:absolute;
+  top:57%;
+  left:50%;
+  right:0;
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 header .logoText span.quirk:after {
@@ -226,7 +249,8 @@ header .logoText span.quirk:after {
   margin: 0 2px;
   outline-width:1.5px!important;
   outline-color:#eee!important;
-  color:#fff
+  color:#fff;
+  border-radius:5px
 }
 
 .puzzle .puzzle-grid {
