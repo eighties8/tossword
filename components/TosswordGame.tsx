@@ -7,7 +7,7 @@ import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 
 // Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
-const SINGLE_PUZZLE_MODE = false
+const SINGLE_PUZZLE_MODE = true
 
 const inter = Inter({
   subsets: ["latin"],
