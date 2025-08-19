@@ -122,12 +122,7 @@ html {
           `}
         </Script>
 
-        {/* Google AdSense - use a native <script> to avoid Next.js data-nscript attribute */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5584270993866771"
-          crossOrigin="anonymous"
-        />
+
 
         {/* Structured Data */}
         <script

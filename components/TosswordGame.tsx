@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Lightbulb, HelpCircle, KeyRound, Crown, Delete, Sparkles, Brain } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
+import wordDefinitionsData from "@/lib/wordDefinitions.json"
 
 // Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
 const SINGLE_PUZZLE_MODE = true
@@ -88,23 +89,21 @@ const HARD_PUZZLES = [
   { root: "MUSIC", mystery: "DEPTH" },
 ]
 
-// Function to fetch word definitions from Free Dictionary API
-const fetchWordDefinition = async (word: string): Promise<{ pronunciation: string; definition: string } | null> => {
+// Function to get word definitions from local file
+const getWordDefinition = (word: string): { pronunciation: string; definition: string } | null => {
   try {
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`)
-    if (!response.ok) return null
+    const lowerWord = word.toLowerCase()
+    const definition = (wordDefinitionsData.definitions as any)[lowerWord]
     
-    const data = await response.json()
-    if (Array.isArray(data) && data.length > 0) {
-      const entry = data[0]
-      const pronunciation = entry.phonetic || entry.phonetics?.[0]?.text || ''
-      const definition = entry.meanings?.[0]?.definitions?.[0]?.definition || 'No definition available'
-      
-      return { pronunciation, definition }
+    if (definition) {
+      return {
+        pronunciation: definition.pronunciation || '',
+        definition: definition.definition || 'No definition available'
+      }
     }
     return null
   } catch (error) {
-    console.error(`Error fetching definition for ${word}:`, error)
+    console.error(`Error getting definition for ${word}:`, error)
     return null
   }
 }
@@ -379,21 +378,16 @@ export default function TosswordGame() {
     }
   }, [settingsLoaded, initializeGame])
 
-  // Fetch word definitions when game is won
+  // Get word definitions when game is won
   useEffect(() => {
     if (gameState.gameWon && !gameState.definitionsLoaded) {
-      const fetchAllDefinitions = async () => {
+      const fetchAllDefinitions = () => {
         const allWords = [gameState.rootWord, ...gameState.attempts]
         const definitions: { [word: string]: { pronunciation: string; definition: string } | null } = {}
         
-        // Fetch definitions for all words in parallel
-        const definitionPromises = allWords.map(async (word) => {
-          const definition = await fetchWordDefinition(word)
-          return { word, definition }
-        })
-        
-        const results = await Promise.all(definitionPromises)
-        results.forEach(({ word, definition }) => {
+        // Get definitions for all words from local file
+        allWords.forEach((word) => {
+          const definition = getWordDefinition(word)
           definitions[word] = definition
         })
         

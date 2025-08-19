@@ -149,7 +149,7 @@ export const VALID_WORDS = new Set([
   "slice", "slick", "slide", "slime", "slimy", "sling", "slink", "slips", "slits", "slobs",
   "sloth", "slots", "slows", "slugs", "slump", "slung", "slunk", "slurp", "slurs", "slush",
   "slyly", "smack", "small", "smart", "smash", "smear", "smell", "smelt", "smile", "smirk",
-  "smite", "smith", "smock", "smoke", "smoky", "smote", "smurf", "smush", "snack", "snags",
+  "smite", "smith", "smock", "smoke", "smoky", "smote", "smurf", "smush", "snack", "snafu", "snags",
   "snail", "snake", "snaky", "snaps", "snare", "snark", "snarl", "sneak", "sneer", "snide",
   "sniff", "snipe", "snipe", "snips", "snits", "snobs", "snood", "snook", "snoot", "snore",
   "snort", "snout", "snowy", "snubs", "snuck", "snuff", "snugs", "soaks", "soaps", "soapy",
