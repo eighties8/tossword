@@ -1210,7 +1210,7 @@ export default function TosswordGame() {
                   return (
                     <div
                       key={index}
-                      className={`w-full aspect-square bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable bg-white !text-gray-400 border border-gray-400" : ""} relative`}
+                      className={`w-full aspect-square bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center ${shouldHighlight ? "tossable bg-white text-gray-200 border border-gray-400" : ""} relative`}
                       onTouchStart={() => {
                         if (!shouldHighlight || gameState.gameWon) return
                         const tooltip = document.getElementById(`start-tooltip-${index}`)
@@ -1219,7 +1219,7 @@ export default function TosswordGame() {
                       onMouseEnter={() => { if (shouldHighlight && !gameState.gameWon) { document.getElementById(`start-tooltip-${index}`)?.classList.remove('hidden') } }}
                       onMouseLeave={() => { if (shouldHighlight) { document.getElementById(`start-tooltip-${index}`)?.classList.add('hidden') } }}
                     >
-                      <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-400" : "text-white"}`}>{letter}</span>
+                      <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-200" : "text-white"}`}>{letter}</span>
                       {shouldHighlight && (
                         <div
                           id={`start-tooltip-${index}`}
@@ -1336,7 +1336,7 @@ export default function TosswordGame() {
                         key={letterIndex}
                         className={`w-full aspect-square ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${
                           shouldHighlightCell
-                            ? "tossable bg-white !text-gray-400 border border-gray-400"
+                            ? "tossable bg-white border border-gray-400"
                             : ""
                         } ${
                           gameState.showWinAnimation &&
@@ -1355,7 +1355,7 @@ export default function TosswordGame() {
                       >
                         <span
                           className={`text-lg font-bold font-inter ${
-                            shouldHighlightCell ? "text-gray-400" : "text-white"
+                            shouldHighlightCell ? "text-gray-200" : "text-white"
                           }`}
                         >
                           {letter}
@@ -1679,7 +1679,7 @@ export default function TosswordGame() {
       </footer> */}
       <footer className="fixed bottom-0 left-0 right-0 h-14 bg-white text-gray-900 px-6 border-t border-gray-300 shadow-sm md:relative md:h-auto">
         <div className="max-w-md h-full mx-auto text-center flex items-center justify-center">
-          <p className="text-sm text-gray-600 font-inter">
+          <p className="text-sm text-gray-600 font-inter p-4">
             © Red Mountain Media, LLC 2025 · Tossword<span className="align-super text-[0.65em]">™</span>
           </p>
         </div>

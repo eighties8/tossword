@@ -184,7 +184,12 @@
 }
 
 .tossable.bg-white {
-  background:#eee !important
+  /* background:#eee !important */
+  background:#99a1af !important;
+  outline: 2px dashed #ccc;
+  outline-offset: -4px;
+  border-bottom:none;
+  border-bottom:4px solid transparent;
 }
 
 .puzzle-row-last {
