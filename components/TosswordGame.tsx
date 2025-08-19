@@ -1057,7 +1057,7 @@ export default function TosswordGame() {
               <div className="bg-green-500 rounded"></div>
             </div>
           </div>
-          <h1 className="text-5xl font-bold text-gray-700 mb-4 font-poppins">Tossword</h1>
+          <h1 className="text-5xl font-bold text-gray-700 mb-4 font-poppins">tOsSwOrd</h1>
           <p className="text-lg text-gray-700 mb-4 font-inter">
             Today's start word is <strong className="text-emerald-500">{settingsLoaded ? (debugMode ? "OCEAN" : (selectedPuzzle?.root || "Loading...")) : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
