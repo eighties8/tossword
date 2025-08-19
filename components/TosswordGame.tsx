@@ -1238,8 +1238,8 @@ export default function TosswordGame() {
         </div>
       </header>
 
-              {/* Main Puzzle Grid */}
-        <div className="flex-1 flex flex-col justify-center items-center pb-14 md:pb-0">
+        {/* Main Puzzle Grid */}
+        <div className="flex-1 flex flex-col justify-center items-center pb-4 md:pb-4">
           {/* Mobile-only TOSSWORD title */}
           {/* <h1 className="logoText splash text-2xl font-bold font-poppins mb-4 md:hidden block">
           T<span>o</span>ssW<span className="quirk">o</span>rd
@@ -1767,7 +1767,7 @@ export default function TosswordGame() {
 
       {/* WORD DEFINITIONS - Displayed above footer */}
       {gameState.gameWon && !gameState.definitionsLoaded && (
-        <div className="mx-auto w-full max-w-[400px] mt-6 text-center px-4">
+        <div className="mx-auto w-full max-w-[400px] text-center px-4">
           <div className="animate-pulse">
             <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
             <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
@@ -1779,12 +1779,12 @@ export default function TosswordGame() {
       )}
       
       {gameState.gameWon && gameState.definitionsLoaded && gameState.showDefinitions && (
-        <div className="mx-auto w-full max-w-[400px] mt-6 px-4 animate-fade-in mb-20 md:mb-20">
+        <div className="mx-auto w-full max-w-[400px] px-4 animate-fade-in mb-20 md:mb-20">
           <div className="space-y-4">
             {[gameState.rootWord, ...gameState.attempts].map((word, index) => {
               const definition = gameState.wordDefinitions[word]
               return (
-                <div key={word} className="bg-white p-4 shadow-sm rounded-lg">
+                <div key={word}>
                   <h4 className="text-lg font-bold font-inter text-gray-900 mb-2">
                     {word}
                   </h4>
