@@ -6,6 +6,7 @@ import { Lightbulb, Delete, Brain } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 import wordDefinitionsData from "@/lib/wordDefinitions.json"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 // single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
 const SINGLE_PUZZLE_MODE = true
@@ -107,6 +108,7 @@ const getWordDefinition = (word: string): { pronunciation: string; definition: s
 }
 
 export default function TosswordGame() {
+  const isMobile = useIsMobile()
   const [debugMode, setDebugMode] = useState(false)
   const [hintTextAuto, setHintTextAuto] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -117,6 +119,7 @@ export default function TosswordGame() {
   const [settingsLoaded, setSettingsLoaded] = useState(false)
   const [selectedPuzzle, setSelectedPuzzle] = useState<{ root: string; mystery: string } | null>(null)
   const [countdown, setCountdown] = useState<string>("")
+  const [showDesktopKeyboard, setShowDesktopKeyboard] = useState(false)
 
   const [gameState, setGameState] = useState<GameState>({
     mysteryWord: "",
@@ -1239,96 +1242,93 @@ export default function TosswordGame() {
           T<span>o</span>ssW<span className="quirk">o</span>rd
           </h1> */}
           
-          {/* Attempt Counter - Only show when not solved */}
-          {!gameState.gameWon && (
-            <div className="w-full max-w-[400px] px-[10px] min-h-[100px] flex flex-col justify-end">
-              {(() => {
-                const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
-                const maxAttempts = optimalLength + 1 // Easy mode: optimal + 1
-                const remainingAttempts = maxAttempts - gameState.attempts.length
-                const isLastAttempt = remainingAttempts === 1
-                const isOutOfAttempts = remainingAttempts <= 0
-                
-                if (isOutOfAttempts) {
+          {/* Puzzle Counter Container - Always rendered to preserve layout */}
+          <div className="puzzle-counter w-full max-w-[400px] px-[10px] min-h-[116px] flex flex-col justify-end pb-4">
+            {/* Game Status Content - Show when playing */}
+            {!gameState.gameWon && (
+              <div className="game-status-content">
+                {(() => {
+                  const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                  const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                  const maxAttempts = optimalLength + 1 // Easy mode: optimal + 1
+                  const remainingAttempts = maxAttempts - gameState.attempts.length
+                  const isLastAttempt = remainingAttempts === 1
+                  const isOutOfAttempts = remainingAttempts <= 0
+                  
+                  if (isOutOfAttempts) {
+                    return (
+                      <h2 className="text-lg font-semibold text-red-600 font-inter text-center">
+                        Awe, that was your last try today. Sorry, try again tomorrow!
+                      </h2>
+                    )
+                  }
+                  
                   return (
-                    <h2 className="text-lg font-semibold text-red-600 font-inter text-center">
-                      Awe, that was your last try today. Sorry, try again tomorrow!
+                    <h2 className="text-lg font-semibold text-gray-700 font-inter text-center mt-3">
+                      {!gameState.isHardMode && gameState.attempts.length === 0 ? (
+                        // Before first attempt, show puzzle difficulty info and clue
+                        (() => {
+                          const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                          const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                          const nextWord = optimalPath.length >= 2 ? optimalPath[1].toLowerCase() : null
+                          const clue = nextWord ? getWordClue(nextWord) : null
+                          
+                          return (
+                            <>
+                              <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span>
+                              {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
+                            </>
+                          )
+                        })()
+                      ) : (
+                        // After first attempt, show attempts remaining and clue
+                        <>
+                          {isLastAttempt ? (
+                            <span className="text-amber-600 text-xl">Last attempt! </span>
+                          ) : (
+                            <span className="text-gray-800 text-xl">{remainingAttempts} attempts remaining</span>
+                          )}
+                          {!gameState.isHardMode && (() => {
+                            const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                            const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+                            if (path.length >= 2) {
+                              const nextWord = path[1].toLowerCase()
+                              const clue = getWordClue(nextWord)
+                              return <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue || 'No clue available'}"</strong></span>
+                            }
+                            return null
+                          })()}
+                        </>
+                      )}
                     </h2>
                   )
-                }
-                
-                return (
-                  <h2 className="text-lg font-semibold text-gray-700 font-inter text-center mt-3">
-                    {!gameState.isHardMode && gameState.attempts.length === 0 ? (
-                      // Before first attempt, show puzzle difficulty info and clue
-                      (() => {
-                        const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                        const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
-                        const nextWord = optimalPath.length >= 2 ? optimalPath[1].toLowerCase() : null
-                        const clue = nextWord ? getWordClue(nextWord) : null
-                        
-                        return (
-                          <>
-                            <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span>
-                            {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
-                          </>
-                        )
-                      })()
-                    ) : (
-                      // After first attempt, show attempts remaining and clue
-                      <>
-                        {isLastAttempt ? (
-                          <span className="text-amber-600 text-xl">Last attempt! </span>
-                        ) : (
-                          <span className="text-gray-800 text-xl">{remainingAttempts} attempts remaining</span>
-                        )}
-                        {!gameState.isHardMode && (() => {
-                          const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
-                          const path = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
-                          if (path.length >= 2) {
-                            const nextWord = path[1].toLowerCase()
-                            const clue = getWordClue(nextWord)
-                            return <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue || 'No clue available'}"</strong></span>
-                          }
-                          return null
-                        })()}
-                      </>
-                    )}
+                })()}
+              </div>
+            )}
+
+            {/* Win Banner Content - Show when solved */}
+            {gameState.gameWon && (
+              <div className="win-banner-content">
+                <div className="text-center mb-4">
+                  <h2 className="text-2xl md:text-3xl font-bold font-poppins">
+                    You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span>
+                    {/* Only show brain animation for optimal solutions */}
+                    {gameState.attempts.length === (() => {
+                      const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                      return optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                    })() && (
+                      <Brain 
+                        className="inline w-8 h-8 text-emerald-600 animate-[brainScale_1s_ease-in-out_2] ml-3 mr-2" 
+                        style={{ animationDelay: '1.5s' }}
+                      />
+                    )} Great Job!
                   </h2>
-                )
-              })()}
-            </div>
-          )}
-          
-          <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}> 
-          {/* WIN BANNER */}
-          <div
-            className={[
-              "mx-auto w-full max-w-[400px]",
-              "overflow-hidden will-change-[max-height,opacity,transform]",
-              "transition-[max-height,opacity,transform] duration-500 ease-out pt-4",
-              gameState.showWinMessage
-                ? "max-h-40 opacity-100 translate-y-0"   // ~160px – adjust as needed
-                : "max-h-0  opacity-0  -translate-y-1 pointer-events-none",
-            ].join(" ")}
-            aria-hidden={!gameState.showWinMessage}
-          >
-            <div className="text-center mb-4">
-              <h2 className="text-2xl md:text-3xl font-bold font-poppins">
-                You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span>
-                {/* Only show brain animation for optimal solutions */}
-                {gameState.attempts.length === (() => {
-                  const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                  return optimalPath.length > 0 ? optimalPath.length - 1 : 0
-                })() && (
-                  <Brain 
-                    className="inline w-8 h-8 text-emerald-600 animate-[brainScale_1s_ease-in-out_2] ml-3 mr-2" 
-                  />
-                )} Great Job!
-              </h2>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
+    
+                      <div ref={puzzleRef} className={`w-full max-w-[400px] px-[10px] puzzle ${gameState.gameWon ? 'puzzle-solved' : ''}`}>
           {/* <div className={`transition-transform duration-900 ease-in-out`} style={{ transform: gameState.showWinMessage ? "translateY(0)" : "translateY(-64px)" }}> */}
           <div className="transition-transform duration-900 ease-in-out">
             <div className="mb-2">
@@ -1532,8 +1532,8 @@ export default function TosswordGame() {
                 </div>
               </div>
 
-              {/* Mobile on-screen keyboard */}
-               <div className="w-full mt-4 md:hidden select-none">
+              {/* On-screen keyboard */}
+               <div className="w-full mt-4 select-none">
                 {[
                   ['Q','W','E','R','T','Y','U','I','O','P'],
                   ['A','S','D','F','G','H','J','K','L'],
