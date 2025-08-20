@@ -1534,8 +1534,8 @@ export default function TosswordGame() {
                         focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid`}
                       maxLength={1}
                       autoComplete="off"
-                      inputMode={typeof window !== 'undefined' && window.innerWidth < 768 ? "none" : "text"}
-                      readOnly={typeof window !== 'undefined' && window.innerWidth < 768}
+                      inputMode={isMobile && useMobileKeyboard ? "text" : (typeof window !== 'undefined' && window.innerWidth < 768 ? "none" : "text")}
+                      readOnly={isMobile && !useMobileKeyboard}
                       aria-label={`Letter ${index + 1}`}
                     />
                   ))}
