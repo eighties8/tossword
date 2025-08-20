@@ -1459,7 +1459,7 @@ export default function TosswordGame() {
                       shouldShowHint && optimalHints.includes(letterIndex);
                     const bgColor =
                       results[letterIndex] === "correct"
-                        ? "bg-emerald-500"
+                        ? "bg-emerald-600"
                         : results[letterIndex] === "present"
                         ? "bg-amber-500"
                         : shouldHighlightCell
