@@ -743,24 +743,9 @@ export default function TosswordGame() {
     }
   }, [gameState.gameWon, gameState.inputLetters, hideAllTooltips])
 
-  // iOS-friendly focus function that prevents scroll
-  const focusIOS = useCallback((el: HTMLInputElement) => {
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (!isIOS) { el.focus(); return; }
-
-    const y = window.scrollY;
-    el.focus({ preventScroll: true });   // iOS 15+ Safari supports this
-    requestAnimationFrame(() => window.scrollTo(0, y)); // belt & suspenders
-  }, [])
-
   const handleFocus = useCallback((index: number) => {
     setGameState((prev) => ({ ...prev, activeIndex: index }))
-    
-    // Use iOS-friendly focus when device keyboard is enabled
-    if (isMobile && useMobileKeyboard && inputRefs.current[index]) {
-      focusIOS(inputRefs.current[index]!)
-    }
-  }, [isMobile, useMobileKeyboard, focusIOS])
+  }, [])
 
   const submitWord = useCallback(() => {
     if (gameState.gameWon) return
@@ -1228,7 +1213,7 @@ export default function TosswordGame() {
   }
 
   return (
-          <div className={`min-h-[100svh] bg-white flex flex-col ${inter.variable} ${poppins.variable}`}>
+          <div className={`min-h-screen bg-white flex flex-col ${inter.variable} ${poppins.variable}`}>
       <header className="bg-white text-gray-900 py-4 px-6 border-b border-gray-300 shadow-sm">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
