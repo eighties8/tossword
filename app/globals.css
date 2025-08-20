@@ -449,21 +449,5 @@ header .logoText span.quirk:after {
   100% { transform: scale(1); filter: drop-shadow(0 0 0px lime); }
 }
 
-/* Mobile viewport fix to prevent keyboard from shifting layout */
-.mobile-viewport-fixed {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-}
 
-/* Ensure puzzle content is scrollable within fixed container */
-.mobile-viewport-fixed .flex-1 {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  height: calc(100vh - 120px) !important; /* Account for header height */
-}
+

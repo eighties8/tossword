@@ -1213,13 +1213,7 @@ export default function TosswordGame() {
   }
 
   return (
-          <div 
-        className={`min-h-screen bg-white flex flex-col ${inter.variable} ${poppins.variable} ${isMobile ? 'mobile-viewport-fixed' : ''}`} 
-        style={{ 
-          height: '100vh', 
-          overflow: 'hidden'
-        }}
-      >
+          <div className={`min-h-screen bg-white flex flex-col ${inter.variable} ${poppins.variable}`}>
       <header className="bg-white text-gray-900 py-4 px-6 border-b border-gray-300 shadow-sm">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
@@ -1762,7 +1756,7 @@ export default function TosswordGame() {
                 <button onClick={() => { const newHintTextAuto = !hintTextAuto; setHintTextAuto(newHintTextAuto); if (typeof window !== 'undefined') { localStorage.setItem('tossword-hint-text-auto', newHintTextAuto.toString()) } }} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hintTextAuto ? "bg-emerald-500" : "bg-gray-400"}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hintTextAuto ? "translate-x-6" : "translate-x-1"}`} />
                 </button>
-              </div>
+                            </div>
               {isMobile && (
                 <div className="flex items-center justify-between">
                   <div>
@@ -1774,6 +1768,7 @@ export default function TosswordGame() {
                   </button>
                 </div>
               )}
+              
               <div className="flex items-center justify-between opacity-50">
                 <div>
                   <h3 className="text-white font-semibold">Dark Theme</h3>
