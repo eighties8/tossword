@@ -1213,7 +1213,13 @@ export default function TosswordGame() {
   }
 
   return (
-    <div className={`min-h-screen bg-white flex flex-col ${inter.variable} ${poppins.variable}`}>
+          <div 
+        className={`min-h-screen bg-white flex flex-col ${inter.variable} ${poppins.variable} ${isMobile ? 'mobile-viewport-fixed' : ''}`} 
+        style={{ 
+          height: '100vh', 
+          overflow: 'hidden'
+        }}
+      >
       <header className="bg-white text-gray-900 py-4 px-6 border-b border-gray-300 shadow-sm">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
