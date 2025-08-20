@@ -1270,7 +1270,7 @@ export default function TosswordGame() {
                         
                         return (
                           <>
-                            <span className="text-gray-800 text-xl">Today's puzzle can be reached in {optimalLength} attempts, you have {optimalLength + 1} available.</span>
+                            <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span>
                             {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
                           </>
                         )
