@@ -1355,7 +1355,7 @@ export default function TosswordGame() {
                 const isAnimating = gameState.animatingLetters.includes(index)
                 
                 return (
-                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
+                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-600 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
                        style={{ 
                          animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms"
                        }}
