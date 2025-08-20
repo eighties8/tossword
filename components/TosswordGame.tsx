@@ -1241,7 +1241,7 @@ export default function TosswordGame() {
           
           {/* Attempt Counter - Only show when not solved */}
           {!gameState.gameWon && (
-            <div className="w-full max-w-[400px] px-[10px]">
+            <div className="w-full max-w-[400px] px-[10px] min-h-[100px] flex flex-col justify-end">
               {(() => {
                 const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
                 const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
@@ -1315,19 +1315,17 @@ export default function TosswordGame() {
             aria-hidden={!gameState.showWinMessage}
           >
             <div className="text-center mb-4">
-              {/* Only show brain animation for optimal solutions */}
-              {gameState.attempts.length === (() => {
-                const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
-                return optimalPath.length > 0 ? optimalPath.length - 1 : 0
-              })() && (
-                <div className="flex items-center justify-center mb-3">
-                  <Brain 
-                    className="w-12 h-12 text-emerald-600 animate-[brainScale_2s_ease-in-out_infinite]" 
-                  />
-                </div>
-              )}
               <h2 className="text-2xl md:text-3xl font-bold font-poppins">
-                You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span> Great Job!
+                You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span>
+                {/* Only show brain animation for optimal solutions */}
+                {gameState.attempts.length === (() => {
+                  const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                  return optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                })() && (
+                  <Brain 
+                    className="inline w-8 h-8 text-emerald-600 animate-[brainScale_1s_ease-in-out_2] ml-3 mr-2" 
+                  />
+                )} Great Job!
               </h2>
             </div>
           </div>
@@ -1654,7 +1652,7 @@ export default function TosswordGame() {
       {/* NEXT PUZZLE COUNTDOWN - Positioned between puzzle and definitions */}
       {gameState.gameWon && (
         <div className="mx-auto w-full max-w-[400px] text-center px-1">
-          <p className="text-sm text-gray-600 font-inter">
+          <p className="text-sm bg-gray-200 rounded-lg p-2 font-inter mx-2 mt-1">
             Next puzzle in <b>{countdown}</b> (EST)
           </p>
         </div>
