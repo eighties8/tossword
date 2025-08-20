@@ -111,6 +111,7 @@ export default function TosswordGame() {
   const isMobile = useIsMobile()
   const [debugMode, setDebugMode] = useState(false)
   const [hintTextAuto, setHintTextAuto] = useState(false)
+  const [useMobileKeyboard, setUseMobileKeyboard] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [showHowToPlay, setShowHowToPlay] = useState(false)
   const [showStats, setShowStats] = useState(false)
@@ -366,9 +367,20 @@ export default function TosswordGame() {
       }
     })()
 
+    const savedUseMobileKeyboard = (() => {
+      if (typeof window === 'undefined') return false
+      try {
+        const v = window.localStorage?.getItem('tossword-use-mobile-keyboard')
+        return v === 'true'
+      } catch {
+        return false
+      }
+    })()
+
     setDebugMode(savedDebugMode)
     debugModeRef.current = savedDebugMode
     setHintTextAuto(savedHintTextAuto)
+    setUseMobileKeyboard(savedUseMobileKeyboard)
     setSettingsLoaded(true)
   }, [])
 
@@ -1308,8 +1320,8 @@ export default function TosswordGame() {
 
             {/* Win Banner Content - Show when solved */}
             {gameState.gameWon && (
-              <div className="win-banner-content">
-                <div className="text-center mb-4">
+              <div className="win-banner-content flex flex-col items-center justify-end pb-0">
+                <div className="text-center mb-0">
                   <h2 className="text-2xl md:text-3xl font-bold font-poppins">
                     You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span>
                     {/* Only show brain animation for optimal solutions */}
@@ -1532,8 +1544,9 @@ export default function TosswordGame() {
                 </div>
               </div>
 
-              {/* On-screen keyboard */}
-               <div className="w-full mt-4 select-none">
+              {/* On-screen keyboard - Only show if not using mobile keyboard or not on mobile */}
+              {(!isMobile || !useMobileKeyboard) && (
+                <div className="w-full mt-4 select-none">
                 {[
                   ['Q','W','E','R','T','Y','U','I','O','P'],
                   ['A','S','D','F','G','H','J','K','L'],
@@ -1627,6 +1640,7 @@ export default function TosswordGame() {
                   </div>
                 ))}
               </div>
+              )}
 
               {/* <div className={["mx-auto overflow-hidden","transition-[max-height,opacity,margin] duration-300 ease-in-out rounded-lg puzzle-error-message", gameState.errorMessage ? "opacity-100 my-2" : "opacity-0 my-0"].join(" ")} aria-live="polite">
                 <div className="h-12 w-full flex items-center justify-center px-4">
@@ -1743,6 +1757,17 @@ export default function TosswordGame() {
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hintTextAuto ? "translate-x-6" : "translate-x-1"}`} />
                 </button>
               </div>
+              {isMobile && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-white font-semibold">Use Device Keyboard</h3>
+                    <p className="text-gray-400 text-sm">Switch to your device's keyboard instead of virtual keyboard</p>
+                  </div>
+                  <button onClick={() => { const newUseMobileKeyboard = !useMobileKeyboard; setUseMobileKeyboard(newUseMobileKeyboard); if (typeof window !== 'undefined') { localStorage.setItem('tossword-use-mobile-keyboard', newUseMobileKeyboard.toString()) } }} className={`relative inline-flex flex-shrink-0 h-6 w-11 items-center rounded-full transition-colors ${useMobileKeyboard ? "bg-emerald-500" : "bg-gray-400"}`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useMobileKeyboard ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </div>
+              )}
               <div className="flex items-center justify-between opacity-50">
                 <div>
                   <h3 className="text-white font-semibold">Dark Theme</h3>
