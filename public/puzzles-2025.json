@@ -1,0 +1,707 @@
+[
+  {
+    "date": "2025-01-01",
+    "root": "SOWED",
+    "mystery": "GIVER"
+  },
+  {
+    "date": "2025-01-02",
+    "root": "SPELL",
+    "mystery": "DIARY"
+  },
+  {
+    "date": "2025-01-03",
+    "root": "MAKER",
+    "mystery": "WRIST"
+  },
+  {
+    "date": "2025-01-04",
+    "root": "SOPPY",
+    "mystery": "LEFTS"
+  },
+  {
+    "date": "2025-01-05",
+    "root": "SYRUP",
+    "mystery": "JACKS"
+  },
+  {
+    "date": "2025-01-06",
+    "root": "FIERY",
+    "mystery": "SINUS"
+  },
+  {
+    "date": "2025-01-07",
+    "root": "HILLS",
+    "mystery": "JIFFY"
+  },
+  {
+    "date": "2025-08-20",
+    "root": "FEIGN",
+    "mystery": "POOCH"
+  },
+  {
+    "date": "2025-08-21",
+    "root": "TANGO",
+    "mystery": "THRUM"
+  },
+  {
+    "date": "2025-08-22",
+    "root": "TRAIT",
+    "mystery": "MYTHS"
+  },
+  {
+    "date": "2025-08-23",
+    "root": "GUSTO",
+    "mystery": "ALLEY"
+  },
+  {
+    "date": "2025-08-24",
+    "root": "GLAZE",
+    "mystery": "WRIST"
+  },
+  {
+    "date": "2025-08-25",
+    "root": "FRUIT",
+    "mystery": "ERROR"
+  },
+  {
+    "date": "2025-08-26",
+    "root": "SLING",
+    "mystery": "FEMUR"
+  },
+  {
+    "date": "2025-08-27",
+    "root": "FROWN",
+    "mystery": "HANGS"
+  },
+  {
+    "date": "2025-08-28",
+    "root": "PEDAL",
+    "mystery": "HAUNT"
+  },
+  {
+    "date": "2025-08-29",
+    "root": "CARRY",
+    "mystery": "WHIFF"
+  },
+  {
+    "date": "2025-08-30",
+    "root": "SWORN",
+    "mystery": "GOODY"
+  },
+  {
+    "date": "2025-08-31",
+    "root": "PLAYS",
+    "mystery": "FLECK"
+  },
+  {
+    "date": "2025-09-01",
+    "root": "OUTGO",
+    "mystery": "NESTS"
+  },
+  {
+    "date": "2025-09-02",
+    "root": "SPOIL",
+    "mystery": "QUEER"
+  },
+  {
+    "date": "2025-09-03",
+    "root": "ROBIN",
+    "mystery": "READY"
+  },
+  {
+    "date": "2025-09-04",
+    "root": "EARTH",
+    "mystery": "RINDS"
+  },
+  {
+    "date": "2025-09-05",
+    "root": "LEAKS",
+    "mystery": "ROWER"
+  },
+  {
+    "date": "2025-09-06",
+    "root": "SOULS",
+    "mystery": "HAPPY"
+  },
+  {
+    "date": "2025-09-07",
+    "root": "GRUEL",
+    "mystery": "DUSTY"
+  },
+  {
+    "date": "2025-09-08",
+    "root": "PINKY",
+    "mystery": "GAUGE"
+  },
+  {
+    "date": "2025-09-09",
+    "root": "DRONE",
+    "mystery": "RUGBY"
+  },
+  {
+    "date": "2025-09-10",
+    "root": "GONER",
+    "mystery": "DUMPY"
+  },
+  {
+    "date": "2025-09-11",
+    "root": "DIVER",
+    "mystery": "HAVOC"
+  },
+  {
+    "date": "2025-09-12",
+    "root": "FIFTH",
+    "mystery": "SLASH"
+  },
+  {
+    "date": "2025-09-13",
+    "root": "MADAM",
+    "mystery": "WAILS"
+  },
+  {
+    "date": "2025-09-14",
+    "root": "CHECK",
+    "mystery": "JAILS"
+  },
+  {
+    "date": "2025-09-15",
+    "root": "RINKS",
+    "mystery": "ZEBRA"
+  },
+  {
+    "date": "2025-09-16",
+    "root": "SOPPY",
+    "mystery": "ASSET"
+  },
+  {
+    "date": "2025-09-17",
+    "root": "LIGHT",
+    "mystery": "SOAPY"
+  },
+  {
+    "date": "2025-09-18",
+    "root": "ANGST",
+    "mystery": "FROTH"
+  },
+  {
+    "date": "2025-09-19",
+    "root": "TARRY",
+    "mystery": "GREBE"
+  },
+  {
+    "date": "2025-09-20",
+    "root": "WARMS",
+    "mystery": "LATCH"
+  },
+  {
+    "date": "2025-09-21",
+    "root": "STILT",
+    "mystery": "AIDER"
+  },
+  {
+    "date": "2025-09-22",
+    "root": "HEAVE",
+    "mystery": "WHISK"
+  },
+  {
+    "date": "2025-09-23",
+    "root": "MAYBE",
+    "mystery": "WELSH"
+  },
+  {
+    "date": "2025-09-24",
+    "root": "RHINO",
+    "mystery": "JOUST"
+  },
+  {
+    "date": "2025-09-25",
+    "root": "SLEEK",
+    "mystery": "AMISS"
+  },
+  {
+    "date": "2025-09-26",
+    "root": "COAST",
+    "mystery": "SNEER"
+  },
+  {
+    "date": "2025-09-27",
+    "root": "RINKS",
+    "mystery": "SUEDE"
+  },
+  {
+    "date": "2025-09-28",
+    "root": "STORY",
+    "mystery": "SHUCK"
+  },
+  {
+    "date": "2025-09-29",
+    "root": "PRIZE",
+    "mystery": "GROWL"
+  },
+  {
+    "date": "2025-09-30",
+    "root": "STRAY",
+    "mystery": "SKULL"
+  },
+  {
+    "date": "2025-10-01",
+    "root": "VERSO",
+    "mystery": "ADMIN"
+  },
+  {
+    "date": "2025-10-02",
+    "root": "STOKE",
+    "mystery": "DRAWL"
+  },
+  {
+    "date": "2025-10-03",
+    "root": "FLASH",
+    "mystery": "TRACE"
+  },
+  {
+    "date": "2025-10-04",
+    "root": "VALVE",
+    "mystery": "DUSKY"
+  },
+  {
+    "date": "2025-10-05",
+    "root": "TESTS",
+    "mystery": "BLAME"
+  },
+  {
+    "date": "2025-10-06",
+    "root": "FOUND",
+    "mystery": "SHIRT"
+  },
+  {
+    "date": "2025-10-07",
+    "root": "MINES",
+    "mystery": "PACKS"
+  },
+  {
+    "date": "2025-10-08",
+    "root": "BUILD",
+    "mystery": "MIRTH"
+  },
+  {
+    "date": "2025-10-09",
+    "root": "WILES",
+    "mystery": "ROTOR"
+  },
+  {
+    "date": "2025-10-10",
+    "root": "SWAPS",
+    "mystery": "DECAL"
+  },
+  {
+    "date": "2025-10-11",
+    "root": "TABLE",
+    "mystery": "GRIND"
+  },
+  {
+    "date": "2025-10-12",
+    "root": "ONION",
+    "mystery": "WRITS"
+  },
+  {
+    "date": "2025-10-13",
+    "root": "SPARE",
+    "mystery": "KNEED"
+  },
+  {
+    "date": "2025-10-14",
+    "root": "HEART",
+    "mystery": "TUCKS"
+  },
+  {
+    "date": "2025-10-15",
+    "root": "UNCLE",
+    "mystery": "WANTS"
+  },
+  {
+    "date": "2025-10-16",
+    "root": "GYPSY",
+    "mystery": "PRIME"
+  },
+  {
+    "date": "2025-10-17",
+    "root": "WEEDS",
+    "mystery": "RETRO"
+  },
+  {
+    "date": "2025-10-18",
+    "root": "YOKEL",
+    "mystery": "TAPER"
+  },
+  {
+    "date": "2025-10-19",
+    "root": "TICKS",
+    "mystery": "GLOWY"
+  },
+  {
+    "date": "2025-10-20",
+    "root": "IDIOM",
+    "mystery": "SMASH"
+  },
+  {
+    "date": "2025-10-21",
+    "root": "JETTY",
+    "mystery": "ZONES"
+  },
+  {
+    "date": "2025-10-22",
+    "root": "GRAPH",
+    "mystery": "SULKS"
+  },
+  {
+    "date": "2025-10-23",
+    "root": "FUNKY",
+    "mystery": "TEARS"
+  },
+  {
+    "date": "2025-10-24",
+    "root": "TRIES",
+    "mystery": "EVADE"
+  },
+  {
+    "date": "2025-10-25",
+    "root": "PLAIN",
+    "mystery": "STAGE"
+  },
+  {
+    "date": "2025-10-26",
+    "root": "ROOMY",
+    "mystery": "SOAPS"
+  },
+  {
+    "date": "2025-10-27",
+    "root": "POURS",
+    "mystery": "JOKED"
+  },
+  {
+    "date": "2025-10-28",
+    "root": "MEANS",
+    "mystery": "ROCKS"
+  },
+  {
+    "date": "2025-10-29",
+    "root": "STOWS",
+    "mystery": "ROVER"
+  },
+  {
+    "date": "2025-10-30",
+    "root": "HANGS",
+    "mystery": "FORGE"
+  },
+  {
+    "date": "2025-10-31",
+    "root": "DREAD",
+    "mystery": "HILLS"
+  },
+  {
+    "date": "2025-11-01",
+    "root": "LATCH",
+    "mystery": "SPIRE"
+  },
+  {
+    "date": "2025-11-02",
+    "root": "ADAPT",
+    "mystery": "WINCH"
+  },
+  {
+    "date": "2025-11-03",
+    "root": "AGENT",
+    "mystery": "WOLDS"
+  },
+  {
+    "date": "2025-11-04",
+    "root": "AFTER",
+    "mystery": "SLOTH"
+  },
+  {
+    "date": "2025-11-05",
+    "root": "FRILL",
+    "mystery": "PLATE"
+  },
+  {
+    "date": "2025-11-06",
+    "root": "PLATE",
+    "mystery": "BASIS"
+  },
+  {
+    "date": "2025-11-07",
+    "root": "PROSE",
+    "mystery": "MURAL"
+  },
+  {
+    "date": "2025-11-08",
+    "root": "THIGH",
+    "mystery": "DRILL"
+  },
+  {
+    "date": "2025-11-09",
+    "root": "ROADS",
+    "mystery": "GIANT"
+  },
+  {
+    "date": "2025-11-10",
+    "root": "SWAIN",
+    "mystery": "REACH"
+  },
+  {
+    "date": "2025-11-11",
+    "root": "WENCH",
+    "mystery": "LIGHT"
+  },
+  {
+    "date": "2025-11-12",
+    "root": "WRING",
+    "mystery": "LAKES"
+  },
+  {
+    "date": "2025-11-13",
+    "root": "DRUNK",
+    "mystery": "ROLES"
+  },
+  {
+    "date": "2025-11-14",
+    "root": "BROKE",
+    "mystery": "MARCH"
+  },
+  {
+    "date": "2025-11-15",
+    "root": "WANES",
+    "mystery": "OTHER"
+  },
+  {
+    "date": "2025-11-16",
+    "root": "TRUSS",
+    "mystery": "TOILE"
+  },
+  {
+    "date": "2025-11-17",
+    "root": "WHINY",
+    "mystery": "BROAD"
+  },
+  {
+    "date": "2025-11-18",
+    "root": "WRONG",
+    "mystery": "STALK"
+  },
+  {
+    "date": "2025-11-19",
+    "root": "MEDIA",
+    "mystery": "SERVE"
+  },
+  {
+    "date": "2025-11-20",
+    "root": "GOLEM",
+    "mystery": "STEEP"
+  },
+  {
+    "date": "2025-11-21",
+    "root": "ALERT",
+    "mystery": "DUSKY"
+  },
+  {
+    "date": "2025-11-22",
+    "root": "PLAYS",
+    "mystery": "VOICE"
+  },
+  {
+    "date": "2025-11-23",
+    "root": "MATTE",
+    "mystery": "BLIND"
+  },
+  {
+    "date": "2025-11-24",
+    "root": "RABBI",
+    "mystery": "MEDIC"
+  },
+  {
+    "date": "2025-11-25",
+    "root": "DRINK",
+    "mystery": "TABLE"
+  },
+  {
+    "date": "2025-11-26",
+    "root": "WHOSE",
+    "mystery": "GOLLY"
+  },
+  {
+    "date": "2025-11-27",
+    "root": "FIGHT",
+    "mystery": "SCALE"
+  },
+  {
+    "date": "2025-11-28",
+    "root": "FARCE",
+    "mystery": "PLUMS"
+  },
+  {
+    "date": "2025-11-29",
+    "root": "GRABS",
+    "mystery": "QUILT"
+  },
+  {
+    "date": "2025-11-30",
+    "root": "SCRUB",
+    "mystery": "INDIE"
+  },
+  {
+    "date": "2025-12-01",
+    "root": "SPLAT",
+    "mystery": "VIGIL"
+  },
+  {
+    "date": "2025-12-02",
+    "root": "LOOKS",
+    "mystery": "DWELT"
+  },
+  {
+    "date": "2025-12-03",
+    "root": "PANDA",
+    "mystery": "GAVEL"
+  },
+  {
+    "date": "2025-12-04",
+    "root": "PITHY",
+    "mystery": "PLANS"
+  },
+  {
+    "date": "2025-12-05",
+    "root": "OZONE",
+    "mystery": "MYTHS"
+  },
+  {
+    "date": "2025-12-06",
+    "root": "OPERA",
+    "mystery": "SUMPS"
+  },
+  {
+    "date": "2025-12-07",
+    "root": "DENSE",
+    "mystery": "SLITS"
+  },
+  {
+    "date": "2025-12-08",
+    "root": "FORCE",
+    "mystery": "UTILE"
+  },
+  {
+    "date": "2025-12-09",
+    "root": "SMOKE",
+    "mystery": "POUCH"
+  },
+  {
+    "date": "2025-12-10",
+    "root": "EXILE",
+    "mystery": "ROMAN"
+  },
+  {
+    "date": "2025-12-11",
+    "root": "SNOBS",
+    "mystery": "SILLY"
+  },
+  {
+    "date": "2025-12-12",
+    "root": "DUTCH",
+    "mystery": "SLANT"
+  },
+  {
+    "date": "2025-12-13",
+    "root": "SPOIL",
+    "mystery": "TITAN"
+  },
+  {
+    "date": "2025-12-14",
+    "root": "PULLS",
+    "mystery": "SCARE"
+  },
+  {
+    "date": "2025-12-15",
+    "root": "RUSTY",
+    "mystery": "SPOOL"
+  },
+  {
+    "date": "2025-12-16",
+    "root": "ANNEX",
+    "mystery": "THUDS"
+  },
+  {
+    "date": "2025-12-17",
+    "root": "THREE",
+    "mystery": "SPURS"
+  },
+  {
+    "date": "2025-12-18",
+    "root": "WRONG",
+    "mystery": "HAUNT"
+  },
+  {
+    "date": "2025-12-19",
+    "root": "BELOW",
+    "mystery": "CURLY"
+  },
+  {
+    "date": "2025-12-20",
+    "root": "WRONG",
+    "mystery": "SIXTH"
+  },
+  {
+    "date": "2025-12-21",
+    "root": "HOLES",
+    "mystery": "CHAIN"
+  },
+  {
+    "date": "2025-12-22",
+    "root": "QUOTA",
+    "mystery": "WARES"
+  },
+  {
+    "date": "2025-12-23",
+    "root": "EVICT",
+    "mystery": "TONAL"
+  },
+  {
+    "date": "2025-12-24",
+    "root": "ROGUE",
+    "mystery": "LASTS"
+  },
+  {
+    "date": "2025-12-25",
+    "root": "STOOL",
+    "mystery": "GIANT"
+  },
+  {
+    "date": "2025-12-26",
+    "root": "LUCKY",
+    "mystery": "ROPES"
+  },
+  {
+    "date": "2025-12-27",
+    "root": "ROGUE",
+    "mystery": "CHEAP"
+  },
+  {
+    "date": "2025-12-28",
+    "root": "KNELT",
+    "mystery": "VILLA"
+  },
+  {
+    "date": "2025-12-29",
+    "root": "WRING",
+    "mystery": "SEEDS"
+  },
+  {
+    "date": "2025-12-30",
+    "root": "HEART",
+    "mystery": "SPOON"
+  },
+  {
+    "date": "2025-12-31",
+    "root": "SPIFF",
+    "mystery": "NECKS"
+  }
+]
