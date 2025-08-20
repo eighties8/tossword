@@ -1353,9 +1353,9 @@ export default function TosswordGame() {
                 const isLastLetterToReveal = gameState.revealedLetters.filter(r => r).length === 4 && !gameState.revealedLetters[index]
                 const shouldFlip = gameState.newlyFlippedLetters.includes(index) && !isLastLetterToReveal
                 const isAnimating = gameState.animatingLetters.includes(index)
-                
+                // FLIP COLOR BG-EMERALD-600
                 return (
-                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "opacity-50 bg-emerald-600"} ${shouldFlip ? "flip-animation" : ""}`}
+                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-600 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "opacity-100 bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
                        style={{ 
                          animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms"
                        }}
@@ -1363,10 +1363,11 @@ export default function TosswordGame() {
                        onMouseEnter={() => { if (gameState.gameWon) return; const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.remove('hidden') }}
                        onMouseLeave={() => { const tooltip = document.getElementById(`mystery-letter-tooltip-${index}`); if (tooltip) tooltip.classList.add('hidden') }}>
                     <span className={`${isLetterFound && !isAnimating ? "text-white text-lg font-bold font-inter leading-none mystery-letter-reveal" : "text-white text-2xl font-bold leading-none"} ${isAnimating ? "animate-[letterFadeIn_400ms_ease-in_200ms_forwards]" : ""}`}>{isLetterFound && !isAnimating ? letter : "\u2022"}</span>
-                    <div id={`mystery-letter-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
+                    {/* TOOLTIP */}
+                    {/* <div id={`mystery-letter-tooltip-${index}`} className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-center break-words">
                       {isLetterFound ? `Letter "${letter}" found in your guesses` : "Mystery letter - keep guessing to reveal"}
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                    </div>
+                    </div> */}
                   </div>
                 )
               })}
@@ -1459,7 +1460,7 @@ export default function TosswordGame() {
                       shouldShowHint && optimalHints.includes(letterIndex);
                     const bgColor =
                       results[letterIndex] === "correct"
-                        ? "bg-emerald-500"
+                        ? "bg-emerald-600" // FLIP COLOR guess row BG-EMERALD-600
                         : results[letterIndex] === "present"
                         ? "bg-amber-500"
                         : shouldHighlightCell
