@@ -1355,7 +1355,7 @@ export default function TosswordGame() {
                 const isAnimating = gameState.animatingLetters.includes(index)
                 
                 return (
-                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-600 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
+                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-500 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "bg-emerald-600"} ${shouldFlip ? "flip-animation" : ""}`}
                        style={{ 
                          animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms"
                        }}
@@ -1459,7 +1459,7 @@ export default function TosswordGame() {
                       shouldShowHint && optimalHints.includes(letterIndex);
                     const bgColor =
                       results[letterIndex] === "correct"
-                        ? "bg-emerald-600"
+                        ? "bg-emerald-500"
                         : results[letterIndex] === "present"
                         ? "bg-amber-500"
                         : shouldHighlightCell
@@ -1735,7 +1735,7 @@ export default function TosswordGame() {
                   <h3 className="text-white font-semibold">Hard Mode</h3>
                   <p className="text-gray-400 text-sm">No hints - pure challenge!</p>
                 </div>
-                <button onClick={() => setGameState((prev) => ({ ...prev, isHardMode: !prev.isHardMode }))} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gameState.isHardMode ? "bg-emerald-600" : "bg-gray-400"}`}>
+                <button onClick={() => setGameState((prev) => ({ ...prev, isHardMode: !prev.isHardMode }))} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gameState.isHardMode ? "bg-emerald-500" : "bg-gray-400"}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${gameState.isHardMode ? "translate-x-6" : "translate-x-1"}`} />
                 </button>
               </div>
