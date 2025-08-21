@@ -131,7 +131,7 @@ export const VALID_WORDS = new Set([
   "round", "rouse", "route", "rover", "rowdy", "rower", "royal", "ruddy", "ruder", "rugby",
   "ruins", "ruled", "ruler", "rules", "rural", "rusty", "sadly", "safer", "saint", "salad",
   "sally", "salon", "salsa", "salts", "salty", "salve", "salvo", "sands", "sandy", "satin",
-  "satyr", "sauce", "saucy", "saucy", "sauna", "saved", "saves", "savor", "savvy", "scald",
+  "sauce", "saucy", "saucy", "sauna", "saved", "saves", "savor", "savvy", "scald",
   "scale", "scalp", "scare", "scarf", "scary", "scene", "scent", "scoff", "scold", "scoop",
   "scope", "score", "scorn", "scout", "scowl", "scrap", "screw", "scrub", "scrum", "scuba",
   "sedan", "seeds", "seedy", "segue", "seize", "sense", "sepia", "serif", "serum", "serve",

@@ -11,7 +11,7 @@ import { useDailyPuzzle } from "@/lib/useDailyPuzzle"
 import cluesMap from "@/lib/clues.json" // private clues, stays in /lib
 
 // single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
-const SINGLE_PUZZLE_MODE = true
+const SINGLE_PUZZLE_MODE = false
 
 // Brain component with continuous breathing animation
 const BrainWithPulse = () => {
@@ -99,7 +99,7 @@ const getWordDefinition = (word: string): { pronunciation: string; definition: s
 }
 
 export default function TosswordGame() {
-  const { loading: dailyLoading, puzzle: dailyPuzzle } = useDailyPuzzle() // Daily puzzle (root/mystery) source
+  const { loading: dailyLoading, puzzle: dailyPuzzle, error: dailyError } = useDailyPuzzle() // Daily puzzle (root/mystery) source
   const isMobile = useIsMobile()
   const [debugMode, setDebugMode] = useState(false)
   const [hintTextAuto, setHintTextAuto] = useState(false)
@@ -339,7 +339,7 @@ export default function TosswordGame() {
     })
 
     setIsLoading(false)
-  }, [dailyPuzzle])
+  }, [dailyPuzzle, gameState.isHardMode])
 
   useEffect(() => {
     const savedDebugMode = (() => {
@@ -389,8 +389,12 @@ export default function TosswordGame() {
   useEffect(() => {
     if (!settingsLoaded) return
     if (!SINGLE_PUZZLE_MODE && dailyLoading) return
+    if (!SINGLE_PUZZLE_MODE && dailyError) {
+      // If there's an error loading daily puzzle, use fallback
+      console.error('Failed to load daily puzzle:', dailyError)
+    }
     initializeGame()
-  }, [settingsLoaded, dailyLoading, dailyPuzzle, initializeGame])
+  }, [settingsLoaded, dailyLoading, dailyPuzzle, dailyError, initializeGame])
 
   // Get word definitions when game is won
   useEffect(() => {
@@ -1650,6 +1654,13 @@ export default function TosswordGame() {
                          }
                       }
                       
+                      // Check if this letter is currently entered in input cells
+                      const isCurrentlyEntered = gameState.inputLetters.includes(k.toUpperCase())
+                      let outlineClass = ''
+                      if (isCurrentlyEntered && k.length === 1) {
+                        outlineClass = 'ring-2 ring-gray-500 ring-inset'
+                      }
+                      
                       return (
                         <button
                           key={k}
@@ -1665,6 +1676,7 @@ export default function TosswordGame() {
                           className={[
                             'h-[60px] rounded-md text-sm font-medium',
                             keyStyle,
+                            outlineClass,
                             'active:opacity-80',
                             k === 'ENTER' ? 'px-3 flex-1 max-w-[90px]' : k === 'BACKSPACE' ? 'px-3 flex-1 max-w-[120px] flex items-center justify-center' : 'flex-1'
                           ].join(' ')}
