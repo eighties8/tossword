@@ -7,6 +7,8 @@ import { Inter, Poppins } from "next/font/google"
 import { VALID_WORDS, bidirectionalBFS, neighborsOneChangeReorder } from "@/lib/dictionary"
 import wordDefinitionsData from "@/lib/wordDefinitions.json"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useDailyPuzzle } from "@/lib/useDailyPuzzle"
+import cluesMap from "@/lib/clues.json" // private clues, stays in /lib
 
 // single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
 const SINGLE_PUZZLE_MODE = true
@@ -66,27 +68,7 @@ interface GameState {
   showDefinitions: boolean
 }
 
-const PUZZLES = [
-  { root: "STORM", mystery: "LIGHT" },
-  { root: "GAMES", mystery: "FRONT" },
-  { root: "CEDAR", mystery: "LIGHT" },
-  { root: "MINES", mystery: "WORTH" },
-  { root: "BREAD", mystery: "HONEY" },
-  { root: "CUMIN", mystery: "DEPTH" },
-  { root: "ELFIN", mystery: "GRASS" },
-  { root: "SWORD", mystery: "BEACH" },
-  { root: "HOUSE", mystery: "MAGIC" },
-  { root: "OCEAN", mystery: "FIELD" },
-  { root: "SMILE", mystery: "GRIME" },
-]
 
-const HARD_PUZZLES = [
-  { root: "MAGIC", mystery: "FRONT" },
-  { root: "DANCE", mystery: "LIGHT" },
-  { root: "MUSIC", mystery: "WORTH" },
-  { root: "FIELD", mystery: "GRASS" },
-  { root: "MUSIC", mystery: "DEPTH" },
-]
 
 // Function to get word definitions from local file
 const getWordDefinition = (word: string): { pronunciation: string; definition: string } | null => {
@@ -108,6 +90,7 @@ const getWordDefinition = (word: string): { pronunciation: string; definition: s
 }
 
 export default function TosswordGame() {
+  const { loading: dailyLoading, puzzle: dailyPuzzle } = useDailyPuzzle() // Daily puzzle (root/mystery) source
   const isMobile = useIsMobile()
   const [debugMode, setDebugMode] = useState(false)
   const [hintTextAuto, setHintTextAuto] = useState(false)
@@ -165,6 +148,7 @@ export default function TosswordGame() {
   const confettiFiredRef = useRef(false)
   const hasPrimedFocusRef = useRef(false)
   const focusTimersRef = useRef<number[]>([])
+  const animatedLettersRef = useRef<Set<number>>(new Set())
 
   const launchConfettiOverPuzzle = useCallback((durationMs: number = 1600) => {
     if (typeof window === 'undefined') return
@@ -282,19 +266,26 @@ export default function TosswordGame() {
     }))
     solutionPathCache.current.clear()
     hintsCache.current.clear()
+    animatedLettersRef.current.clear()
     setTimeout(() => {
       inputRefs.current[0]?.focus()
     }, 100)
   }, [])
 
   const initializeGame = useCallback(() => {
-    let puzzle
-    if (SINGLE_PUZZLE_MODE) {
+    let puzzle: { root: string; mystery: string }
+
+    if (!SINGLE_PUZZLE_MODE && dailyPuzzle?.root && dailyPuzzle?.mystery) {
+      puzzle = { root: dailyPuzzle.root, mystery: dailyPuzzle.mystery }
+    } else if (SINGLE_PUZZLE_MODE) {
+      // puzzle = { root: "GLAZE", mystery: "WRIST" }
+      // puzzle = { root: "BREAD", mystery: "HONEY" }
       puzzle = { root: "OCEAN", mystery: "FIELD" }
+      // puzzle = { root: "FEIGN", mystery: "POOCH" }
+      // puzzle = { root: "TANGO", mystery: "THRUM" }
     } else {
-      puzzle = gameState.isHardMode
-        ? HARD_PUZZLES[Math.floor(Math.random() * HARD_PUZZLES.length)]
-        : PUZZLES[Math.floor(Math.random() * PUZZLES.length)]
+      // Fallback puzzle if no daily puzzle and not in single puzzle mode
+      puzzle = { root: "OCEAN", mystery: "FIELD" }
     }
 
     setSelectedPuzzle(puzzle)
@@ -304,6 +295,7 @@ export default function TosswordGame() {
 
     solutionPathCache.current.clear()
     hintsCache.current.clear()
+    animatedLettersRef.current.clear()
 
     setGameState({
       mysteryWord,
@@ -338,7 +330,7 @@ export default function TosswordGame() {
     })
 
     setIsLoading(false)
-  }, [gameState.isHardMode])
+  }, [dailyPuzzle])
 
   useEffect(() => {
     const savedDebugMode = (() => {
@@ -386,10 +378,10 @@ export default function TosswordGame() {
 
   // Reinitialize game when single puzzle mode changes
   useEffect(() => {
-    if (settingsLoaded) {
-      initializeGame()
-    }
-  }, [settingsLoaded, initializeGame])
+    if (!settingsLoaded) return
+    if (!SINGLE_PUZZLE_MODE && dailyLoading) return
+    initializeGame()
+  }, [settingsLoaded, dailyLoading, dailyPuzzle, initializeGame])
 
   // Get word definitions when game is won
   useEffect(() => {
@@ -632,6 +624,10 @@ export default function TosswordGame() {
   }, [])
 
   const updateRevealedLetters = useCallback((guess: string) => {
+    console.log('🔄 updateRevealedLetters called with:', guess)
+    console.log('🔄 Current newlyFlippedLetters:', gameState.newlyFlippedLetters)
+    console.log('🔄 Current animatingLetters:', gameState.animatingLetters)
+    
     const results = checkWord(guess, gameState.mysteryWord)
     const newRevealed = [...gameState.revealedLetters]
     const newlyRevealed: number[] = []
@@ -643,7 +639,8 @@ export default function TosswordGame() {
     guessLetters.forEach((guessLetter, guessIndex) => {
       // Find all positions in mystery word where this letter appears
       mysteryLetters.forEach((mysteryLetter, mysteryIndex) => {
-        if (guessLetter === mysteryLetter && !newRevealed[mysteryIndex]) {
+        if (guessLetter === mysteryLetter && 
+            !newRevealed[mysteryIndex]) {
           // This letter is newly revealed in the mystery word at this position
           newlyRevealed.push(mysteryIndex)
           // Don't reveal the letter yet - start animation first
@@ -651,13 +648,21 @@ export default function TosswordGame() {
       })
     })
     
+    console.log('🔄 Newly revealed indices:', newlyRevealed)
+    console.log('🔄 Already animated letters:', Array.from(animatedLettersRef.current))
+    
     if (newlyRevealed.length > 0) {
       // Check if this is the winning word - if so, don't animate the final letter
       const isWinningWord = guess.toLowerCase() === gameState.mysteryWord.toLowerCase()
       const lettersToAnimate = isWinningWord ? newlyRevealed.slice(0, -1) : newlyRevealed
       
+      console.log('🔄 Letters to animate:', lettersToAnimate)
+      console.log('🔄 Is winning word:', isWinningWord)
+      
       if (lettersToAnimate.length > 0) {
-        // Start animation for non-final letters
+        // Start animation for non-final letters - use a single atomic state update
+        console.log('🔄 Set newlyFlippedLetters to:', lettersToAnimate)
+        
         setGameState((prev) => ({ 
           ...prev, 
           newlyFlippedLetters: lettersToAnimate,
@@ -677,6 +682,7 @@ export default function TosswordGame() {
         
         // Clear animation classes after animation completes
         setTimeout(() => {
+          console.log('🔄 Clearing animation classes')
           setGameState((prev) => ({ 
             ...prev, 
             newlyFlippedLetters: [],
@@ -786,7 +792,26 @@ export default function TosswordGame() {
       return () => clearTimeout(timer)
     }
     const newAttempts = [...gameState.attempts, word]
-    const isWon = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+    
+    // Check if puzzle is solved by seeing if all mystery letters are revealed
+    // Simulate what the revealed letters will be after this word
+    const tempRevealed = [...gameState.revealedLetters]
+    const guessLetters = word.toUpperCase().split("")
+    const mysteryWordLetters = gameState.mysteryWord.toUpperCase().split("")
+    
+    guessLetters.forEach((guessLetter, guessIndex) => {
+      // Find all positions in mystery word where this letter appears
+      mysteryWordLetters.forEach((mysteryLetter, mysteryIndex) => {
+        if (guessLetter === mysteryLetter && !tempRevealed[mysteryIndex]) {
+          tempRevealed[mysteryIndex] = true
+        }
+      })
+    })
+    
+    // Win condition: all mystery letters are revealed OR exact match
+    const allLettersRevealed = tempRevealed.every(revealed => revealed)
+    const exactMatch = word.toUpperCase() === gameState.mysteryWord.toUpperCase()
+    const isWon = allLettersRevealed || exactMatch
     
     // Debug mode: always show current solvable word progression
     if (debugMode) {
@@ -857,6 +882,10 @@ export default function TosswordGame() {
       setGameState((prev) => ({ ...prev, hideAttemptsDuringReveal: true }))
       setTimeout(() => { setGameState((prev) => ({ ...prev, showWinAnimation: true })) }, 100)
       setTimeout(() => { setGameState((prev) => ({ ...prev, hideAttemptsDuringReveal: false })) }, 1900)
+      // Show all rows for regular win (not just final-letter solve)
+      setTimeout(() => {
+        setGameState((prev) => ({ ...prev, winRevealRowsShown: newAttempts.length }))
+      }, 2000) // After win animation completes
     } else {
       setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
     }
@@ -993,56 +1022,14 @@ export default function TosswordGame() {
   }, [])
 
   const getWordClue = useCallback((word: string): string | null => {
-    const clues: Record<string, string> = {
-      "sinew": "tendon", "twine": "string", "write": "compose", "tower": "building", "crowd": "group",
-      "chord": "notes", "chard": "vegetable", "reach": "extend", "gamer": "player",
-      "aback": "surprised", "abase": "humiliate", "abate": "lessen", "abbey": "monastery", "abbot": "monk",
-      "abhor": "hate", "abide": "endure", "abled": "capable", "abode": "home", "abort": "cancel",
-      "about": "concerning", "above": "overhead", "abuse": "mistreat", "abyss": "chasm", "acorn": "nut",
-      "acrid": "bitter", "actor": "performer", "acute": "sharp", "adage": "proverb", "adapt": "adjust",
-      "adept": "skilled", "admin": "manager", "admit": "confess", "adobe": "brick", "adopt": "embrace",
-      "adore": "love", "adorn": "decorate", "adult": "grown", "affix": "attach", "afire": "burning",
-      "afoot": "happening", "afoul": "conflicting", "after": "following", "again": "repeatedly",
-      "agape": "open", "agate": "stone", "agent": "representative", "agile": "nimble", "aging": "maturing",
-      "aglow": "shining", "agony": "pain", "agora": "marketplace", "agree": "consent", "ahead": "forward",
-      "aider": "helper", "aisle": "passage", "alarm": "warning", "album": "collection", "alert": "vigilant",
-      "algae": "seaweed", "alibi": "excuse", "align": "arrange", "alike": "similar", "alive": "living",
-      "allay": "soothe", "alley": "pathway", "allot": "assign", "allow": "permit", "alloy": "mixture",
-      "aloft": "airborne", "along": "together", "aloof": "distant", "aloud": "audible", "alpha": "first",
-      "altar": "shrine", "alter": "change", "amass": "gather", "amaze": "astonish", "amber": "resin",
-      "amble": "stroll", "amend": "improve", "amiss": "wrong", "amity": "friendship", "among": "between",
-      "ample": "sufficient", "amply": "adequately", "amuse": "entertain", "angel": "messenger", "angle": "corner",
-      "angry": "furious", "angst": "anxiety", "anime": "cartoon", "ankle": "joint", "annex": "addition",
-      "annoy": "irritate", "annul": "cancel", "anode": "electrode", "antic": "prank", "anvil": "tool",
-      "aorta": "artery", "apart": "separate", "aphid": "insect", "aping": "copying", "apnea": "breathing",
-      "apple": "fruit", "apply": "use", "arena": "stadium", "argue": "dispute", "arise": "emerge",
-      "array": "arrangement", "aside": "separately", "asset": "property", "audio": "sound", "audit": "examination",
-      "avoid": "evade", "await": "wait", "awake": "conscious", "award": "prize", "aware": "conscious",
-      "awful": "terrible", "axiom": "principle", "store": "save", "twins": "pair",
-
-      "storm": "tempest", "light": "illumination", "games": "play", "front": "foremost",
-      "bread": "food", "honey": "sweet", "cumin": "spice", "depth": "profundity",
-      "sword": "weapon", "beach": "shore", "anger": "rage", "goner": "finished", "tenor": "voice",
-      "break": "shatter", "brake": "stop", "brave": "courageous", "grave": "serious", "mince": "chop",
-      "medic": "doctor", "edict": "decree", "tepid": "lukewarm",
-
-      "triad": "group", "third": "ordinal", "girth": "circumference", "ridge": "crest", "tiger": "feline",
-      "cedar": "tree", "worth": "value",
-
-      "wards": "guards", "shard": "fragment", "heard": "listened",
-      "morse": "code",
-      "swear": "curse", "share": "divide",
-      "elfin": "fairy",
-      "manic": "crazy", "meant": "intended", "tamed": "domesticated", "short": "brief", "shirt": "garment",
-      "fling": "throw", "sling": "strap", "glans": "tip", "glass": "transparent", "grass": "lawn",
-      "smear": "spread", "rates": "prices", "roast": "cook", "snort": "sneer",
-      "house": "home", "mouse": "rodent", "males": "men", "email": "message", "image": "picture", "magic": "spell",
-      "serum": "liquid", "miser": "stingy", "grime": "dirt",
-      "ocean": "sea", "alone": "solitary", "alien": "foreign", "ideal": "exemplary", "field": "meadow",
-      "yearn": "desire", "hyena": "animal", "ready": "prepared", "denim": "fabric", "pined": "longed",
-      "space": "area", "place": "location", "smile": "grin", "stile": "step",
+    if (!word) return null
+    try {
+      // keys in clues.json are lowercase
+      const val = (cluesMap as Record<string, string>)[word.toLowerCase()]
+      return (typeof val === "string" && val.trim()) ? val.trim() : null
+    } catch { 
+      return null 
     }
-    return clues[word] || null
   }, [])
 
   const foundLetters = useMemo(() => {
@@ -1347,15 +1334,20 @@ export default function TosswordGame() {
             <div className="mx-auto flex justify-center gap-2 mb-2">
               {gameState.mysteryWord.split("").map((letter, index) => {
                 const isHeldForFinalReveal = gameState.finalRevealIndex === index
-                const isLetterFoundGeneric = gameState.attempts.some(attempt => attempt.includes(letter))
+                const isLetterFoundGeneric = gameState.revealedLetters[index]
                 const isLetterFound = !isHeldForFinalReveal && isLetterFoundGeneric
                 // Don't flip the last letter that gets revealed - it will flip during the final win sequence
                 const isLastLetterToReveal = gameState.revealedLetters.filter(r => r).length === 4 && !gameState.revealedLetters[index]
-                const shouldFlip = gameState.newlyFlippedLetters.includes(index) && !isLastLetterToReveal
+                const shouldFlip = gameState.newlyFlippedLetters.includes(index) && !isLastLetterToReveal && !animatedLettersRef.current.has(index)
+                if (shouldFlip) {
+                  console.log('🎭 Applying flip animation to letter index:', index, 'letter:', letter, 'newlyFlippedLetters:', gameState.newlyFlippedLetters)
+                  // Mark this letter as animated to prevent future renders from applying the class again
+                  animatedLettersRef.current.add(index)
+                }
                 const isAnimating = gameState.animatingLetters.includes(index)
                 // FLIP COLOR BG-EMERALD-600
                 return (
-                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-600 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[spinX_1s_ease-in-out_1]" : ""}` : "opacity-100 bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
+                  <div key={index} className={`w-full aspect-square rounded-lg puzzle-grid flex items-center justify-center ${isLetterFound ? `relative bg-emerald-600 ${gameState.showWinAnimation && gameState.gameWon ? "animate-[flipReveal_0.6s_ease-in-out_1]" : ""}` : "opacity-100 bg-emerald-500"} ${shouldFlip ? "flip-animation" : ""}`}
                        style={{ 
                          animationDelay: gameState.showWinAnimation && gameState.gameWon ? `${index * 200}ms` : "0ms"
                        }}
@@ -1412,7 +1404,7 @@ export default function TosswordGame() {
             ) : null}
           </div>
 
-          {(gameState.gameWon ? [gameState.rootWord, ...gameState.attempts] : gameState.attempts.slice(-1)).map((attempt, sliceIndex) => {
+          {(gameState.gameWon ? [...gameState.attempts] : gameState.attempts.slice(-1)).map((attempt, sliceIndex) => {
             const actualIndex = gameState.gameWon ? sliceIndex : gameState.attempts.length - 1
             const isLastAttempt = true
             const lastAttemptRowIndex = gameState.gameWon ? gameState.attempts.length : gameState.attempts.length - 1
@@ -1458,14 +1450,17 @@ export default function TosswordGame() {
                   {attempt.split("").map((letter, letterIndex) => {
                     const shouldHighlightCell =
                       shouldShowHint && optimalHints.includes(letterIndex);
-                    const bgColor =
-                      results[letterIndex] === "correct"
-                        ? "bg-emerald-600" // FLIP COLOR guess row BG-EMERALD-600
-                        : results[letterIndex] === "present"
-                        ? "bg-amber-500"
-                        : shouldHighlightCell
-                        ? "bg-[#aaaaaa]"
-                        : "bg-gray-400";
+                    // Only show green/yellow highlighting after game is won
+                    // During gameplay, only show gray tiles for submitted words
+                    const bgColor = gameState.gameWon
+                      ? (results[letterIndex] === "correct"
+                          ? "bg-emerald-600" // Green for correct position
+                          : results[letterIndex] === "present"
+                          ? "bg-amber-500"   // Yellow for present but wrong position
+                          : shouldHighlightCell
+                          ? "bg-[#aaaaaa]"   // Gray for hint highlighting
+                          : "bg-gray-400")   // Default gray
+                      : "bg-gray-400";       // Always gray during gameplay
                     const borderColor = "";
             
                     return (
@@ -1479,7 +1474,7 @@ export default function TosswordGame() {
                           gameState.showWinAnimation &&
                           isCompleted &&
                           gameState.gameWon === false
-                            ? "animate-[spinX_1s_ease-in-out_1]"
+                            ? "animate-[flipReveal_0.6s_ease-in-out_1]"
                             : ""
                         } relative`}
                         style={{
@@ -1519,27 +1514,37 @@ export default function TosswordGame() {
               
               <div className="w-full mx-auto">
                 <div className="grid grid-cols-5 gap-2">
-                  {gameState.inputLetters.map((letter, index) => (
-                    <input
-                      key={index}
-                      id={`guess-${index}`}
-                      name={`guess-${index}`}
-                      ref={(el) => { inputRefs.current[index] = el }}
-                      type="text"
-                      value={letter}
-                      onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      onFocus={() => handleFocus(index)}
-                      className={`w-full aspect-square rounded-lg bg-transparent border border-gray-400 
-                        text-center text-[clamp(14px,4.5vw,20px)] font-bold text-gray-900
-                        focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid`}
-                      maxLength={1}
-                      autoComplete="off"
-                      inputMode={isMobile && useMobileKeyboard ? "text" : "none"}
-                      readOnly={isMobile && !useMobileKeyboard}
-                      aria-label={`Letter ${index + 1}`}
-                    />
-                  ))}
+                  {gameState.inputLetters.map((letter, index) => {
+                    const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+                    const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
+                    const maxAttempts = optimalLength + 1
+                    const remainingAttempts = maxAttempts - gameState.attempts.length
+                    const isOutOfAttempts = remainingAttempts <= 0
+                    
+                    return (
+                      <input
+                        key={index}
+                        id={`guess-${index}`}
+                        name={`guess-${index}`}
+                        ref={(el) => { inputRefs.current[index] = el }}
+                        type="text"
+                        value={letter}
+                        onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
+                        onKeyDown={(e) => handleKeyDown(e, index)}
+                        onFocus={() => handleFocus(index)}
+                        disabled={isOutOfAttempts}
+                        className={`w-full aspect-square rounded-lg bg-transparent border border-gray-400 
+                          text-center text-[clamp(14px,4.5vw,20px)] font-bold text-gray-900
+                          focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid
+                          ${isOutOfAttempts ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        maxLength={1}
+                        autoComplete="off"
+                        inputMode={isMobile && useMobileKeyboard ? "text" : "none"}
+                        readOnly={isMobile && !useMobileKeyboard}
+                        aria-label={`Letter ${index + 1}`}
+                      />
+                    )
+                  })}
 
 
                 </div>
@@ -1718,6 +1723,37 @@ export default function TosswordGame() {
           </div>
         </div>
       )}
+
+      {/* SOLUTION PATH - Displayed after word definitions */}
+      {/* {gameState.gameWon && (
+        <div className="mx-auto w-full max-w-[400px] px-3 animate-fade-in mb-20 md:mb-20 mt-3">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <h3 className="text-lg font-bold font-inter text-gray-900 mb-3 text-center">
+              Your Solution Path
+            </h3>
+            <div className="space-y-2">
+              {[gameState.rootWord, ...gameState.attempts].map((word, index) => (
+                <div key={index} className="flex items-center">
+                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold font-inter mr-3">
+                    {index + 1}
+                  </div>
+                  <span className="text-lg font-semibold font-inter text-gray-800">
+                    {word}
+                  </span>
+                  {index < [gameState.rootWord, ...gameState.attempts].length - 1 && (
+                    <span className="text-gray-400 mx-2">→</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <p className="text-sm text-gray-600 font-inter text-center">
+                <strong>FEIGN</strong> → <strong>HINGE</strong> → <strong>NICHE</strong> → <strong>PINCH</strong> → <strong>PUNCH</strong> → <strong>POUCH</strong> → <strong>POOCH</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {/* Settings and How To Play sections remain unchanged from original and are included below */}
       {/* Settings Modal */}

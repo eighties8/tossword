@@ -148,12 +148,18 @@
   }
 }
 
-@keyframes spinX {
+@keyframes flipReveal {
   0% {
     transform: rotateX(0deg);
+    background-color: #10b981; /* emerald-500 */
+  }
+  50% {
+    transform: rotateX(90deg);
+    background-color: #10b981; /* emerald-500 */
   }
   100% {
-    transform: rotateX(360deg);
+    transform: rotateX(0deg);
+    background-color: #059669; /* emerald-600 */
   }
 }
 
@@ -308,6 +314,7 @@ header .logoText span.quirk:after {
   outline-offset: -4px;
   border-bottom:none;
   border-bottom:4px solid transparent;
+  opacity:0.5;
 }
 
 .tossable-icon {
