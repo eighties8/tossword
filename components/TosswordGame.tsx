@@ -763,7 +763,7 @@ export default function TosswordGame() {
     const remainingAttempts = maxAttempts - gameState.attempts.length
     
     if (remainingAttempts <= 0) {
-      setGameState((prev) => ({ ...prev, errorMessage: "Awe, that was your last try today. Sorry, try again tomorrow!", inputLetters: ["", "", "", "", ""], activeIndex: 0 }))
+      setGameState((prev) => ({ ...prev, errorMessage: "Yo, that's your final swing for today, fam! slide back tomorrow for another shot!", inputLetters: ["", "", "", "", ""], activeIndex: 0 }))
       const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 5000)
       setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
       return () => clearTimeout(timer)
@@ -1256,8 +1256,8 @@ export default function TosswordGame() {
                   
                   if (isOutOfAttempts) {
                     return (
-                      <h2 className="text-lg font-semibold text-red-600 font-inter text-center">
-                        Awe, that was your last try today. Sorry, try again tomorrow!
+                      <h2 className="text-3xl font-semibold font-inter text-center">
+                        That's your final swing for today, fam! slide back tomorrow for another shot!
                       </h2>
                     )
                   }
@@ -1277,7 +1277,7 @@ export default function TosswordGame() {
                               {/* <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span> */}
                               <span className="text-gray-800 text-xl">Crack the Code, Brainiac Bounce!
                                 <br/>You have {optimalLength + 1} shots to slay it!</span>
-                              {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
+                              {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-8 h-8 mr-1" /> <strong>"{clue}"</strong></span>}
                             </>
                           )
                         })()
@@ -1285,9 +1285,9 @@ export default function TosswordGame() {
                         // After first attempt, show attempts remaining and clue
                         <>
                           {isLastAttempt ? (
-                            <span className="text-amber-600 text-xl">Last attempt! </span>
+                            <span className="text-amber-600 text-4xl">Last Shot! Make it count. </span>
                           ) : (
-                            <span className="text-gray-800 text-xl">{remainingAttempts} shots left!</span>
+                            <span className="text-gray-800 text-3xl">{remainingAttempts} shots left!</span>
                           )}
                           {!gameState.isHardMode && (() => {
                             const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
@@ -1295,7 +1295,7 @@ export default function TosswordGame() {
                             if (path.length >= 2) {
                               const nextWord = path[1].toLowerCase()
                               const clue = getWordClue(nextWord)
-                              return <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue || 'No clue available'}"</strong></span>
+                              return <span className="text-emerald-600 block mt-1"><Brain className="inline w-8 h-8 mr-1" /> <strong>"{clue || 'No clue available'}"</strong></span>
                             }
                             return null
                           })()}
