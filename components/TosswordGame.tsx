@@ -17,7 +17,7 @@ const SINGLE_PUZZLE_MODE = true
 const BrainWithPulse = () => {
   return (
     <Brain 
-      className="inline w-8 h-8 mr-1 brain-breathing"
+      className="inline w-8 h-8 mr-1 brain-breathing text-gray-700"
     />
   )
 }
@@ -1286,7 +1286,17 @@ export default function TosswordGame() {
                               {/* <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span> */}
                               <span className="text-gray-800 text-xl">Crack the Code, Brainiac Bounce!
                                 <br/>You have {optimalLength + 1} shots to slay it!</span>
-                              {clue && <span className="text-emerald-600 block mt-1"><BrainWithPulse /> <strong>"{clue}"</strong></span>}
+                              {clue && (
+                                <div className="flex justify-center items-center mt-2">
+                                  <div className="relative inline-flex items-center">
+                                    <BrainWithPulse />
+                                    <div className="ml-2 px-3 py-2 bg-amber-500 text-white text-sm rounded-lg shadow-lg pointer-events-none whitespace-nowrap relative">
+                                      {clue}
+                                      <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-0 h-0 border-t-4 border-b-4 border-transparent border-r-4 border-r-amber-500"></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </>
                           )
                         })()
@@ -1304,7 +1314,17 @@ export default function TosswordGame() {
                             if (path.length >= 2) {
                               const nextWord = path[1].toLowerCase()
                               const clue = getWordClue(nextWord)
-                              return <span className="text-emerald-600 block mt-1"><BrainWithPulse /> <strong>"{clue || 'No clue available'}"</strong></span>
+                              return (
+                                <div className="flex justify-center items-center mt-2">
+                                  <div className="relative inline-flex items-center">
+                                    <BrainWithPulse />
+                                    <div className="ml-2 px-3 py-2 bg-amber-500 text-white text-sm rounded-lg shadow-lg pointer-events-none whitespace-nowrap relative">
+                                      {clue || 'No clue available'}
+                                      <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-0 h-0 border-t-4 border-b-4 border-transparent border-r-4 border-r-amber-500"></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
                             }
                             return null
                           })()}
