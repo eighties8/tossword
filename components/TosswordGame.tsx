@@ -1274,7 +1274,9 @@ export default function TosswordGame() {
                           
                           return (
                             <>
-                              <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span>
+                              {/* <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span> */}
+                              <span className="text-gray-800 text-xl">Crack the Code, Brainiac Bounce!
+                                <br/>You have {optimalLength + 1} shots to slay it!</span>
                               {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-4 h-4 mr-1" /> <strong>"{clue}"</strong></span>}
                             </>
                           )
@@ -1310,7 +1312,7 @@ export default function TosswordGame() {
               <div className="win-banner-content flex flex-col items-center justify-end pb-0">
                 <div className="text-center mb-0">
                   <h2 className="text-2xl md:text-3xl font-bold font-poppins">
-                    You solved the puzzle in <span className="text-emerald-700">{gameState.attempts.length} steps</span>
+                    Cracked it in <span className="text-emerald-700">{gameState.attempts.length} steps</span>
                     {/* Only show brain animation for optimal solutions */}
                     {gameState.attempts.length === (() => {
                       const optimalPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
@@ -1320,7 +1322,7 @@ export default function TosswordGame() {
                         className="inline w-8 h-8 text-emerald-600 animate-[brainScale_1s_ease-in-out_2] ml-3 mr-2" 
                         style={{ animationDelay: '1.5s' }}
                       />
-                    )} Great Job!
+                    )} Chomp Chomp!
                   </h2>
                 </div>
               </div>
