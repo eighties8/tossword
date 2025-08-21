@@ -1287,7 +1287,7 @@ export default function TosswordGame() {
                           {isLastAttempt ? (
                             <span className="text-amber-600 text-xl">Last attempt! </span>
                           ) : (
-                            <span className="text-gray-800 text-xl">{remainingAttempts} attempts remaining</span>
+                            <span className="text-gray-800 text-xl">{remainingAttempts} shots left!</span>
                           )}
                           {!gameState.isHardMode && (() => {
                             const lastAttempt = gameState.attempts[gameState.attempts.length - 1].toUpperCase()
