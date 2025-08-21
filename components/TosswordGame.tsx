@@ -13,6 +13,15 @@ import cluesMap from "@/lib/clues.json" // private clues, stays in /lib
 // single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
 const SINGLE_PUZZLE_MODE = true
 
+// Brain component with continuous breathing animation
+const BrainWithPulse = () => {
+  return (
+    <Brain 
+      className="inline w-8 h-8 mr-1 brain-breathing"
+    />
+  )
+}
+
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -1160,7 +1169,7 @@ export default function TosswordGame() {
               <div className="bg-gray-400 rounded flex items-center justify-center"><span className="text-white text-sm font-bold"></span></div>
             </div>
           </div>
-          <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</h1>
+          <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<Brain className="inline w-7 h-7 -ml-1" />rd</h1>
           <p className="text-lg text-gray-700 mb-4 font-inter">
             Today's start word is <strong className="text-green-700">{settingsLoaded ? (selectedPuzzle?.root || "Loading...") : "..."}</strong>.
             {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
@@ -1205,7 +1214,7 @@ export default function TosswordGame() {
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSplash(true)}>
             <Image src="/tossword-logo.webp" alt="Tossword logo" width={24} height={24} className="h-6 w-6" />
-            <span className="logoText hidden md:inline text-lg text-gray-700 font-bold font-poppins">T<span>o</span>ssW<span className="quirk">o</span>rd</span>
+            <span className="logoText hidden md:inline text-lg text-gray-700 font-bold font-poppins">T<span>o</span>ssW<Brain className="inline w-3 h-3 -ml-0.5" />rd</span>
           </div>
           <div className="flex items-center gap-3">
             {debugMode && (
@@ -1277,7 +1286,7 @@ export default function TosswordGame() {
                               {/* <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span> */}
                               <span className="text-gray-800 text-xl">Crack the Code, Brainiac Bounce!
                                 <br/>You have {optimalLength + 1} shots to slay it!</span>
-                              {clue && <span className="text-emerald-600 block mt-1"><Brain className="inline w-8 h-8 mr-1" /> <strong>"{clue}"</strong></span>}
+                              {clue && <span className="text-emerald-600 block mt-1"><BrainWithPulse /> <strong>"{clue}"</strong></span>}
                             </>
                           )
                         })()
@@ -1295,7 +1304,7 @@ export default function TosswordGame() {
                             if (path.length >= 2) {
                               const nextWord = path[1].toLowerCase()
                               const clue = getWordClue(nextWord)
-                              return <span className="text-emerald-600 block mt-1"><Brain className="inline w-8 h-8 mr-1" /> <strong>"{clue || 'No clue available'}"</strong></span>
+                              return <span className="text-emerald-600 block mt-1"><BrainWithPulse /> <strong>"{clue || 'No clue available'}"</strong></span>
                             }
                             return null
                           })()}
