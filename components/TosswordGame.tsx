@@ -11,7 +11,7 @@ import { useDailyPuzzle } from "@/lib/useDailyPuzzle"
 import cluesMap from "@/lib/clues.json" // private clues, stays in /lib
 
 // single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
-const SINGLE_PUZZLE_MODE = false
+const SINGLE_PUZZLE_MODE = true
 
 const inter = Inter({
   subsets: ["latin"],
@@ -280,9 +280,9 @@ export default function TosswordGame() {
     } else if (SINGLE_PUZZLE_MODE) {
       // puzzle = { root: "GLAZE", mystery: "WRIST" }
       // puzzle = { root: "BREAD", mystery: "HONEY" }
-      puzzle = { root: "OCEAN", mystery: "FIELD" }
+      // puzzle = { root: "OCEAN", mystery: "FIELD" }
       // puzzle = { root: "FEIGN", mystery: "POOCH" }
-      // puzzle = { root: "TANGO", mystery: "THRUM" }
+      puzzle = { root: "TANGO", mystery: "THUMP" }
     } else {
       // Fallback puzzle if no daily puzzle and not in single puzzle mode
       puzzle = { root: "OCEAN", mystery: "FIELD" }
