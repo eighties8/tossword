@@ -11,7 +11,7 @@ import { useDailyPuzzle } from "@/lib/useDailyPuzzle"
 import cluesMap from "@/lib/clues.json" // private clues, stays in /lib
 
 // single puzzle mode Set to true to always show OCEAN -> FIELD puzzle, false for random puzzles
-const SINGLE_PUZZLE_MODE = true
+const SINGLE_PUZZLE_MODE = false
 
 const inter = Inter({
   subsets: ["latin"],
