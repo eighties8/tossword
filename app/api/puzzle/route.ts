@@ -7,10 +7,13 @@ type Row = { date: string; root: string; mystery: string };
 const FILE = path.join(process.cwd(), "data", "puzzles-2025.json");
 
 function todayEasternISO(): string {
-  const nowET = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
-  );
-  return nowET.toISOString().slice(0, 10);
+  // Get current time in Eastern Time using manual UTC calculation (more reliable)
+  const now = new Date();
+  const utcDate = new Date(now.getTime());
+  const easternOffset = -5; // EST is UTC-5
+  const easternTime = new Date(utcDate.getTime() + (easternOffset * 60 * 60 * 1000));
+  
+  return easternTime.toISOString().slice(0, 10);
 }
 
 export async function GET(req: Request) {

@@ -1,6 +1,6 @@
 "use client"
 import type { KeyboardEvent } from "react"
-import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from "react"
 import Image from "next/image"
 import { Lightbulb, Delete, Brain } from "lucide-react"
 import { Inter, Poppins } from "next/font/google"
@@ -40,6 +40,12 @@ type LetterState = "correct" | "present" | "absent"
 const MYSTERY_LETTER_FADE_MS = 1000
 const AFTER_FADE_BUFFER_MS = 500
 
+// Hint letters feature constants
+const ENABLE_HINT_LETTERS = true
+const HINT_LETTER_COUNT = 3
+
+
+
 interface GameState {
   mysteryWord: string
   rootWord: string
@@ -75,6 +81,8 @@ interface GameState {
   wordDefinitions: { [word: string]: { pronunciation: string; definition: string } | null }
   definitionsLoaded: boolean
   showDefinitions: boolean
+  // Hint letters: track which input fields are disabled due to hint letters
+  hintLetterIndexes: number[]
 }
 
 
@@ -119,7 +127,7 @@ export default function TosswordGame() {
     rootWord: "",
     attempts: [],
     inputLetters: ["", "", "", "", ""],
-    activeIndex: 0,
+    activeIndex: 0, // This will be updated after game state is loaded
     gameWon: false,
     revealedLetters: [false, false, false, false, false],
     solutionPath: [],
@@ -144,12 +152,14 @@ export default function TosswordGame() {
     wordDefinitions: {},
     definitionsLoaded: false,
     showDefinitions: false,
+    hintLetterIndexes: [],
   })
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const deletingRef = useRef(false)
   const debugModeRef = useRef(false)
   const playButtonRef = useRef<HTMLButtonElement | null>(null)
+  const programmaticFocus = useRef<boolean>(false)
 
   const solutionPathCache = useRef<Map<string, string[]>>(new Map())
   const hintsCache = useRef<Map<string, number[]>>(new Map())
@@ -336,6 +346,7 @@ export default function TosswordGame() {
       wordDefinitions: {},
       definitionsLoaded: false,
       showDefinitions: false,
+      hintLetterIndexes: [],
     })
 
     setIsLoading(false)
@@ -413,6 +424,37 @@ export default function TosswordGame() {
     initializeGame()
   }, [settingsLoaded, dailyLoading, dailyPuzzle, dailyError, initializeGame])
 
+  // Handle focus changes after React commits DOM updates
+  useLayoutEffect(() => {
+    const el = inputRefs.current[gameState.activeIndex]
+    if (el && !el.disabled) {
+      programmaticFocus.current = true
+      el.focus()
+    }
+  }, [gameState.activeIndex])
+
+  // Initialize focus to first available non-hint cell after game setup
+  useEffect(() => {
+    // Only run when game is active (not showing splash screen) and game is initialized
+    if (!showSplash && gameState.rootWord && gameState.mysteryWord && gameState.attempts.length === 0) {
+      // Calculate hint letters for the first word to solve
+      const targetPath = bidirectionalBFS(gameState.rootWord.toUpperCase(), gameState.mysteryWord.toUpperCase())
+      const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+      const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+      
+      // Find first available non-hint index
+      let firstAvailableIndex = 0
+      while (firstAvailableIndex <= 4 && hintIndexes.includes(firstAvailableIndex)) {
+        firstAvailableIndex++
+      }
+      
+      console.log('🎯 INITIAL FOCUS: Setting cursor to index', firstAvailableIndex, 'hintIndexes:', hintIndexes)
+      
+      // Set the active index to the first available position
+      setGameState(prev => ({ ...prev, activeIndex: firstAvailableIndex }))
+    }
+  }, [showSplash, gameState.rootWord, gameState.mysteryWord, gameState.attempts.length])
+
   // Get word definitions when game is won
   useEffect(() => {
     if (gameState.gameWon && !gameState.definitionsLoaded) {
@@ -476,6 +518,8 @@ export default function TosswordGame() {
       return () => clearTimeout(t)
     }
   }, [gameState.gameWon, gameState.showWinAnimation, launchConfettiOverPuzzle])
+
+
 
   // Show word definitions 1.5 seconds after confetti ends
   useEffect(() => {
@@ -757,9 +801,69 @@ export default function TosswordGame() {
     return []
   }, [isValidMove])
 
+
+
+  // Function to determine which letters should be revealed as hints
+  const getHintLetterIndexes = (word: string): number[] => {
+    if (!ENABLE_HINT_LETTERS || !word) return []
+    
+    const vowels = ['a', 'e', 'i', 'o', 'u']
+    const consonants = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']
+    
+    const wordLower = word.toLowerCase()
+    const hintIndexes: number[] = []
+    
+    // First, try to find vowels up to HINT_LETTER_COUNT
+    for (let i = 0; i < wordLower.length && hintIndexes.length < HINT_LETTER_COUNT; i++) {
+      if (vowels.includes(wordLower[i])) {
+        hintIndexes.push(i)
+      }
+    }
+    
+    // If we need more hints, add consonants
+    for (let i = 0; i < wordLower.length && hintIndexes.length < HINT_LETTER_COUNT; i++) {
+      if (consonants.includes(wordLower[i]) && !hintIndexes.includes(i)) {
+        hintIndexes.push(i)
+      }
+    }
+    
+    // Ensure no 3 sequential letters are hint indexes
+    const sortedIndexes = hintIndexes.sort((a, b) => a - b)
+    const finalIndexes: number[] = []
+    
+    for (let i = 0; i < sortedIndexes.length; i++) {
+      const current = sortedIndexes[i]
+      const prev = sortedIndexes[i - 1]
+      const next = sortedIndexes[i + 1]
+      
+      // Skip if this would create 3 sequential letters
+      if ((prev !== undefined && current - prev === 1) && (next !== undefined && next - current === 1)) {
+        continue
+      }
+      
+      finalIndexes.push(current)
+    }
+    
+    return finalIndexes.slice(0, HINT_LETTER_COUNT)
+  }
+
   const handleLetterInput = useCallback((index: number, letter: string) => {
     hideAllTooltips()
     if (gameState.gameWon) return
+    
+    // Prevent input into hint letter fields
+    // Calculate hint letters from the target word we're trying to spell
+    const targetWord = gameState.attempts.length > 0 
+      ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+      : gameState.rootWord.toUpperCase()
+    const targetPath = bidirectionalBFS(targetWord, gameState.mysteryWord.toUpperCase())
+    const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+    const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+    
+    if (hintIndexes.includes(index)) {
+      return // Don't allow input into hint letter fields
+    }
+    
     const newInput = [...gameState.inputLetters]
     if (letter === "") { newInput[index] = "" } else {
       const filteredLetter = letter.replace(/[^A-Za-z]/g, "")
@@ -768,7 +872,14 @@ export default function TosswordGame() {
     }
     setGameState((prev) => ({ ...prev, inputLetters: newInput }))
     if (letter !== "" && index < 4) { 
-      setTimeout(() => { inputRefs.current[index + 1]?.focus() }, 0) 
+      // Find the next available non-hint field
+      let nextIndex = index + 1
+      while (nextIndex <= 4 && hintIndexes.includes(nextIndex)) {
+        nextIndex++
+      }
+      if (nextIndex <= 4) {
+        setGameState((prev) => ({ ...prev, activeIndex: nextIndex }))
+      }
     } else if (letter !== "" && index === 4) {
       // Keep focus on the last cell when the last letter is entered
       setGameState((prev) => ({ ...prev, activeIndex: 4 }))
@@ -777,11 +888,46 @@ export default function TosswordGame() {
         inputRefs.current[4]?.focus()
       }, 0)
     }
-  }, [gameState.gameWon, gameState.inputLetters, hideAllTooltips])
+  }, [gameState.gameWon, gameState.inputLetters, hideAllTooltips, gameState.rootWord, gameState.mysteryWord])
 
   const handleFocus = useCallback((index: number) => {
+    // Ignore programmatic focus events to prevent infinite loops
+    if (programmaticFocus.current) {
+      programmaticFocus.current = false
+      return
+    }
+    
+    // Don't allow focus on hint letter fields
+    // Calculate hint letters from the target word we're trying to spell
+    const targetWord = gameState.attempts.length > 0 
+      ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+      : gameState.rootWord.toUpperCase()
+    const targetPath = bidirectionalBFS(targetWord, gameState.mysteryWord.toUpperCase())
+    const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+    const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+    if (hintIndexes.includes(index)) {
+      // Find the next available non-hint field
+      let targetIndex = index + 1
+      while (targetIndex <= 4 && hintIndexes.includes(targetIndex)) {
+        targetIndex++
+      }
+      if (targetIndex > 4) {
+        // Try going backwards
+        targetIndex = index - 1
+        while (targetIndex >= 0 && hintIndexes.includes(targetIndex)) {
+          targetIndex--
+        }
+      }
+      if (targetIndex >= 0 && targetIndex <= 4) {
+        programmaticFocus.current = true
+        setGameState((prev) => ({ ...prev, activeIndex: targetIndex }))
+        setTimeout(() => inputRefs.current[targetIndex]?.focus(), 0)
+        return
+      }
+    }
+    
     setGameState((prev) => ({ ...prev, activeIndex: index }))
-  }, [])
+  }, [gameState.rootWord, gameState.mysteryWord])
 
   const submitWord = useCallback(() => {
     if (gameState.gameWon) return
@@ -799,14 +945,35 @@ export default function TosswordGame() {
       return () => clearTimeout(timer)
     }
     
-    const word = gameState.inputLetters.join("")
+    // Get hint letter indexes for the next word to solve
+    // Calculate from current position (last attempt or root word)
+    const currentWord = gameState.attempts.length > 0 
+      ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+      : gameState.rootWord.toUpperCase()
+    const currentPath = bidirectionalBFS(currentWord, gameState.mysteryWord.toUpperCase())
+    const nextWord = currentPath.length >= 2 ? currentPath[1].toLowerCase() : null
+    const hintIndexes = nextWord ? getHintLetterIndexes(nextWord) : []
     
-    if (word.length !== 5) {
+    // Build the complete word including hint letters
+    let completeWord = ""
+    for (let i = 0; i < 5; i++) {
+      if (hintIndexes.includes(i)) {
+        // Use hint letter for this position
+        completeWord += nextWord ? nextWord[i].toUpperCase() : ""
+      } else {
+        // Use user input for this position
+        completeWord += gameState.inputLetters[i] || ""
+      }
+    }
+    
+    if (completeWord.length !== 5) {
       setGameState((prev) => ({ ...prev, errorMessage: "Please enter exactly 5 letters", inputLetters: ["", "", "", "", ""], activeIndex: 0 }))
       const timer = setTimeout(() => setGameState((prev) => ({ ...prev, errorMessage: "" })), 3000)
       setTimeout(() => { inputRefs.current[0]?.focus() }, 50)
       return () => clearTimeout(timer)
     }
+    
+    const word = completeWord
     const lastAttempt = gameState.attempts.length > 0 ? gameState.attempts[gameState.attempts.length - 1] : gameState.rootWord
     const wordLower = word.toLowerCase()
     if (!VALID_WORDS.has(wordLower)) {
@@ -893,7 +1060,27 @@ export default function TosswordGame() {
     }
 
     updateRevealedLetters(word)
-    setGameState((prev) => ({ ...prev, attempts: newAttempts, inputLetters: ["", "", "", "", ""], gameWon: isWon, activeIndex: 0, errorMessage: "" }))
+          // Calculate the first available non-hint position for the next word
+          const nextCurrentWord = word.toUpperCase()
+          const nextPath = bidirectionalBFS(nextCurrentWord, gameState.mysteryWord.toUpperCase())
+          const nextTargetWord = nextPath.length >= 2 ? nextPath[1].toLowerCase() : null
+          const nextHintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+          
+          // Find first non-hint position
+          let firstAvailableIndex = 0
+          while (firstAvailableIndex <= 4 && nextHintIndexes.includes(firstAvailableIndex)) {
+            firstAvailableIndex++
+          }
+          
+          setGameState((prev) => ({ ...prev, attempts: newAttempts, inputLetters: ["", "", "", "", ""], gameWon: isWon, activeIndex: firstAvailableIndex, errorMessage: "" }))
+          
+          // Focus the first available input field after a short delay
+          setTimeout(() => {
+            if (firstAvailableIndex <= 4) {
+              programmaticFocus.current = true
+              inputRefs.current[firstAvailableIndex]?.focus()
+            }
+          }, 100)
     if (hintTextAuto && !isWon && !gameState.isHardMode) {
       setTimeout(() => {
         const currentWord = word.toUpperCase()
@@ -958,12 +1145,7 @@ export default function TosswordGame() {
     } else if (key.length === 1 && key.match(/[A-Z]/)) {
       if (gameState.activeIndex < 5) {
         handleLetterInput(gameState.activeIndex, key)
-        // Ensure focus is maintained after letter input, especially for the last cell
-        if (gameState.activeIndex === 4) {
-          setTimeout(() => {
-            inputRefs.current[4]?.focus()
-          }, 0)
-        }
+        // Let handleLetterInput handle the cursor positioning - don't override it here
       }
     }
   }, [gameState.gameWon, gameState.gameOver, gameState.activeIndex, submitWord, handleLetterInput])
@@ -1084,15 +1266,46 @@ export default function TosswordGame() {
     hideAllTooltips()
     if (e.key === "Backspace" || e.key === "Delete") {
       e.preventDefault()
+      
+      // Ignore OS key auto-repeat to prevent "slow taps" oddness
+      if (e.repeat) return
+      
+      // Calculate hint letters for the word we're currently trying to type
+      // If we have input letters, calculate from the target word we're aiming for
+      // If no input letters, calculate from the last attempt
+      let targetWord: string
+      let nextTargetWord: string | null
+      
+      if (gameState.inputLetters.some(letter => letter !== "")) {
+        // We're in the middle of typing - calculate hints from the target word
+        const lastAttempt = gameState.attempts.length > 0 
+          ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+          : gameState.rootWord.toUpperCase()
+        const targetPath = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+        nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+      } else {
+        // No input yet - calculate from the last attempt
+        const lastAttempt = gameState.attempts.length > 0 
+          ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+          : gameState.rootWord.toUpperCase()
+        const targetPath = bidirectionalBFS(lastAttempt, gameState.mysteryWord.toUpperCase())
+        nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+      }
+      
+      const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+      
       const currentEmpty = !gameState.inputLetters[index]
       
       if (currentEmpty && index > 0) {
-        // If current input is empty and not at first position, move to previous and clear it
-        handleLetterInput(index - 1, "")
-        setTimeout(() => {
-          setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
-          inputRefs.current[index - 1]?.focus()
-        }, 0)
+        // If current input is empty and not at first position, find previous non-hint field and clear it
+        let targetIndex = index - 1
+        while (targetIndex >= 0 && hintIndexes.includes(targetIndex)) {
+          targetIndex--
+        }
+        if (targetIndex >= 0) {
+          handleLetterInput(targetIndex, "")
+          setGameState((prev) => ({ ...prev, activeIndex: targetIndex }))
+        }
       } else if (!currentEmpty) {
         // If current input has a letter, just clear it and stay in place
         handleLetterInput(index, "")
@@ -1100,38 +1313,107 @@ export default function TosswordGame() {
       return
     }
     if (e.key === "ArrowLeft" && index > 0) {
-      setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
-      setTimeout(() => inputRefs.current[index - 1]?.focus(), 0)
+      // Find the next available non-hint field to the left
+      let targetIndex = index - 1
+      while (targetIndex >= 0) {
+        // Calculate hint letters for current position
+        const targetWord = gameState.attempts.length > 0 
+          ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+          : gameState.rootWord.toUpperCase()
+        const targetPath = bidirectionalBFS(targetWord, gameState.mysteryWord.toUpperCase())
+        const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+        const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+        if (!hintIndexes.includes(targetIndex)) {
+          break
+        }
+        targetIndex--
+      }
+      if (targetIndex >= 0) {
+        setGameState((prev) => ({ ...prev, activeIndex: targetIndex }))
+      }
     }
     if (e.key === "ArrowRight" && index < 4) {
-      setGameState((prev) => ({ ...prev, activeIndex: index + 1 }))
-      setTimeout(() => inputRefs.current[index + 1]?.focus(), 0)
+      // Find the next available non-hint field to the right
+      let targetIndex = index + 1
+      while (targetIndex <= 4) {
+        // Calculate hint letters for current position
+        const targetWord = gameState.attempts.length > 0 
+          ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+          : gameState.rootWord.toUpperCase()
+        const targetPath = bidirectionalBFS(targetWord, gameState.mysteryWord.toUpperCase())
+        const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+        const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+        if (!hintIndexes.includes(targetIndex)) {
+          break
+        }
+        targetIndex++
+      }
+      if (targetIndex <= 4) {
+        setGameState((prev) => ({ ...prev, activeIndex: targetIndex }))
+      }
     }
     if (e.key === "Enter") {
-      const allLettersFilled = gameState.inputLetters.every((letter) => letter.trim() !== "")
+      // Check if all required letters are filled (including hint letters)
+      // Calculate hint letters for current position
+      const targetWord = gameState.attempts.length > 0 
+        ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+        : gameState.rootWord.toUpperCase()
+      const targetPath = bidirectionalBFS(targetWord, gameState.mysteryWord.toUpperCase())
+      const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+      const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+      
+      let allLettersFilled = true
+      for (let i = 0; i < 5; i++) {
+        if (hintIndexes.includes(i)) {
+          // Hint letter position - always considered filled
+          continue
+        } else {
+          // User input position - must have a letter
+          if (!gameState.inputLetters[i] || gameState.inputLetters[i].trim() === "") {
+            allLettersFilled = false
+            break
+          }
+        }
+      }
+      
       if (allLettersFilled) { submitWord() }
     }
-  }, [handleLetterInput, gameState.inputLetters, submitWord, hideAllTooltips])
+  }, [handleLetterInput, gameState.inputLetters, submitWord, hideAllTooltips, gameState.rootWord, gameState.mysteryWord, getHintLetterIndexes])
 
   const handleBeforeInput = useCallback((e: any, index: number) => {
     const inputType = (e && (e as any).inputType) || ""
     if (inputType === "deleteContentBackward") {
       e.preventDefault?.()
+      
+      // Calculate hint letters for current position
+      const targetWord = gameState.attempts.length > 0 
+        ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+        : gameState.rootWord.toUpperCase()
+      const targetPath = bidirectionalBFS(targetWord, gameState.mysteryWord.toUpperCase())
+      const nextTargetWord = targetPath.length >= 2 ? targetPath[1].toLowerCase() : null
+      const hintIndexes = nextTargetWord ? getHintLetterIndexes(nextTargetWord) : []
+      
       const currentEmpty = !gameState.inputLetters[index]
       
       if (currentEmpty && index > 0) {
-        // If current input is empty and not at first position, move to previous and clear it
-        handleLetterInput(index - 1, "")
-        setTimeout(() => {
-          setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
-          inputRefs.current[index - 1]?.focus()
-        }, 0)
+        // If current input is empty and not at first position, find previous non-hint field and clear it
+        let targetIndex = index - 1
+        while (targetIndex >= 0 && hintIndexes.includes(targetIndex)) {
+          targetIndex--
+        }
+        if (targetIndex >= 0) {
+          handleLetterInput(targetIndex, "")
+          setTimeout(() => {
+            setGameState((prev) => ({ ...prev, activeIndex: targetIndex }))
+            inputRefs.current[targetIndex]?.focus()
+          }, 0)
+        }
       } else if (!currentEmpty) {
         // If current input has a letter, just clear it and stay in place
         handleLetterInput(index, "")
       }
     }
-  }, [gameState.inputLetters, handleLetterInput])
+  }, [gameState.inputLetters, handleLetterInput, gameState.rootWord, gameState.mysteryWord, getHintLetterIndexes])
 
   // Debug mode: show word progression after each word submission
   useEffect(() => {
@@ -1499,7 +1781,7 @@ export default function TosswordGame() {
                       onMouseLeave={() => { if (shouldHighlight) { document.getElementById(`start-tooltip-${index}`)?.classList.add('hidden') } }}
                     >
                       <span className={`text-lg font-bold font-inter ${shouldHighlight ? "text-gray-200" : "text-white"}`}>{letter}</span>
-                      {shouldHighlight && (
+                      {/* {shouldHighlight && (
                         <div
                           id={`start-tooltip-${index}`}
                           className={`absolute top-1/2 transform -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-50 hidden pointer-events-none max-w-[200px] text-left puzzle-tooltip ${index <= 2 ? 'left-full ml-2' : 'right-full mr-2'}`}
@@ -1509,7 +1791,7 @@ export default function TosswordGame() {
                             className={`absolute top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-transparent ${index <= 2 ? '-left-1 border-r-4 border-r-gray-900' : '-right-1 border-l-4 border-l-gray-900'}`}
                           ></div>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   )
                 })}
@@ -1580,17 +1862,7 @@ export default function TosswordGame() {
                     return (
                       <div
                         key={letterIndex}
-                        className={`w-full aspect-square ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${
-                          shouldHighlightCell
-                            ? "tossable bg-white border border-gray-400"
-                            : ""
-                        } ${
-                          gameState.showWinAnimation &&
-                          isCompleted &&
-                          gameState.gameWon === false
-                            ? "animate-[flipReveal_0.6s_ease-in-out_1]"
-                            : ""
-                        } relative`}
+                        className={`w-full aspect-square ${bgColor} rounded-lg puzzle-grid flex items-center justify-center ${borderColor} ${shouldHighlightCell ? "tossable bg-white border border-gray-400" : ""} ${gameState.showWinAnimation && isCompleted && gameState.gameWon === false ? "animate-[flipReveal_0.6s_ease-in-out_1]" : ""} relative`}
                         style={{
                           animationDelay:
                             gameState.showWinAnimation && isCompleted
@@ -1600,9 +1872,7 @@ export default function TosswordGame() {
                         /* ... handlers unchanged ... */
                       >
                         <span
-                          className={`text-lg font-bold font-inter ${
-                            shouldHighlightCell ? "text-gray-200" : "text-white"
-                          }`}
+                          className={`text-lg font-bold font-inter ${shouldHighlightCell ? "text-gray-200" : "text-white"}`}
                         >
                           {letter}
                         </span>
@@ -1635,6 +1905,17 @@ export default function TosswordGame() {
                     const remainingAttempts = maxAttempts - gameState.attempts.length
                     const isOutOfAttempts = remainingAttempts <= 0
                     
+                    // Get hint letter indexes for the next word to solve
+                    // Calculate from current position (last attempt or root word)
+                    const currentWord = gameState.attempts.length > 0 
+                      ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                      : gameState.rootWord.toUpperCase()
+                    const currentPath = bidirectionalBFS(currentWord, gameState.mysteryWord.toUpperCase())
+                    const nextWord = currentPath.length >= 2 ? currentPath[1].toLowerCase() : null
+                    const hintIndexes = nextWord ? getHintLetterIndexes(nextWord) : []
+                    const isHintField = hintIndexes.includes(index)
+                    const hintLetter = isHintField && nextWord ? nextWord[index] : null
+                    
                     return (
                       <input
                         key={index}
@@ -1642,20 +1923,17 @@ export default function TosswordGame() {
                         name={`guess-${index}`}
                         ref={(el) => { inputRefs.current[index] = el }}
                         type="text"
-                        value={letter}
+                        value={isHintField ? (hintLetter || '').toUpperCase() : letter}
                         onChange={(e) => handleLetterInput(index, e.target.value.slice(-1))}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         onFocus={() => handleFocus(index)}
-                        disabled={isOutOfAttempts}
-                        className={`w-full aspect-square rounded-lg bg-transparent border border-gray-400 
-                          text-center text-[clamp(14px,4.5vw,20px)] font-bold text-gray-900
-                          focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid
-                          ${isOutOfAttempts ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={isOutOfAttempts || isHintField}
+                        className={`w-full aspect-square rounded-lg bg-transparent border border-gray-400 text-center text-[clamp(14px,4.5vw,20px)] font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter puzzle-grid ${isOutOfAttempts ? 'opacity-50 cursor-not-allowed' : ''} ${isHintField ? '!bg-gray-100 text-gray-600 cursor-not-allowed' : ''}`}
                         maxLength={1}
                         autoComplete="off"
                         inputMode={isMobile && useMobileKeyboard ? "text" : "none"}
                         readOnly={isMobile && !useMobileKeyboard}
-                        aria-label={`Letter ${index + 1}`}
+                        aria-label={`Letter ${index + 1}${isHintField ? ' (hint letter)' : ''}`}
                       />
                     )
                   })}
@@ -1750,7 +2028,31 @@ export default function TosswordGame() {
                             const optimalLength = optimalPath.length > 0 ? optimalPath.length - 1 : 0
                             const maxAttempts = optimalLength + 1
                             const remainingAttempts = maxAttempts - gameState.attempts.length
-                            return remainingAttempts <= 0
+                            
+                            if (remainingAttempts <= 0) return true
+                            
+                            // Check if all required letters are filled (including hint letters)
+                            // Calculate from current position (last attempt or root word)
+                            const currentWord = gameState.attempts.length > 0 
+                              ? gameState.attempts[gameState.attempts.length - 1].toUpperCase()
+                              : gameState.rootWord.toUpperCase()
+                            const currentPath = bidirectionalBFS(currentWord, gameState.mysteryWord.toUpperCase())
+                            const nextWord = currentPath.length >= 2 ? currentPath[1].toLowerCase() : null
+                            const hintIndexes = nextWord ? getHintLetterIndexes(nextWord) : []
+                            
+                            for (let i = 0; i < 5; i++) {
+                              if (hintIndexes.includes(i)) {
+                                // Hint letter position - always considered filled
+                                continue
+                              } else {
+                                // User input position - must have a letter
+                                if (!gameState.inputLetters[i] || gameState.inputLetters[i].trim() === "") {
+                                  return true // Disable if any required field is empty
+                                }
+                              }
+                            }
+                            
+                            return false // Enable if all required fields are filled
                           })()}
                           className={[
                             'h-[60px] rounded-md text-sm font-medium',
