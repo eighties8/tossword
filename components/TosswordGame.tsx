@@ -385,6 +385,23 @@ export default function TosswordGame() {
     setSettingsLoaded(true)
   }, [])
 
+  // Add keyboard shortcut to enable debug mode (Shift+D)
+  useEffect(() => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.metaKey && e.key === '0') {
+        const newDebugMode = !debugMode
+        setDebugMode(newDebugMode)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('tossword-debug-mode', newDebugMode.toString())
+        }
+        console.log(`🔧 Debug mode ${newDebugMode ? 'enabled' : 'disabled'}`)
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [debugMode])
+
   // Reinitialize game when single puzzle mode changes
   useEffect(() => {
     if (!settingsLoaded) return
@@ -1068,20 +1085,17 @@ export default function TosswordGame() {
     if (e.key === "Backspace" || e.key === "Delete") {
       e.preventDefault()
       const currentEmpty = !gameState.inputLetters[index]
+      
       if (currentEmpty && index > 0) {
+        // If current input is empty and not at first position, move to previous and clear it
         handleLetterInput(index - 1, "")
         setTimeout(() => {
           setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
           inputRefs.current[index - 1]?.focus()
         }, 0)
-      } else {
+      } else if (!currentEmpty) {
+        // If current input has a letter, just clear it and stay in place
         handleLetterInput(index, "")
-        if (index > 0) {
-          setTimeout(() => {
-            setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
-            inputRefs.current[index - 1]?.focus()
-          }, 0)
-        }
       }
       return
     }
@@ -1104,20 +1118,17 @@ export default function TosswordGame() {
     if (inputType === "deleteContentBackward") {
       e.preventDefault?.()
       const currentEmpty = !gameState.inputLetters[index]
+      
       if (currentEmpty && index > 0) {
+        // If current input is empty and not at first position, move to previous and clear it
         handleLetterInput(index - 1, "")
         setTimeout(() => {
           setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
           inputRefs.current[index - 1]?.focus()
         }, 0)
-      } else {
+      } else if (!currentEmpty) {
+        // If current input has a letter, just clear it and stay in place
         handleLetterInput(index, "")
-        if (index > 0) {
-          setTimeout(() => {
-            setGameState((prev) => ({ ...prev, activeIndex: index - 1 }))
-            inputRefs.current[index - 1]?.focus()
-          }, 0)
-        }
       }
     }
   }, [gameState.inputLetters, handleLetterInput])
@@ -1158,8 +1169,8 @@ export default function TosswordGame() {
 
   if (showSplash) {
     return (
-      <div className={`min-h-screen bg-gray-100 flex items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
-        <div className="text-center max-w-md text-gray-700">
+      <div className={`min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 ${inter.variable} ${poppins.variable}`}>
+        <div className="text-center w-full max-w-7xl text-gray-700">
           <div className="mb-6">
             <div className="puzzle-splash-grid grid grid-cols-[repeat(3,_24px)] auto-rows-[24px] gap-2 w-fit mx-auto mb-4 bg-[#444] p-2 rounded-lg text-white text-xl">
               <div className="bg-green-500 rounded">•</div>
@@ -1174,16 +1185,78 @@ export default function TosswordGame() {
             </div>
           </div>
           <h1 className="logoText text-5xl font-bold text-gray-700 mb-4 font-poppins">T<span>o</span>ssW<Brain className="inline w-7 h-7 -ml-1" />rd</h1>
-          <p className="text-lg text-gray-700 mb-4 font-inter">
-            Today's start word is <strong className="text-green-700">{settingsLoaded ? (selectedPuzzle?.root || "Loading...") : "..."}</strong>.
-            {!settingsLoaded && <span className="text-sm text-gray-500"> (Loading...)</span>}
-          </p>
-          <p className="splashHelp text-lg text-gray-700 mb-8 font-inter">
-            Using this word as a starting point, along with the clues <Brain className="inline w-4 h-4" /> provided, change one letter at a time, in any order, to unlock the hidden word's matching letters. 
-            The suggested throw-away letter for each new word you create is highlighted: <span className="aspect-square bg-gray-400 rounded-lg puzzle-grid flex items-center justify-center tossable bg-white text-gray-200 border border-gray-400 relative">A</span>
-            &nbsp;
-            {/* Click the <Brain className="inline w-4 h-4" /> icon to reveal a helpful clue for each word. */}
-            </p>
+          {/* Tour Images Grid */}
+          <div className="w-full mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 max-w-6xl mx-auto">
+              {/* Tour Step 1 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-2">
+                  <Image
+                    src="/tour1.webp"
+                    alt="Start with a word"
+                    width={200}
+                    height={200}
+                    className="rounded-lg shadow-md w-full max-w-[200px] h-auto"
+                  />
+                </div>
+                <p className="text-sm text-gray-700 font-inter">
+                  <strong>Start</strong><br />
+                  You are given a starting word to begin and a clue <Brain className="inline w-3 h-3" /> to transform it.
+                </p>
+              </div>
+
+              {/* Tour Step 2 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-2">
+                  <Image
+                    src="/tour2.webp"
+                    alt="Change one letter"
+                    width={200}
+                    height={200}
+                    className="rounded-lg shadow-md w-full max-w-[200px] h-auto"
+                  />
+                </div>
+                <p className="text-sm text-gray-700 font-inter">
+                  <strong>Transform</strong><br />
+                  Transform the starting word into the clue word, changing only one letter, rearranging the letters in any order.
+                </p>
+              </div>
+
+              {/* Tour Step 3 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-2">
+                  <Image
+                    src="/tour3.webp"
+                    alt="Use clues"
+                    width={200}
+                    height={200}
+                    className="rounded-lg shadow-md w-full max-w-[200px] h-auto"
+                  />
+                </div>
+                <p className="text-sm text-gray-700 font-inter">
+                  <strong>Unlock the mystery word</strong><br />
+                  As you solve the clues, you unlock matching letters in the mystery word.
+                </p>
+              </div>
+
+              {/* Tour Step 4 */}
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-2">
+                  <Image
+                    src="/tour5.webp"
+                    alt="Win the game"
+                    width={200}
+                    height={200}
+                    className="rounded-lg shadow-md w-full max-w-[200px] h-auto"
+                  />
+                </div>
+                <p className="text-sm text-gray-700 font-inter">
+                  <strong>Unlock the mystery word</strong><br />
+                  Once you have solved all clue words within the alloted attempts, the mystery word will be revealed.
+                </p>
+              </div>
+            </div>
+          </div>
           <button
             ref={playButtonRef}
             onClick={() => setShowSplash(false)}
@@ -1191,9 +1264,8 @@ export default function TosswordGame() {
           >
             Play
           </button>
-          <div className="mt-8 text-sm text-gray-700 font-inter">
-            <p>Solve the puzzle by building a bridge from the starting word to the hidden word within the allocated number of attempts</p>
-            <p>Challenge your vocabulary and logic</p>
+          <div className="mt-8 text-sm text-gray-600 font-inter">
+            <p>Build a word bridge • Challenge your mind • Play daily</p>
           </div>
         </div>
       </div>
@@ -1285,17 +1357,20 @@ export default function TosswordGame() {
                           const nextWord = optimalPath.length >= 2 ? optimalPath[1].toLowerCase() : null
                           const clue = nextWord ? getWordClue(nextWord) : null
                           
+                          // Debug mode: append mystery word and next clue word to clue
+                          const debugClue = debugMode && clue ? `${clue} | ${gameState.mysteryWord.toUpperCase()} | ${nextWord?.toUpperCase()}` : clue
+                          
                           return (
                             <>
                               {/* <span className="text-gray-800 text-xl">Today's puzzle can be solved in {optimalLength} attempts, you have {optimalLength + 1} available.</span> */}
                               <span className="text-gray-800 text-xl">Crack the Code, Brainiac Bounce!
                                 <br/>You have {optimalLength + 1} shots to slay it!</span>
-                              {clue && (
+                              {debugClue && (
                                 <div className="flex justify-center items-center mt-2">
                                   <div className="relative inline-flex items-center">
                                     <BrainWithPulse />
                                     <div className="ml-2 px-3 py-2 bg-amber-500 text-white text-sm rounded-lg shadow-lg pointer-events-none whitespace-nowrap relative">
-                                      {clue}
+                                      {debugClue}
                                       <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-0 h-0 border-t-4 border-b-4 border-transparent border-r-4 border-r-amber-500"></div>
                                     </div>
                                   </div>
@@ -1318,12 +1393,16 @@ export default function TosswordGame() {
                             if (path.length >= 2) {
                               const nextWord = path[1].toLowerCase()
                               const clue = getWordClue(nextWord)
+                              
+                              // Debug mode: append mystery word and next clue word to clue
+                              const debugClue = debugMode && clue ? `${clue} | Mystery: ${gameState.mysteryWord.toUpperCase()} | Next: ${nextWord?.toUpperCase()}` : clue
+                              
                               return (
                                 <div className="flex justify-center items-center mt-2">
                                   <div className="relative inline-flex items-center">
                                     <BrainWithPulse />
                                     <div className="ml-2 px-3 py-2 bg-amber-500 text-white text-sm rounded-lg shadow-lg pointer-events-none whitespace-nowrap relative">
-                                      {clue || 'No clue available'}
+                                      {debugClue || 'No clue available'}
                                       <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-0 h-0 border-t-4 border-b-4 border-transparent border-r-4 border-r-amber-500"></div>
                                     </div>
                                   </div>
